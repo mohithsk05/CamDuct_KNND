@@ -1,0 +1,114 @@
+# CamDuct KNND — Phase 1 Implementation Walkthrough
+
+The **Phase 1** real-time inventory system for **CamDuct KNND** (Maalur & Haryana branches) is built and verified.
+
+---
+
+## 🎨 Design & Theme
+
+- **Pure White & Neutral Aesthetic**: Built with a clean `#ffffff` and light `#f7f8fa` palette with `#2563eb` accent touches. Strictly no dark mode, no gaudy colors.
+- **Typography**: Google Font **Inter** for clean, modern readability.
+- **Micro-Interactions**: Smooth card hover effects, status badges, locked tile overlays, and instant toast notifications.
+
+---
+
+## 🔑 Authentication Architecture
+
+### 1. Common Gate Login (`index.html`)
+- Single shared company access login.
+- Credentials: `camduct` / `camduct@2024`
+
+### 2. Role Entry Portal (`portal.html`)
+- Heading: **ADMIN, MANAGER & DEPARTMENT ENTRY PORTAL**
+- Authorised individual login credentials for each user role:
+
+| Role | Username | Default Password | Branch | Access Scope |
+| :--- | :--- | :--- | :--- | :--- |
+| **Admin / Owner** | `admin` | `admin@2024` | Both | Full system control, approvals, power grants, user management |
+| **Manager (Maalur)** | `manager_maalur` | `mgr_maalur@24` | Maalur | View-only dashboard, reports, date-range downloads |
+| **Manager (Haryana)** | `manager_haryana` | `mgr_haryana@24` | Haryana | View-only dashboard, reports, date-range downloads |
+| **Planning (Maalur)** | `plan_maalur` | `plan@24` | Maalur | Upload drawings, assign Job #, enter quantities |
+| **Planning (Haryana)** | `plan_haryana` | `plan@24h` | Haryana | Upload drawings, assign Job #, enter quantities |
+| **Purchase (Maalur)** | `purchase_maalur` | `purchase@24` | Maalur | Locked by default (unless power granted by Admin) |
+| **Accounts (Maalur)** | `accounts_maalur` | `accounts@24` | Maalur | Locked by default (unless power granted by Admin) |
+
+---
+
+## 📊 Dashboards
+
+### Admin / Owner Dashboard (`admin-dashboard.html`)
+1. **Branch Selection Screen**: Step 1 prompts the Admin to choose between **Maalur** or **Haryana** operations (with easy branch switching).
+2. **3×3 Department Tile Grid** (matching `AM.jpeg` sketch):
+   - **Row 1**: Planning | Purchase | Consumption
+   - **Row 2**: Accounts | Dispatch | Balance
+   - **Row 3**: Scrap | Users | Overview
+3. **⚡ Power Feature**:
+   - Admin can click the `⚡ Power` button on any department tile.
+   - Opens a modal allowing Admin to grant access power to other departments (e.g., allow Planning department to access Purchase department).
+4. **Users Management Panel**:
+   - Bifurcated by branch (**Maalur** | **Haryana** | **Administrators**).
+   - Allows creating new users and removing existing users.
+5. **Overview & Date-Range Export**:
+   - Filter by `From Date` and `To Date` → Download Excel summary report (`.xlsx`).
+
+![Admin Dashboard](file:///C:/Users/Mohith/.gemini/antigravity-ide/brain/7026653f-aacf-4b86-91da-8fa50fc8865e/.system_generated/click_feedback/click_feedback_1786343448217.png)
+
+---
+
+### Manager Dashboard (`manager-dashboard.html`)
+- Same 3×3 grid layout as Admin, locked to the manager's assigned branch.
+- **View-only**: Cannot perform approvals/rejections or grant power.
+- Includes date-range summary report export.
+
+---
+
+### Department Dashboard (`dept-dashboard.html`)
+- **2-Row × 3-Col Grid** (matching `PPCADO.jpeg` sketch):
+  - **Row 1**: Planning | Purchase | Consumption
+  - **Row 2**: Accounts | Dispatch | Overview
+- **Lock System**: Department users can only access their own department tile. Other department tiles display a 🔒 **Locked** overlay on hover.
+- **Granted Power**: If Admin has granted power access to additional departments, those tiles dynamically unlock for the department user.
+- **Alerts Tab**: Topbar bell icon provides real-time notification alerts (e.g., when Admin requests a revision).
+
+---
+
+## 📋 Planning Department Page (`planning.html`)
+
+1. **Upload Zone**:
+   - Supports Drag-and-Drop or click-to-upload for drawings (PNG, JPG, PDF, DWG, DXF, XLSX).
+   - **OTF format blocked**: Per instruction, `.otf` files are rejected.
+2. **Job Assignment Modal**:
+   - Prompts for **Job Number**, **Customer Name**, and **Estimated PO Quantity**.
+   - Generates a project card set to `⏳ Pending Review`.
+3. **Approval & Revision Workflow**:
+   - **Admin View**: Has `✅ Approve`, `❌ Reject`, and `🔄 Revise` action controls.
+   - **Revision Notification**: Clicking **Revise** sends a notification banner + topbar alert to the Planning department user.
+4. **Post-Approval Quantities**:
+   - Once approved by Admin, two action buttons appear on the project card:
+     - 💼 **Billing Quantity** (Qty, Unit, Rate)
+     - 🧱 **Insulation Quantity** (Qty, Unit, Rate)
+   - Saves quantities back to the system.
+5. **View & Download Controls**:
+   - **View Details**: Full project modal with calculated totals.
+   - **PDF Download**: Print/download clean project PDF report.
+   - **Excel Download**: Date-range export for single or multiple projects.
+
+![Planning Page](file:///C:/Users/Mohith/.gemini/antigravity-ide/brain/7026653f-aacf-4b86-91da-8fa50fc8865e/.system_generated/click_feedback/click_feedback_1786343466595.png)
+
+---
+
+## ⚡ Server & Persistence
+
+- **Backend**: Express.js REST API server running on `http://localhost:3000`.
+- **Database**: Clean JSON database persistence (`server/data.json`) requiring zero native C++ compilation modules.
+- **JWT Session Guarding**: Auth tokens stored in `sessionStorage`.
+
+---
+
+## 🚀 How to Run
+
+```bash
+# Start server
+node server/app.js
+# Open http://localhost:3000 in your browser
+```

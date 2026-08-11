@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamDuct KNND — Login</title>
+  <meta name="description" content="CamDuct KNND Inventory Management System — Secure Login">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+
+      <!-- Brand -->
+      <div class="login-brand">
+        <div class="login-brand-icon">
+          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <h1>CamDuct KNND</h1>
+        <p class="login-brand-sub">Inventory Management System</p>
+      </div>
+
+      <!-- Form -->
+      <div class="login-form">
+        <p class="login-form-title">Enter company access credentials to continue</p>
+
+        <div id="gate-error" class="login-error hidden">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="gate-error-msg">Invalid credentials</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="gate-username">Username</label>
+          <input
+            class="form-input"
+            type="text"
+            id="gate-username"
+            placeholder="Enter username"
+            autocomplete="username"
+            spellcheck="false"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="gate-password">Password</label>
+          <div class="input-password-wrap">
+            <input
+              class="form-input"
+              type="password"
+              id="gate-password"
+              placeholder="Enter password"
+              autocomplete="current-password"
+            >
+            <button type="button" class="password-toggle" id="gate-pw-toggle" title="Show/hide password">
+              <svg id="gate-eye-icon" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg login-submit" id="gate-submit" type="button">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+          </svg>
+          Access System
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p>© 2024 CamDuct KNND &nbsp;·&nbsp; All rights reserved</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API = '/api';
+    // Password toggle
+    document.getElementById('gate-pw-toggle').addEventListener('click', () => {
+      const pw = document.getElementById('gate-password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+    });
+
+    // Submit on Enter
+    document.getElementById('gate-password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('gate-submit').click();
+    });
+    document.getElementById('gate-username').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('gate-submit').click();
+    });
+
+    // Gate login
+    document.getElementById('gate-submit').addEventListener('click', async () => {
+      const btn = document.getElementById('gate-submit');
+      const errEl = document.getElementById('gate-error');
+      const errMsg = document.getElementById('gate-error-msg');
+      const username = document.getElementById('gate-username').value.trim();
+      const password = document.getElementById('gate-password').value;
+
+      if (!username || !password) {
+        errMsg.textContent = 'Please enter both username and password.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Verifying...';
+      errEl.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API}/auth/gate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Invalid credentials');
+
+        // Store gate token and redirect to portal
+        sessionStorage.setItem('gate_token', data.token);
+        window.location.href = '/portal.html';
+      } catch (err) {
+        errMsg.textContent = err.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = `
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+          </svg>
+          Access System`;
+      }
+    });
+  </script>
+</body>
+</html>

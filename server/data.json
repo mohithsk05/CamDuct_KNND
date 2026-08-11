@@ -1,0 +1,464 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "gate",
+      "password": "$2a$10$mLbNjPH0NaNfGdRuBmaOHOIZH5sTl77NpWwUvTbhNR067GDj1cSzy",
+      "role": "gate",
+      "branch": null,
+      "full_name": "Gate Access",
+      "created_at": "2026-08-10T06:28:15.922Z"
+    },
+    {
+      "id": 2,
+      "username": "admin",
+      "password": "$2a$10$rgsjSOdpoX4hN1w384GxmevXavib90l65sQUF5E9uUXI7OiAeTZpS",
+      "role": "admin",
+      "branch": null,
+      "full_name": "Admin / Owner",
+      "created_at": "2026-08-10T06:28:16.006Z"
+    },
+    {
+      "id": 3,
+      "username": "manager_maalur",
+      "password": "$2a$10$YmpgcbQ.qbyRTv2UgAKQ/.qpsvO3D4pShXn4OnJV/uYVNs/To0WJ.",
+      "role": "manager",
+      "branch": "maalur",
+      "full_name": "Manager – Maalur",
+      "created_at": "2026-08-10T06:28:16.091Z"
+    },
+    {
+      "id": 4,
+      "username": "manager_haryana",
+      "password": "$2a$10$IfgZ8z9BBxM.g14RuxcvfuvItuPXyOk13pB52UGHv0IljctQuJvsS",
+      "role": "manager",
+      "branch": "haryana",
+      "full_name": "Manager – Haryana",
+      "created_at": "2026-08-10T06:28:16.174Z"
+    },
+    {
+      "id": 5,
+      "username": "plan_maalur",
+      "password": "$2a$10$y1PYmnhuK4HwrqGp7vws0eF6eagoYbrBRW3kF2Dzzq8o/85x8Yjsi",
+      "role": "planning",
+      "branch": "maalur",
+      "full_name": "Planning – Maalur",
+      "created_at": "2026-08-10T06:28:16.255Z"
+    },
+    {
+      "id": 6,
+      "username": "purchase_maalur",
+      "password": "$2a$10$1Om8Zoc2Zn5Tq9S5p78piumccTq0nFISvpGKT2s2Vyi/r8R32/5bG",
+      "role": "purchase",
+      "branch": "maalur",
+      "full_name": "Purchase – Maalur",
+      "created_at": "2026-08-10T06:28:16.340Z"
+    },
+    {
+      "id": 7,
+      "username": "consume_maalur",
+      "password": "$2a$10$eOlAtosW3G.BOCuNmbu1S.Jt3rMbeTPtZBnbUrxjs4qNSNMlMpXsS",
+      "role": "consumption",
+      "branch": "maalur",
+      "full_name": "Consumption – Maalur",
+      "created_at": "2026-08-10T06:28:16.422Z"
+    },
+    {
+      "id": 8,
+      "username": "dispatch_maalur",
+      "password": "$2a$10$kAJtXgXKm/S11zZr/oUVDex9OJax4Q0TXTKKMQpQcb.KJzE0nHUF6",
+      "role": "dispatch",
+      "branch": "maalur",
+      "full_name": "Dispatch – Maalur",
+      "created_at": "2026-08-10T06:28:16.503Z"
+    },
+    {
+      "id": 9,
+      "username": "accounts_maalur",
+      "password": "$2a$10$boqqG.R2kaHdHvdm.qmy4.6wUntPxzNphc1b2sJMF064KA9gNThGG",
+      "role": "accounts",
+      "branch": "maalur",
+      "full_name": "Accounts – Maalur",
+      "created_at": "2026-08-10T06:28:16.589Z"
+    },
+    {
+      "id": 10,
+      "username": "security_maalur",
+      "password": "$2a$10$ab2Zu3DLhNSToYYDUe9dIei8wURiOr3BU2enCmMcDIz21FQ7bD2XC",
+      "role": "security",
+      "branch": "maalur",
+      "full_name": "Security – Maalur",
+      "created_at": "2026-08-10T06:28:16.669Z"
+    },
+    {
+      "id": 11,
+      "username": "plan_haryana",
+      "password": "$2a$10$FqKQaEswH7tn5ljnDyV5d.3la8iCQZ30nxpJsN9MlyBHjtoESbx5i",
+      "role": "planning",
+      "branch": "haryana",
+      "full_name": "Planning – Haryana",
+      "created_at": "2026-08-10T06:28:16.751Z"
+    },
+    {
+      "id": 12,
+      "username": "purchase_haryana",
+      "password": "$2a$10$Sv.JPGOwkvnecU7iCG1cxO6sinuW4vj9G7p6osgfdG5XuBZcen8Jm",
+      "role": "purchase",
+      "branch": "haryana",
+      "full_name": "Purchase – Haryana",
+      "created_at": "2026-08-10T06:28:16.831Z"
+    },
+    {
+      "id": 13,
+      "username": "consume_haryana",
+      "password": "$2a$10$qTYAj7A/1Zjjmx1Sa/QWFOPuO5hWHAOTljhwIDB.X433nxuN2dwFy",
+      "role": "consumption",
+      "branch": "haryana",
+      "full_name": "Consumption – Haryana",
+      "created_at": "2026-08-10T06:28:16.912Z"
+    },
+    {
+      "id": 14,
+      "username": "dispatch_haryana",
+      "password": "$2a$10$hlH0R.U8rCCQksuNOJT77uBWtod5BdjNeWStXJZ.RbNPQWCTfIX3C",
+      "role": "dispatch",
+      "branch": "haryana",
+      "full_name": "Dispatch – Haryana",
+      "created_at": "2026-08-10T06:28:16.995Z"
+    },
+    {
+      "id": 15,
+      "username": "accounts_haryana",
+      "password": "$2a$10$37pvHlsxdVDM49F3k4o/.e/0bSQ.7jKzB2AOGfmQWf8p/uYI/ja1y",
+      "role": "accounts",
+      "branch": "haryana",
+      "full_name": "Accounts – Haryana",
+      "created_at": "2026-08-10T06:28:17.076Z"
+    },
+    {
+      "id": 16,
+      "username": "security_haryana",
+      "password": "$2a$10$0vR6nrQs7sQy3yVj0rGPjennl1uibJJ1HDrdxhR8nWv.wPqgRcpB2",
+      "role": "security",
+      "branch": "haryana",
+      "full_name": "Security – Haryana",
+      "created_at": "2026-08-10T06:28:17.158Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": 2,
+      "job_no": "2024-01",
+      "branch": "maalur",
+      "customer_name": "abcd",
+      "po_quantity": 66,
+      "drawing_path": "1786344423941_drawing.png",
+      "drawing_name": "drawing.png",
+      "status": "approved",
+      "revise_remark": null,
+      "billing_qty": 34,
+      "billing_unit": "sqmt",
+      "billing_rate": 55,
+      "insulation_qty": null,
+      "insulation_unit": null,
+      "insulation_rate": null,
+      "submitted_by": 5,
+      "reviewed_by": 2,
+      "created_at": "2026-08-10T06:47:03.946Z",
+      "updated_at": "2026-08-10T08:17:18.534Z"
+    },
+    {
+      "id": 3,
+      "job_no": "2004-02",
+      "branch": "maalur",
+      "customer_name": "abcdew",
+      "po_quantity": 12,
+      "drawing_path": "1786346642641_drawing.png",
+      "drawing_name": "drawing.png",
+      "status": "rejected",
+      "revise_remark": null,
+      "billing_qty": null,
+      "billing_unit": null,
+      "billing_rate": null,
+      "insulation_qty": null,
+      "insulation_unit": null,
+      "insulation_rate": null,
+      "submitted_by": 5,
+      "reviewed_by": 2,
+      "created_at": "2026-08-10T07:24:02.665Z",
+      "updated_at": "2026-08-10T07:32:31.188Z"
+    },
+    {
+      "id": 4,
+      "job_no": "2024",
+      "branch": "maalur",
+      "customer_name": "ee",
+      "po_quantity": 44,
+      "drawing_path": "1786347350335_drawing.png",
+      "drawing_name": "drawing.png",
+      "status": "approved",
+      "revise_remark": null,
+      "billing_qty": 15,
+      "billing_unit": "nos",
+      "billing_rate": 15,
+      "insulation_qty": null,
+      "insulation_unit": null,
+      "insulation_rate": null,
+      "submitted_by": 5,
+      "reviewed_by": 2,
+      "created_at": "2026-08-10T07:35:50.357Z",
+      "updated_at": "2026-08-10T08:44:40.310Z",
+      "billing_items": "[{\"product\":\"Box Duct with Angle Flange\",\"qty\":15,\"unit\":\"nos\",\"rate\":15},{\"product\":\"Spiral Oval Duct\",\"qty\":15,\"unit\":\"sqft\",\"rate\":15}]",
+      "insulation_items": null
+    },
+    {
+      "id": 5,
+      "job_no": "2026-09",
+      "branch": "maalur",
+      "customer_name": "moh",
+      "po_quantity": 0,
+      "po_items": "[]",
+      "drawing_path": "1786360929904_drawing.png",
+      "drawing_name": "drawing.png",
+      "status": "pending",
+      "revise_remark": null,
+      "billing_items": null,
+      "insulation_items": null,
+      "submitted_by": 5,
+      "reviewed_by": null,
+      "created_at": "2026-08-10T11:22:09.996Z",
+      "updated_at": "2026-08-10T11:22:09.996Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "New project submitted: Job #2024-01 by Planning – Maalur (MAALUR)",
+      "project_id": 2,
+      "is_read": 1,
+      "created_at": "2026-08-10T06:47:03.949Z"
+    },
+    {
+      "id": 2,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "New project submitted: Job #2024-01 by Planning – Maalur (MAALUR)",
+      "project_id": 2,
+      "is_read": 1,
+      "created_at": "2026-08-10T06:47:03.955Z"
+    },
+    {
+      "id": 3,
+      "role": "planning",
+      "branch": "maalur",
+      "type": "review",
+      "message": "✅ Job #2024-01 has been APPROVED.",
+      "project_id": 2,
+      "is_read": 1,
+      "created_at": "2026-08-10T07:02:00.541Z"
+    },
+    {
+      "id": 4,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "New project submitted: Job #2004-02 by Planning – Maalur (MAALUR)",
+      "project_id": 3,
+      "is_read": 1,
+      "created_at": "2026-08-10T07:24:02.679Z"
+    },
+    {
+      "id": 5,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "New project submitted: Job #2004-02 by Planning – Maalur (MAALUR)",
+      "project_id": 3,
+      "is_read": 1,
+      "created_at": "2026-08-10T07:24:02.688Z"
+    },
+    {
+      "id": 6,
+      "role": "planning",
+      "branch": "maalur",
+      "type": "review",
+      "message": "❌ Job #2004-02 has been REJECTED.",
+      "project_id": 3,
+      "is_read": 1,
+      "created_at": "2026-08-10T07:32:31.191Z"
+    },
+    {
+      "id": 7,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "New project submitted: Job #2024 by Planning – Maalur (MAALUR)",
+      "project_id": 4,
+      "is_read": 1,
+      "created_at": "2026-08-10T07:35:50.365Z"
+    },
+    {
+      "id": 8,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "New project submitted: Job #2024 by Planning – Maalur (MAALUR)",
+      "project_id": 4,
+      "is_read": 1,
+      "created_at": "2026-08-10T07:35:50.373Z"
+    },
+    {
+      "id": 9,
+      "role": "planning",
+      "branch": "maalur",
+      "type": "review",
+      "message": "✅ Job #2024 has been APPROVED.",
+      "project_id": 4,
+      "is_read": 1,
+      "created_at": "2026-08-10T07:36:13.012Z"
+    },
+    {
+      "id": 10,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #2024 (MAALUR)",
+      "project_id": 4,
+      "is_read": 1,
+      "created_at": "2026-08-10T08:43:17.347Z"
+    },
+    {
+      "id": 11,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #2024 (MAALUR)",
+      "project_id": 4,
+      "is_read": 1,
+      "created_at": "2026-08-10T08:43:17.909Z"
+    },
+    {
+      "id": 12,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #2024 (MAALUR)",
+      "project_id": 4,
+      "is_read": 1,
+      "created_at": "2026-08-10T08:43:18.086Z"
+    },
+    {
+      "id": 13,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #2024 (MAALUR)",
+      "project_id": 4,
+      "is_read": 1,
+      "created_at": "2026-08-10T08:43:18.313Z"
+    },
+    {
+      "id": 14,
+      "role": "planning",
+      "branch": "maalur",
+      "type": "review",
+      "message": "🔓 Admin unlocked quantity edit for Job #2024",
+      "project_id": 4,
+      "is_read": 1,
+      "created_at": "2026-08-10T08:43:35.655Z"
+    },
+    {
+      "id": 15,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "branch": "2026-08-10T11:21:03.577Z",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-10T11:21:03.602Z"
+    },
+    {
+      "id": 16,
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "target_user_name": "2026-08-10T11:21:29.748Z",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-10T11:21:29.748Z"
+    },
+    {
+      "id": 17,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "branch": "2026-08-10T11:21:42.842Z",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-10T11:21:42.847Z"
+    },
+    {
+      "id": 18,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "New project submitted: Job #2026-09 by Planning – Maalur (MAALUR)",
+      "project_id": 5,
+      "is_read": 1,
+      "created_at": "2026-08-10T11:22:10.032Z"
+    },
+    {
+      "id": 19,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "New project submitted: Job #2026-09 by Planning – Maalur (MAALUR)",
+      "project_id": 5,
+      "is_read": 1,
+      "created_at": "2026-08-10T11:22:10.060Z"
+    },
+    {
+      "id": 20,
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "target_user_name": "2026-08-10T11:22:53.429Z",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-10T11:22:53.429Z"
+    }
+  ],
+  "power_grants": [
+    {
+      "id": 1,
+      "granted_to_role": "manager",
+      "granted_branch": "maalur",
+      "granted_dept": "users",
+      "granted_by": 2,
+      "created_at": "2026-08-10T11:32:52.771Z"
+    },
+    {
+      "id": 2,
+      "granted_to_role": "purchase",
+      "granted_branch": "maalur",
+      "granted_dept": "planning",
+      "granted_by": 2,
+      "created_at": "2026-08-10T11:33:25.084Z"
+    }
+  ],
+  "autoInc": {
+    "users": 17,
+    "projects": 6,
+    "notifications": 21,
+    "power_grants": 3
+  },
+  "admin_authority": null
+}

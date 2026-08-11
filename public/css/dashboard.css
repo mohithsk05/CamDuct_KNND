@@ -1,0 +1,388 @@
+/* Dashboard Styles */
+
+/* ─── Branch Selector ────────────────────────────────────────────────────── */
+.branch-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 58px);
+  padding: 32px 24px;
+  gap: 24px;
+}
+.branch-selector h2 {
+  font-size: 1.1rem;
+  color: var(--text-second);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.branch-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.branch-card {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  min-width: 200px;
+  box-shadow: var(--shadow-sm);
+}
+.branch-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-light), var(--shadow-md);
+  transform: translateY(-2px);
+}
+.branch-card-icon {
+  width: 56px; height: 56px;
+  background: var(--accent-light);
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+}
+.branch-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.branch-card p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* ─── Dashboard Layout ───────────────────────────────────────────────────── */
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 58px);
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: 58px;
+  height: calc(100vh - 58px);
+  overflow-y: auto;
+}
+.sidebar-section {
+  padding: 8px 12px 4px;
+}
+.sidebar-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0 8px;
+  margin-bottom: 4px;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.85rem;
+  color: var(--text-second);
+  font-weight: 500;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.sidebar-item:hover { background: var(--bg); color: var(--text-primary); }
+.sidebar-item.active { background: var(--accent-light); color: var(--accent); }
+.sidebar-item-icon { font-size: 0.95rem; width: 20px; text-align: center; }
+.sidebar-branch-badge {
+  margin-left: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ─── Department Grid (Admin/Manager) ───────────────────────────────────── */
+.dept-grid-page {
+  padding: 28px;
+}
+.dept-grid-header {
+  margin-bottom: 24px;
+}
+.dept-grid-branch-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.dept-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ─── Department Tile ────────────────────────────────────────────────────── */
+.dept-tile {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  box-shadow: var(--shadow-xs);
+  min-height: 150px;
+  text-align: left;
+}
+.dept-tile:hover:not(.locked) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-light), var(--shadow-sm);
+  transform: translateY(-2px);
+}
+.dept-tile.locked {
+  cursor: not-allowed;
+  background: var(--locked-bg);
+  opacity: 0.7;
+}
+.dept-tile.locked:hover::after {
+  content: '🔒 Locked';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(249,250,251,0.88);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--locked);
+}
+.tile-lock-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 0.9rem;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.dept-tile-icon {
+  width: 50px; height: 50px;
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  background: var(--bg);
+}
+.dept-tile h4 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+.dept-tile p {
+  font-size: 0.95rem;
+  color: var(--text-second);
+  line-height: 1.4;
+}
+
+/* Tile color accents */
+.tile-planning    .dept-tile-icon { background: #eff6ff; }
+.tile-purchase    .dept-tile-icon { background: #f0fdf4; }
+.tile-consumption .dept-tile-icon { background: #fff7ed; }
+.tile-accounts    .dept-tile-icon { background: #fdf4ff; }
+.tile-dispatch    .dept-tile-icon { background: #f0f9ff; }
+.tile-balance     .dept-tile-icon { background: #ecfdf5; }
+.tile-scrap       .dept-tile-icon { background: #fef9c3; }
+.tile-users       .dept-tile-icon { background: var(--accent-light); }
+.tile-overview    .dept-tile-icon { background: #f8fafc; }
+.tile-security    .dept-tile-icon { background: #fef2f2; }
+
+/* Power button on each tile (admin only) */
+.tile-power-btn {
+  position: absolute;
+  top: 10px; right: 10px;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--accent);
+  cursor: pointer;
+  transition: var(--transition);
+  letter-spacing: 0.03em;
+}
+.tile-power-btn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* ─── Power Modal ────────────────────────────────────────────────────────── */
+.power-dept-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.power-dept-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.83rem;
+}
+.power-dept-item label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500; }
+.power-dept-item input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
+
+/* ─── Users Panel ────────────────────────────────────────────────────────── */
+.users-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.users-branch-section h3 {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+.users-table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1.5px solid var(--border);
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.users-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+.users-table tr:last-child td { border-bottom: none; }
+.users-table tr:hover td { background: var(--bg); }
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-second);
+}
+
+/* ─── Download Controls ──────────────────────────────────────────────────── */
+.download-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.download-controls input[type="date"] {
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-family: var(--font);
+  color: var(--text-primary);
+  background: var(--white);
+  outline: none;
+  cursor: pointer;
+}
+.download-controls input[type="date"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+/* ─── Overview Panel ─────────────────────────────────────────────────────── */
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-xs);
+}
+.stat-card-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.stat-card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.stat-card-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .dashboard-layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .dept-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 540px) {
+  .dept-grid { grid-template-columns: 1fr; }
+  .branch-cards { flex-direction: column; width: 100%; }
+  .branch-card { padding: 28px 24px; }
+}
