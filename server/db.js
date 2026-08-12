@@ -175,6 +175,14 @@ function executeQuery(sql, args) {
     const [job_no, branch] = args;
     return data.projects.filter(p => p.job_no === job_no && (!branch || p.branch.toLowerCase() === branch.toLowerCase()));
   }
+  if (sql.includes('FROM projects WHERE LOWER(branch) = LOWER(?) AND LOWER(project_name) = LOWER(?) AND LOWER(place) = LOWER(?)')) {
+    const [branch, project_name, place] = args;
+    return data.projects.filter(p =>
+      p.branch.toLowerCase() === branch.toLowerCase() &&
+      (p.project_name || '').toLowerCase() === project_name.toLowerCase() &&
+      (p.place || '').toLowerCase() === place.toLowerCase()
+    );
+  }
 
   // Projects queries: List projects
   if (sql.includes('FROM projects')) {
@@ -204,6 +212,13 @@ function executeQuery(sql, args) {
   // Notifications queries
   if (sql.includes('FROM notifications')) {
     autoCleanupNotifications();
+
+    if (sql.includes('sender_id = ?')) {
+      const senderId = args[0];
+      return data.notifications
+        .filter(n => n.sender_id == senderId)
+        .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    }
 
     let userId = null;
     let userRole = null;
@@ -292,18 +307,26 @@ function executeMutation(sql, args) {
   // Projects insert
   if (sql.includes('INSERT INTO projects')) {
     const id = data.autoInc.projects++;
-    let job_no, branch, customer_name, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by;
-    if (sql.includes('po_items')) {
+    let job_no, branch, customer_name, customer_type, project_name, place, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by;
+    
+    if (args.length === 13) {
+      [job_no, branch, customer_name, customer_type, project_name, place, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by] = args;
+    } else if (sql.includes('po_items')) {
       [job_no, branch, customer_name, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by] = args;
     } else {
       [job_no, branch, customer_name, po_quantity, drawing_path, drawing_name, status, submitted_by] = args;
     }
+
     const project = {
       id,
       job_no,
       branch: (branch || 'maalur').toLowerCase(),
       customer_name,
-      po_quantity: Number(po_quantity),
+      customer_type: customer_type || (customer_name && customer_name.toLowerCase() === 'knnd' ? 'knnd' : 'others'),
+      project_name: project_name || null,
+      place: place || null,
+      location: location || null,
+      po_quantity: Number(po_quantity) || 0,
       po_items: po_items || null,
       drawing_path: drawing_path || null,
       drawing_name: drawing_name || null,
@@ -518,5 +541,8 @@ function seedUsers() {
 }
 
 seedUsers();
+
+db.data = data;
+db.saveData = saveData;
 
 module.exports = db;

@@ -29,19 +29,13 @@
       <div class="notif-panel hidden" id="notif-panel">
         <div class="notif-panel-header">
           <h4 style="font-size:0.82rem;">Notifications</h4>
-          <button class="btn btn-ghost btn-sm" id="mark-all-read" style="font-size:0.72rem;">Mark all read</button>
+          <button class="mark-all-read-box-btn" id="mark-all-read" type="button"><span>✓</span> Mark All Read</button>
         </div>
         <div class="notif-list" id="notif-list">
           <div class="empty-state" style="padding:24px 16px;"><div class="empty-state-icon" style="font-size:1.5rem;">🔔</div><p>No notifications</p></div>
         </div>
       </div>
     </div>
-    <!-- 👑 AUTHORITY BUTTON -->
-    <button class="authority-btn" id="authority-btn" title="Delegate Admin Authority">
-      <span style="font-size:1rem;">👑</span>
-      <span style="font-size:0.75rem; font-weight:700; letter-spacing:0.04em;">AUTHORITY</span>
-      <span class="authority-active-dot hidden" id="authority-active-dot"></span>
-    </button>
     <div class="user-chip" id="user-chip">
       <div class="user-avatar" id="user-avatar">A</div>
       <span class="user-chip-name" id="user-name">Admin</span>
@@ -63,11 +57,23 @@
       <div class="branch-card-icon">🏭</div>
       <h3>Maalur</h3>
       <p>Maalur Branch Operations</p>
+      <div class="branch-card-power-box">
+        <button class="branch-card-authority-btn" data-branch="maalur" onclick="event.stopPropagation();">
+          <span style="font-size:0.95rem;">👑</span>
+          <span>Transfer Admin Power</span>
+        </button>
+      </div>
     </div>
     <div class="branch-card" id="branch-haryana" data-branch="haryana">
       <div class="branch-card-icon">🏗️</div>
       <h3>Haryana</h3>
       <p>Haryana Branch Operations</p>
+      <div class="branch-card-power-box">
+        <button class="branch-card-authority-btn" data-branch="haryana" onclick="event.stopPropagation();">
+          <span style="font-size:0.95rem;">👑</span>
+          <span>Transfer Admin Power</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -200,7 +206,7 @@
       <button class="modal-close" id="power-modal-close">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:0.82rem; margin-bottom:14px;">Select which departments can access <strong id="power-target-dept"></strong> department:</p>
+      <p style="font-size:0.82rem; margin-bottom:14px;" id="power-modal-desc">Select which departments <strong id="power-target-dept"></strong> department can access:</p>
       <div class="power-dept-list" id="power-dept-list"></div>
     </div>
     <div class="modal-footer">
@@ -215,39 +221,6 @@
 
 <!-- ─── Toast Container ────────────────────────────────────────────────── -->
 <div class="toast-container" id="toast-container"></div>
-
-<!-- ─── Authority Modal ───────────────────────────────────────────────────── -->
-<div class="modal-overlay hidden" id="authority-modal">
-  <div class="modal authority-modal-card">
-    <div class="modal-header" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:1.4rem;">👑</span>
-        <div>
-          <h3 style="font-size:1rem; font-weight:700; color:#fff; margin:0;">Delegate Admin Authority</h3>
-          <p style="font-size:0.73rem; color:rgba(255,255,255,0.75); margin:0;">Grant full admin powers to a Branch Manager</p>
-        </div>
-      </div>
-      <button class="modal-close" id="authority-close" style="color:#fff; opacity:0.8;">✕</button>
-    </div>
-    <div class="modal-body" style="padding:20px;">
-      <!-- Active delegation banner -->
-      <div id="authority-active-banner" class="hidden" style="background:linear-gradient(135deg,#fef9c3,#fef3c7); border:1px solid #f59e0b; border-radius:var(--radius); padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
-        <span style="font-size:1.1rem;">⚡</span>
-        <div style="flex:1;">
-          <div style="font-size:0.8rem; font-weight:700; color:#92400e;">AUTHORITY ACTIVE</div>
-          <div id="authority-active-text" style="font-size:0.75rem; color:#78350f;"></div>
-        </div>
-        <button class="btn btn-sm" id="authority-revoke-btn" style="background:#dc2626; color:#fff; border:none; font-size:0.72rem; padding:5px 10px; border-radius:6px; cursor:pointer; font-weight:600;">Revoke</button>
-      </div>
-
-      <!-- Manager selection cards -->
-      <p style="font-size:0.8rem; color:var(--text-second); margin-bottom:14px;">Select a Branch Manager to grant full admin authority:</p>
-      <div style="display:flex; flex-direction:column; gap:10px;" id="authority-manager-list">
-        <!-- Populated by JS -->
-      </div>
-    </div>
-  </div>
-</div>
 
 <script src="/js/auth.js"></script>
 <script src="/js/dashboard.js"></script>

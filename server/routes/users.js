@@ -77,7 +77,7 @@ router.patch('/:id/password', auth, (req, res) => {
 
 // GET /api/users/power-grants — List all power grants (admin only)
 router.get('/power-grants', auth, (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  if (req.user.role !== 'admin' && !req.user.hasAdminPower) return res.status(403).json({ error: 'Admin only' });
   const grants = db.prepare(`
     SELECT pg.*, u.full_name AS granted_by_name
     FROM power_grants pg LEFT JOIN users u ON pg.granted_by = u.id
@@ -88,7 +88,7 @@ router.get('/power-grants', auth, (req, res) => {
 
 // POST /api/users/power-grants — Grant department access (admin only)
 router.post('/power-grants', auth, (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  if (req.user.role !== 'admin' && !req.user.hasAdminPower) return res.status(403).json({ error: 'Admin only' });
   const { granted_to_role, granted_branch, granted_dept } = req.body;
   if (!granted_to_role || !granted_branch || !granted_dept) {
     return res.status(400).json({ error: 'granted_to_role, granted_branch, granted_dept required' });
@@ -106,7 +106,7 @@ router.post('/power-grants', auth, (req, res) => {
 
 // DELETE /api/users/power-grants/:id — Revoke power grant (admin only)
 router.delete('/power-grants/:id', auth, (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  if (req.user.role !== 'admin' && !req.user.hasAdminPower) return res.status(403).json({ error: 'Admin only' });
   db.prepare('DELETE FROM power_grants WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
@@ -121,11 +121,19 @@ router.get('/recipients', auth, (req, res) => {
   res.json(users);
 });
 
-// POST /api/users/send-notification — Send a custom notification to a user or all users with validity
+// POST /api/users/send-notification — Send a custom notification to multiple recipients
 router.post('/send-notification', auth, (req, res) => {
-  const { recipient, message, validity, branch } = req.body;
-  if (!recipient || !message || !validity) {
-    return res.status(400).json({ error: 'Recipient, message, and validity duration are required' });
+  let { recipient, recipients, message, validity, branch } = req.body;
+
+  // Normalize recipients array
+  if (!recipients) {
+    if (recipient) recipients = [recipient];
+    else return res.status(400).json({ error: 'At least one recipient is required' });
+  }
+  if (!Array.isArray(recipients)) recipients = [recipients];
+
+  if (!message || !validity) {
+    return res.status(400).json({ error: 'Message and validity duration are required' });
   }
 
   const validOptions = ['1day', '3day', '5day', '1week', '1month', '1year'];
@@ -144,42 +152,69 @@ router.post('/send-notification', auth, (req, res) => {
   const durationMs = mult[validity] || mult['1day'];
   const expires_at = new Date(Date.now() + durationMs).toISOString();
 
-  let target_user_id = recipient === 'all' ? 'all' : parseInt(recipient);
-  let target_user_name = null;
-  if (target_user_id !== 'all') {
-    const targetUser = db.prepare('SELECT id, full_name FROM users WHERE id = ?').get(target_user_id);
-    if (targetUser) {
-      target_user_name = targetUser.full_name;
+  const targetBranch = branch ? branch.toLowerCase() : (req.user.branch ? req.user.branch.toLowerCase() : null);
+
+  let insertedCount = 0;
+
+  // Check if broadcast to ALL is selected
+  if (recipients.includes('all')) {
+    db.prepare(`
+      INSERT INTO notifications (sender_id, sender_name, target_user_id, target_user_name, role, branch, type, message, validity, expires_at)
+      VALUES (?, ?, 'all', NULL, 'all', ?, ?, ?, ?, ?)
+    `).run(
+      req.user.id,
+      req.user.full_name,
+      targetBranch,
+      'custom',
+      message,
+      validity,
+      expires_at
+    );
+    insertedCount++;
+  } else {
+    // Process each selected individual user ID
+    for (const rId of recipients) {
+      const uId = parseInt(rId);
+      if (isNaN(uId)) continue;
+      const targetUser = db.prepare('SELECT id, full_name, role, branch FROM users WHERE id = ?').get(uId);
+      if (!targetUser) continue;
+
+      db.prepare(`
+        INSERT INTO notifications (sender_id, sender_name, target_user_id, target_user_name, role, branch, type, message, validity, expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        req.user.id,
+        req.user.full_name,
+        targetUser.id,
+        targetUser.full_name,
+        targetUser.role,
+        targetUser.branch,
+        'custom',
+        message,
+        validity,
+        expires_at
+      );
+      insertedCount++;
     }
   }
 
-  const targetBranch = branch ? branch.toLowerCase() : (req.user.branch ? req.user.branch.toLowerCase() : null);
-
-  const result = db.prepare(`
-    INSERT INTO notifications (sender_id, sender_name, target_user_id, target_user_name, role, branch, type, message, validity, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    req.user.id,
-    req.user.full_name,
-    target_user_id,
-    target_user_name,
-    recipient === 'all' ? 'all' : null,
-    recipient === 'all' ? targetBranch : null,
-    'custom',
-    message,
-    validity,
-    expires_at
-  );
-
-  res.json({ success: true, id: result.lastInsertRowid });
+  res.json({ success: true, count: insertedCount });
 });
 
-// GET /api/users/notifications — Get notifications for current user
+// GET /api/users/notifications — Get notifications for current user (received or sent)
 router.get('/notifications', auth, (req, res) => {
+  const tab = req.query.tab || 'received';
+  if (tab === 'sent') {
+    const sentNotifs = db.prepare('SELECT * FROM notifications WHERE sender_id = ?').all(req.user.id);
+    return res.json(sentNotifs);
+  }
   const notifs = db.prepare(`
     SELECT * FROM notifications
   `).all(req.user.id, req.user.role, req.user.branch);
-  res.json(notifs);
+
+  // In received tab, exclude notifications sent by current user unless self-targeted
+  const receivedNotifs = notifs.filter(n => String(n.sender_id) !== String(req.user.id) || String(n.target_user_id) === String(req.user.id));
+  res.json(receivedNotifs);
 });
 
 // PATCH /api/users/notifications/:id/read — Mark notification as read
@@ -190,11 +225,33 @@ router.patch('/notifications/:id/read', auth, (req, res) => {
 
 // PATCH /api/users/notifications/read-all — Mark all notifications as read
 router.patch('/notifications/read-all', auth, (req, res) => {
-  if (req.user.role === 'admin') {
-    db.prepare(`UPDATE notifications SET is_read = 1 WHERE role = 'admin'`).run();
-  } else {
-    db.prepare(`UPDATE notifications SET is_read = 1 WHERE role = ? AND (branch IS NULL OR branch = ?)`).run(req.user.role, req.user.branch);
-  }
+  const userId = req.user.id;
+  const userRole = req.user.role;
+  const userBranch = req.user.branch ? req.user.branch.toLowerCase() : null;
+
+  db.data.notifications.forEach(n => {
+    let match = false;
+    if (n.target_user_id == userId) match = true;
+    else if (n.target_user_id === 'all' || n.role === 'all') {
+      if (n.branch) {
+        if (userRole === 'admin' || (userBranch && userBranch === n.branch.toLowerCase())) match = true;
+      } else {
+        match = true;
+      }
+    } else if (userRole === 'admin' && (n.role === 'admin' || (!n.role && !n.target_user_id))) {
+      match = true;
+    } else if (n.role && n.role === userRole) {
+      if (!n.branch || !userBranch || n.branch.toLowerCase() === userBranch) {
+        match = true;
+      }
+    }
+
+    if (match) {
+      n.is_read = 1;
+    }
+  });
+
+  db.saveData();
   res.json({ success: true });
 });
 
@@ -208,14 +265,18 @@ router.get('/authority', auth, (req, res) => {
 
 // POST /api/users/authority/grant — Admin grants full power to a branch manager
 router.post('/authority/grant', auth, (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-  const { manager_id } = req.body;
-  if (!manager_id) return res.status(400).json({ error: 'manager_id required' });
+  if (req.user.role !== 'admin' && !req.user.hasAdminPower) return res.status(403).json({ error: 'Admin only' });
+  const { manager_id, branch } = req.body;
 
-  // Find the manager user
-  const manager = db.prepare('SELECT * FROM users WHERE id = ?').get(manager_id);
+  let manager;
+  if (manager_id) {
+    manager = db.prepare('SELECT * FROM users WHERE id = ?').get(manager_id);
+  } else if (branch) {
+    manager = db.prepare('SELECT * FROM users WHERE role = ? AND LOWER(branch) = LOWER(?)').get('manager', branch);
+  }
+
   if (!manager || manager.role !== 'manager') {
-    return res.status(400).json({ error: 'Invalid manager user' });
+    return res.status(400).json({ error: 'Invalid manager user for branch' });
   }
 
   const granted_at = new Date().toISOString();
@@ -225,12 +286,11 @@ router.post('/authority/grant', auth, (req, res) => {
 
   // Send notification to the manager
   db.prepare(`
-    INSERT INTO notifications (sender_id, sender_name, target_user_id, target_user_name, broadcast_target, broadcast_branch, type, message, validity, expires_at, created_at, is_read)
-    VALUES (?, ?, ?, ?, NULL, NULL, 'system', ?, NULL, NULL, ?, 0)
+    INSERT INTO notifications (sender_id, sender_name, target_user_id, target_user_name, role, branch, type, message, validity, expires_at)
+    VALUES (?, ?, ?, ?, 'manager', ?, 'system', ?, '1day', NULL)
   `).run(
-    0, 'Admin / Owner', manager.id, manager.full_name,
-    `🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.`,
-    granted_at
+    0, 'Admin / Owner', manager.id, manager.full_name, manager.branch,
+    `🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.`
   );
 
   res.json({ success: true, message: `Admin authority granted to ${manager.full_name}` });
@@ -250,14 +310,12 @@ router.post('/authority/revert', auth, (req, res) => {
   db.prepare('DELETE FROM admin_authority').run();
 
   // Notify the admin
-  const now = new Date().toISOString();
   db.prepare(`
-    INSERT INTO notifications (sender_id, sender_name, target_user_id, target_user_name, broadcast_target, broadcast_branch, type, message, validity, expires_at, created_at, is_read)
-    VALUES (?, ?, NULL, NULL, 'admin', NULL, 'system', ?, NULL, NULL, ?, 0)
+    INSERT INTO notifications (sender_id, sender_name, target_user_id, target_user_name, role, branch, type, message, validity, expires_at)
+    VALUES (?, ?, NULL, NULL, 'admin', NULL, 'system', ?, '1day', NULL)
   `).run(
     0, 'System',
-    `🔄 Admin authority has been reverted by ${managerName}. Full admin power restored to Admin / Owner.`,
-    now
+    `🔄 Admin authority has been reverted by ${managerName}. Full admin power restored to Admin / Owner.`
   );
 
   res.json({ success: true, message: 'Admin authority reverted to Admin' });

@@ -9,6 +9,8 @@ let currentBranch = 'maalur';
 let currentProjectId = null; // for quantity modals
 let selectedFile = null;
 let allProjects = [];
+let currentBranchProjects = [];
+let currentBifurcation = 'all';
 
 // ─── Product List ──────────────────────────────────────────────────────────────
 const PRODUCT_LIST = [
@@ -69,6 +71,111 @@ const PRODUCT_LIST = [
   'Bright Rod Round'
 ];
 
+const RAW_MATERIALS_LIST = [
+  "10 mm JTR",
+  "120gsm 18G",
+  "120gsm 20G",
+  "120gsm 22G",
+  "120gsm 24G",
+  "120gsm 26G",
+  "120gsm Slit 18G",
+  "120gsm Slit 20G",
+  "120gsm Slit 22G",
+  "120gsm Slit 24G",
+  "275gsm 22G",
+  "275gsm 24G",
+  "Alu. 0.8mm",
+  "Alu. 1mm",
+  "Bright Rod 10mm",
+  "C Clamp",
+  "Cleats",
+  "Corner 25mm",
+  "Corner 32mm",
+  "H Bracket",
+  "Insu Aerocell Thermal 13mm",
+  "Insu Armasound Acou. 10mm",
+  "Insu Armasound Acou. 15mm",
+  "Insu Armasound Acou. 25mm",
+  "Insu Kflex Thermal 13mm",
+  "Insu Kflex Thermal 6mm",
+  "Insu Kflex Thermal 9mm",
+  "Insu Kflex Vidoflex 13mm",
+  "Insu Kflex Vidoflex 19mm",
+  "Insu Kflex Vidoflex 25mm",
+  "Insu Kflex Vidoflex 6mm",
+  "Insu Kflex Vidoflex 9mm",
+  "Insu TF 13mm",
+  "Insu TF 19mm",
+  "Insu TF 25mm",
+  "Insu TF 6mm",
+  "Insu TF 9mm",
+  "Insu XLPE Acou. 10mm",
+  "Insu XLPE Acou. 15mm",
+  "Insu XLPE Acou. 25mm",
+  "Insu XLPE Thermal 12mm",
+  "Insu XLPE Thermal 13mm",
+  "Insu XLPE Thermal 15mm",
+  "Insu XLPE Thermal 19mm",
+  "Insu XLPE Thermal 20mm",
+  "Insu XLPE Thermal 25mm",
+  "Insu XLPE Thermal 6mm",
+  "Insu XLPE Thermal 8mm",
+  "Insu XLPE Thermal 9mm",
+  "JCS Cleats",
+  "Plain round Damper Dia 150",
+  "Plain round Damper Dia 200",
+  "Plain round Damper Dia 250",
+  "Plain round Damper Dia 300",
+  "Plain round Damper Dia 350",
+  "Plain round Damper Dia 400",
+  "Plain round Damper Dia 450",
+  "Plain round Damper Dia 500",
+  "Red Oxide paint",
+  "Round Flange 25x3",
+  "Round Flange 30x3",
+  "Round Flange 40x3",
+  "Round Flange 40x5",
+  "Round Flange 50x5",
+  "SS 304 0.8mm",
+  "SS 304 1mm",
+  "Threaded Rod 10mm",
+  "Threaded Rod 8mm"
+];
+
+const INSULATION_PRODUCT_LIST = [
+  'Insu Kflex Thermal 6mm',
+  'Insu Kflex Thermal 9mm',
+  'Insu Kflex Thermal 13mm',
+  'Insu Kflex Vidoflex 6mm',
+  'Insu Kflex Vidoflex 9mm',
+  'Insu Kflex Vidoflex 13mm',
+  'Insu Kflex Vidoflex 19mm',
+  'Insu Kflex Vidoflex 25mm',
+  'Insu TF 6mm',
+  'Insu TF 9mm',
+  'Insu TF 13mm',
+  'Insu TF 19mm',
+  'Insu TF 25mm',
+  'Insu XLPE Thermal 6mm',
+  'Insu XLPE Thermal 8mm',
+  'Insu XLPE Thermal 9mm',
+  'Insu XLPE Thermal 12mm',
+  'Insu XLPE Thermal 13mm',
+  'Insu XLPE Thermal 15mm',
+  'Insu XLPE Thermal 19mm',
+  'Insu XLPE Thermal 20mm',
+  'Insu XLPE Thermal 25mm',
+  'Insu XLPE Acou. 10mm',
+  'Insu XLPE Acou. 15mm',
+  'Insu XLPE Acou. 25mm',
+  'Insu Armasound Acou. 10mm',
+  'Insu Armasound Acou. 15mm',
+  'Insu Armasound Acou. 25mm',
+  'Insu Aerocell Thermal 13mm'
+];
+
+const MAKE_LIST = ['Paramount', 'Vidoflex', 'Acoustic', 'Thermal', 'Supreme', 'Trocellen', 'Kflex', 'Armasound', 'Aerocell'];
+
 const UNIT_LIST = ['sqft', 'sqmt', 'nos', 'rmt', 'kg', 'ltr', 'set', 'pcs', 'mtr'];
 
 // Build a product item row for PO / Billing / Insulation modals
@@ -77,10 +184,59 @@ function buildProductItemRow(containerId, idx, existing = {}) {
     `<option value="${u}" ${existing.unit === u ? 'selected' : ''}>${u}</option>`
   ).join('');
 
-  const hasRate = containerId !== 'po-items-container';
+  if (containerId === 'billing-items-container') {
+    const matOptions = RAW_MATERIALS_LIST.map(m =>
+      `<option value="${m}" ${existing.material === m ? 'selected' : ''}>${m}</option>`
+    ).join('');
+    return `
+      <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+        <div class="pi-combobox" style="position:relative;">
+          <input class="form-input pi-product-search" type="text" placeholder="🔍 Search product..." autocomplete="off" value="${existing.product || ''}" style="font-size:0.85rem; width:100%; box-sizing:border-box;">
+          <input class="pi-product-value" type="hidden" value="${existing.product || ''}">
+        </div>
+        <select class="form-input pi-material" style="font-size:0.85rem;">
+          <option value="">Material</option>
+          ${matOptions}
+        </select>
+        <input class="form-input pi-qty" type="number" placeholder="Qty" min="0" step="0.01" value="${existing.qty || ''}" style="font-size:0.85rem;">
+        <select class="form-input pi-unit" style="font-size:0.85rem;">
+          <option value="">Unit</option>
+          ${unitOptions}
+        </select>
+        <input class="form-input pi-rate" type="number" placeholder="Rate (₹)" min="0" step="0.01" value="${existing.rate || ''}" style="font-size:0.85rem;">
+        <button type="button" class="btn btn-ghost btn-sm pi-remove-btn" style="color:var(--danger); font-size:1.1rem; padding:2px 6px; min-width:28px;" title="Remove">✕</button>
+      </div>
+    `;
+  }
 
+  if (containerId === 'insulation-items-container') {
+    const makeOptions = MAKE_LIST.map(mk =>
+      `<option value="${mk}" ${existing.make === mk ? 'selected' : ''}>${mk}</option>`
+    ).join('');
+    return `
+      <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+        <div class="pi-combobox" style="position:relative;">
+          <input class="form-input pi-product-search" type="text" placeholder="🔍 Search product..." autocomplete="off" value="${existing.product || ''}" style="font-size:0.85rem; width:100%; box-sizing:border-box;">
+          <input class="pi-product-value" type="hidden" value="${existing.product || ''}">
+        </div>
+        <input class="form-input pi-qty" type="number" placeholder="Qty" min="0" step="0.01" value="${existing.qty || ''}" style="font-size:0.85rem;">
+        <select class="form-input pi-unit" style="font-size:0.85rem;">
+          <option value="">Unit</option>
+          ${unitOptions}
+        </select>
+        <select class="form-input pi-make" style="font-size:0.85rem;">
+          <option value="">Make</option>
+          ${makeOptions}
+        </select>
+        <input class="form-input pi-rate" type="number" placeholder="Rate (₹)" min="0" step="0.01" value="${existing.rate || ''}" style="font-size:0.85rem;">
+        <button type="button" class="btn btn-ghost btn-sm pi-remove-btn" style="color:var(--danger); font-size:1.1rem; padding:2px 6px; min-width:28px;" title="Remove">✕</button>
+      </div>
+    `;
+  }
+
+  // Fallback for PO (with rate, no material or make)
   return `
-    <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1fr 1fr ${hasRate ? '1fr' : ''} 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+    <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
       <div class="pi-combobox" style="position:relative;">
         <input class="form-input pi-product-search" type="text" placeholder="🔍 Search product..." autocomplete="off" value="${existing.product || ''}" style="font-size:0.85rem; width:100%; box-sizing:border-box;">
         <input class="pi-product-value" type="hidden" value="${existing.product || ''}">
@@ -90,7 +246,7 @@ function buildProductItemRow(containerId, idx, existing = {}) {
         <option value="">Unit</option>
         ${unitOptions}
       </select>
-      ${hasRate ? `<input class="form-input pi-rate" type="number" placeholder="Rate (₹)" min="0" step="0.01" value="${existing.rate || ''}" style="font-size:0.85rem;">` : ''}
+      <input class="form-input pi-rate" type="number" placeholder="Rate (₹)" min="0" step="0.01" value="${existing.rate || ''}" style="font-size:0.85rem;">
       <button type="button" class="btn btn-ghost btn-sm pi-remove-btn" style="color:var(--danger); font-size:1.1rem; padding:2px 6px; min-width:28px;" title="Remove">✕</button>
     </div>
   `;
@@ -126,7 +282,20 @@ function getPortalDropdown() {
     const item = e.target.closest('.pi-combo-item');
     if (item) {
       e.preventDefault();
-      _selectPortalProduct(item.dataset.value);
+      if (item.classList.contains('add-new-product-option')) {
+        const name = prompt('Enter new product name:');
+        if (name && name.trim()) {
+          const trimmed = name.trim();
+          const isInsulation = _portalActiveInput && _portalActiveInput.closest('#insulation-items-container');
+          const targetList = isInsulation ? INSULATION_PRODUCT_LIST : PRODUCT_LIST;
+          if (!targetList.includes(trimmed)) {
+            targetList.unshift(trimmed); // add to top
+          }
+          _selectPortalProduct(trimmed);
+        }
+      } else {
+        _selectPortalProduct(item.dataset.value);
+      }
     }
   });
 
@@ -145,14 +314,26 @@ function _positionPortalDropdown(inputEl) {
 function _renderPortalDropdown(query) {
   const dd = getPortalDropdown();
   const q = (query || '').toLowerCase().trim();
+  const isInsulation = _portalActiveInput && _portalActiveInput.closest('#insulation-items-container');
+  const sourceList = isInsulation ? INSULATION_PRODUCT_LIST : PRODUCT_LIST;
+
   const filtered = q
-    ? PRODUCT_LIST.filter(p => p.toLowerCase().includes(q))
-    : PRODUCT_LIST;
+    ? sourceList.filter(p => p.toLowerCase().includes(q))
+    : sourceList;
+
+  let html = `
+    <div class="pi-combo-item add-new-product-option"
+      style="padding:9px 14px; font-size:0.84rem; cursor:pointer; font-weight:700; color:#4f46e5; border-bottom:2px solid #e0e7ff; background:#f5f3ff;"
+      onmouseenter="this.style.background='#ede9fe';"
+      onmouseleave="this.style.background='#f5f3ff';">
+      ➕ Add New Product Name
+    </div>
+  `;
 
   if (!filtered.length) {
-    dd.innerHTML = '<div style="padding:10px 14px; font-size:0.83rem; color:#9ca3af;">No products found</div>';
+    dd.innerHTML = html + '<div style="padding:10px 14px; font-size:0.83rem; color:#9ca3af;">No products found</div>';
   } else {
-    dd.innerHTML = filtered.map((p, i) => {
+    dd.innerHTML = html + filtered.map((p, i) => {
       const escaped = p.replace(/"/g, '&quot;');
       const hl = q
         ? p.replace(
@@ -303,9 +484,13 @@ function collectProductItems(containerId) {
     const unit = unitEl ? unitEl.value.trim() : '';
     const rateEl = row.querySelector('.pi-rate');
     const rate = (rateEl && rateEl.value !== '') ? parseFloat(rateEl.value) : null;
+    const materialEl = row.querySelector('.pi-material');
+    const material = materialEl ? materialEl.value.trim() : undefined;
+    const makeEl = row.querySelector('.pi-make');
+    const make = makeEl ? makeEl.value.trim() : undefined;
 
     if (product) {
-      items.push({ product, qty, unit, rate });
+      items.push({ product, qty, unit, rate, material, make });
     }
   });
   return items;
@@ -360,10 +545,18 @@ async function initPlanning() {
 
   setupUploadZone();
   setupSubmitModal();
+  setupPoUpdateModal();
   setupBillingModal();
   setupInsulationModal();
   setupReviewModal();
   setupDetailModal();
+
+  const searchInput = document.getElementById('project-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      renderFilteredList(currentBranchProjects);
+    });
+  }
 
   await loadProjects();
 }
@@ -410,7 +603,21 @@ function handleFileSelected(file) {
   if (sizeEl) sizeEl.textContent = formatFileSize(file.size);
   if (iconEl) iconEl.textContent = getFileIcon(file.name);
 
+  // Initialize Customer category fields
+  const knndRadio = document.getElementById('ctype-knnd');
+  const othersRadio = document.getElementById('ctype-others');
+  const customerInput = document.getElementById('s-customer');
+  if (knndRadio) {
+    knndRadio.checked = true;
+    if (customerInput) {
+      customerInput.value = 'KNND';
+      customerInput.readOnly = true;
+      customerInput.style.background = '#f8fafc';
+    }
+  }
+
   document.getElementById('submit-modal').classList.remove('hidden');
+  fetchNextJobNo();
 }
 
 function formatFileSize(bytes) {
@@ -425,6 +632,32 @@ function getFileIcon(filename) {
   return icons[ext] || '📄';
 }
 
+async function fetchNextJobNo() {
+  const projNameEl = document.getElementById('s-project-name');
+  const placeEl = document.getElementById('s-place');
+  const jobNoEl = document.getElementById('s-job-no');
+  const statusEl = document.getElementById('s-job-no-status');
+  if (!jobNoEl) return;
+
+  const projName = projNameEl ? projNameEl.value.trim() : '';
+  const place = placeEl ? placeEl.value.trim() : '';
+  const branch = currentBranch || (currentUser && currentUser.branch) || 'maalur';
+
+  try {
+    const res = await apiFetch(`/planning/next-job-no?branch=${branch}&project_name=${encodeURIComponent(projName)}&place=${encodeURIComponent(place)}`);
+    if (res && res.ok) {
+      const data = await res.json();
+      jobNoEl.value = data.next_job_no;
+      if (statusEl) {
+        statusEl.textContent = data.is_existing ? 'Reusing Job No (Same Project & Place)' : 'Auto-generated sequence';
+        statusEl.style.color = data.is_existing ? '#059669' : '#6366f1';
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching job number:', err);
+  }
+}
+
 // ─── Submit Modal ─────────────────────────────────────────────────────────────
 function setupSubmitModal() {
   const modal = document.getElementById('submit-modal');
@@ -433,6 +666,35 @@ function setupSubmitModal() {
   const confirmBtn = document.getElementById('submit-modal-confirm');
   const addPoBtn = document.getElementById('add-po-item-btn');
   if (!modal) return;
+
+  // Customer type change listener
+  const knndRadio = document.getElementById('ctype-knnd');
+  const othersRadio = document.getElementById('ctype-others');
+  const customerInput = document.getElementById('s-customer');
+
+  if (knndRadio && othersRadio && customerInput) {
+    knndRadio.addEventListener('change', () => {
+      if (knndRadio.checked) {
+        customerInput.value = 'KNND';
+        customerInput.readOnly = true;
+        customerInput.style.background = '#f8fafc';
+      }
+    });
+    othersRadio.addEventListener('change', () => {
+      if (othersRadio.checked) {
+        customerInput.value = '';
+        customerInput.readOnly = false;
+        customerInput.style.background = '#ffffff';
+        customerInput.focus();
+      }
+    });
+  }
+
+  // Next job no generators listeners
+  const projNameEl = document.getElementById('s-project-name');
+  const placeEl = document.getElementById('s-place');
+  if (projNameEl) projNameEl.addEventListener('input', fetchNextJobNo);
+  if (placeEl) placeEl.addEventListener('input', fetchNextJobNo);
 
   // Add PO item row button
   if (addPoBtn) addPoBtn.addEventListener('click', () => addProductItemRow('po-items-container'));
@@ -454,11 +716,16 @@ function setupSubmitModal() {
     confirmBtn.addEventListener('click', async () => {
       const jobNo = document.getElementById('s-job-no').value.trim();
       const customer = document.getElementById('s-customer').value.trim();
+      const projName = document.getElementById('s-project-name').value.trim();
+      const place = document.getElementById('s-place').value.trim();
+      const location = document.getElementById('s-location').value.trim();
+      const customerType = document.querySelector('input[name="customer_type"]:checked').value;
+
       const errEl = document.getElementById('submit-error');
       const errMsg = document.getElementById('submit-error-msg');
 
-      if (!jobNo || !customer) {
-        errMsg.textContent = 'Job Number and Customer Name are required.';
+      if (!jobNo || !customer || !projName || !place || !location) {
+        errMsg.textContent = 'Job No, Customer, Project Name, Place, and Location are all required.';
         errEl.classList.remove('hidden');
         return;
       }
@@ -474,7 +741,10 @@ function setupSubmitModal() {
         const formData = new FormData();
         formData.append('job_no', jobNo);
         formData.append('customer_name', customer);
-        // Send po_items as JSON; po_quantity summary will be count of items or 0
+        formData.append('customer_type', customerType);
+        formData.append('project_name', projName);
+        formData.append('place', place);
+        formData.append('location', location);
         formData.append('po_quantity', poItems.length || 0);
         formData.append('po_items', JSON.stringify(poItems));
         formData.append('branch', currentBranch || currentUser.branch || 'maalur');
@@ -490,12 +760,15 @@ function setupSubmitModal() {
 
         if (!res.ok) throw new Error(data.error || 'Submission failed');
 
-        showToast(`Project ${jobNo} submitted for approval ✅`, 'success');
+        showToast(`Project ${jobNo} created successfully ✅`, 'success');
         modal.classList.add('hidden');
         selectedFile = null;
         document.getElementById('file-input').value = '';
         document.getElementById('s-job-no').value = '';
         document.getElementById('s-customer').value = '';
+        document.getElementById('s-project-name').value = '';
+        document.getElementById('s-place').value = '';
+        document.getElementById('s-location').value = '';
         document.getElementById('po-items-container').innerHTML = '';
         await loadProjects();
       } catch (err) {
@@ -503,7 +776,7 @@ function setupSubmitModal() {
         errEl.classList.remove('hidden');
       } finally {
         confirmBtn.disabled = false;
-        confirmBtn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Submit for Approval`;
+        confirmBtn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Submit Project`;
       }
     });
   }
@@ -525,182 +798,372 @@ async function loadProjects() {
     allProjects = await res.json();
 
     // Filter by branch
-    let filtered = allProjects.filter(p => p.branch && p.branch.toLowerCase() === targetBranch);
-    if (filtered.length === 0 && allProjects.length > 0 && currentUser.role === 'admin') {
-      filtered = allProjects; // admin fallback
+    let branchProjects = allProjects.filter(p => p.branch && p.branch.toLowerCase() === targetBranch);
+    if (branchProjects.length === 0 && allProjects.length > 0 && currentUser.role === 'admin') {
+      branchProjects = allProjects; // admin fallback
+    }
+    currentBranchProjects = branchProjects;
+
+    // Update bifurcation counts
+    const cntAll = currentBranchProjects.length;
+    const cntKnnd = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd').length;
+    const cntOthers = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others').length;
+
+    const elAll = document.getElementById('cnt-all');
+    const elKnnd = document.getElementById('cnt-knnd');
+    const elOthers = document.getElementById('cnt-others');
+    if (elAll) elAll.textContent = cntAll;
+    if (elKnnd) elKnnd.textContent = cntKnnd;
+    if (elOthers) elOthers.textContent = cntOthers;
+
+    // Attach bifurcation tab listeners if not attached
+    const tabsContainer = document.getElementById('project-bifurcation-tabs');
+    if (tabsContainer) {
+      tabsContainer.querySelectorAll('.bifurcation-tab-btn').forEach(btn => {
+        btn.onclick = () => {
+          tabsContainer.querySelectorAll('.bifurcation-tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.background = 'transparent';
+            b.style.color = '#64748b';
+            b.style.boxShadow = 'none';
+          });
+          btn.classList.add('active');
+          btn.style.background = '#ffffff';
+          btn.style.color = '#4f46e5';
+          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          currentBifurcation = btn.dataset.bifurcation || 'all';
+          renderFilteredList(currentBranchProjects);
+        };
+      });
     }
 
-    if (filtered.length === 0) {
-      listEl.innerHTML = `
-        <div class="no-projects">
-          <div style="font-size:2rem; margin-bottom:10px; opacity:0.4;">📋</div>
-          <p>No projects yet for ${capitalize(targetBranch)} branch.</p>
-        </div>
-      `;
-      return;
-    }
-
-    listEl.innerHTML = filtered.map(p => renderProjectCard(p)).join('');
-    attachProjectCardEvents();
+    renderFilteredList(currentBranchProjects);
   } catch (err) {
     listEl.innerHTML = `<p style="color:var(--danger); padding:16px;">Error: ${err.message}</p>`;
   }
 }
 
-// ─── Render Project Card ────────────────────────────────────────────────────
-function renderProjectCard(p) {
+function renderFilteredList(branchProjects) {
+  const listEl = document.getElementById('projects-list');
+  if (!listEl) return;
+
+  let filtered = branchProjects;
+  if (currentBifurcation === 'knnd') {
+    filtered = branchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd');
+  } else if (currentBifurcation === 'others') {
+    filtered = branchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others');
+  }
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `
+      <div class="no-projects">
+        <div style="font-size:2rem; margin-bottom:10px; opacity:0.4;">📋</div>
+        <p>No projects found under "${currentBifurcation.toUpperCase()}" category.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Group projects by job_no (Job Number)
+  const groups = [];
+  const groupsMap = {};
+  filtered.forEach(p => {
+    if (!groupsMap[p.job_no]) {
+      groupsMap[p.job_no] = {
+        job_no: p.job_no,
+        customer_name: p.customer_name,
+        customer_type: p.customer_type,
+        created_at: p.created_at,
+        branch: p.branch,
+        project_name: p.project_name,
+        place: p.place,
+        status: p.status, // representative status
+        uploads: []
+      };
+      groups.push(groupsMap[p.job_no]);
+    }
+    groupsMap[p.job_no].uploads.push(p);
+  });
+
+  // Assign serial numbers dynamically
+  groups.forEach((g, idx) => {
+    g.serial_no = groups.length - idx;
+  });
+
+  // Filter groups by search query
+  const searchInput = document.getElementById('project-search-input');
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  let displayedGroups = groups;
+  if (query) {
+    const isPureNumber = /^\d+$/.test(query);
+    if (isPureNumber) {
+      displayedGroups = groups.filter(g => String(g.serial_no) === query);
+    } else {
+      displayedGroups = groups.filter(g => {
+        if (`s.no ${g.serial_no}`.includes(query) || `s.no. ${g.serial_no}`.includes(query)) {
+          return true;
+        }
+        return (g.job_no || '').toLowerCase().includes(query) ||
+               (g.project_name || '').toLowerCase().includes(query) ||
+               (g.place || '').toLowerCase().includes(query) ||
+               (g.customer_name || '').toLowerCase().includes(query);
+      });
+    }
+  }
+
+  if (displayedGroups.length === 0) {
+    listEl.innerHTML = `
+      <div class="no-projects" style="text-align:center; padding:32px; color:var(--text-muted);">
+        <div style="font-size:2rem; margin-bottom:10px; opacity:0.4;">🔍</div>
+        <p>No projects match your search.</p>
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = displayedGroups.map((g) => renderProjectCardGroup(g, g.serial_no)).join('');
+  attachProjectCardEvents();
+}
+
+// ─── Render Grouped Project Card ────────────────────────────────────────────
+function renderProjectCardGroup(group, serialNo) {
+  const latestProj = group.uploads[0];
   const statusBadge = {
     pending:  `<span class="badge badge-pending">⏳ Pending Review</span>`,
     approved: `<span class="badge badge-approved">✅ Approved</span>`,
     rejected: `<span class="badge badge-rejected">❌ Rejected</span>`,
     revised:  `<span class="badge badge-revised">🔄 Revision Requested</span>`,
-  }[p.status] || `<span class="badge">${p.status}</span>`;
+  }[group.status] || `<span class="badge">${group.status}</span>`;
 
-  // Admin decision buttons (ONLY show on pending or revised projects)
-  const showAdminDecisionButtons = (currentUser.role === 'admin') && (p.status === 'pending' || p.status === 'revised');
-
-  const adminDecisionBar = showAdminDecisionButtons ? `
-    <div class="admin-review-bar" style="display:flex; align-items:center; gap:10px; padding:12px 18px; background:#f8fafc; border-top:1.5px solid var(--border); flex-wrap:wrap;">
-      <span style="font-size:0.85rem; font-weight:700; color:var(--text-second); text-transform:uppercase; letter-spacing:0.04em;">Admin Action:</span>
-      <button class="btn btn-success btn-sm" data-id="${p.id}" data-action="quick-approve">
-        ✅ Approve
-      </button>
-      <button class="btn btn-revise btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="quick-revise">
-        🔄 Revise
-      </button>
-      <button class="btn btn-danger btn-sm" data-id="${p.id}" data-action="quick-reject">
-        ❌ Reject
-      </button>
-    </div>
-  ` : '';
-
-  // Revise remark banner
-  const reviseBanner = (p.status === 'revised' && p.revise_remark)
-    ? `<div class="revise-remark-banner">
-        <div class="revise-remark-banner-icon">🔄</div>
-        <div class="revise-remark-banner-text"><strong>Revision note:</strong> ${escapeHtml(p.revise_remark)}</div>
-      </div>` : '';
-
-  // Drawing pill
-  const drawingPill = p.drawing_name
-    ? `<span class="drawing-pill" data-file="${p.drawing_path}" data-name="${escapeHtml(p.drawing_name)}">
-        ${getFileIcon(p.drawing_name)} ${escapeHtml(p.drawing_name)}
-      </span>` : `<span style="font-size:0.78rem; color:var(--text-muted);">No file attached</span>`;
-
-  // Quantities Bar logic
-  let qtyBar = '';
-  if (p.status === 'approved') {
-    // Parse stored JSON items (with legacy single field fallback)
-    const billingItems  = safeParseItems(p.billing_items, p.billing_qty, p.billing_unit, p.billing_rate, 'Billing Item');
-    const insulationItems = safeParseItems(p.insulation_items, p.insulation_qty, p.insulation_unit, p.insulation_rate, 'Insulation Item');
-    const billingDoneItems = billingItems.length > 0;
-    const insulationDoneItems = insulationItems.length > 0;
-
-    const buildItemsSummary = (items, icon) =>
-      items.map(it => `<div style="display:flex; align-items:center; gap:6px;"><span style="font-size:0.95rem;">${icon}</span> <strong style="color:var(--text-primary); font-weight:600;">${escapeHtml(it.product)}:</strong> <span style="font-weight:700; color:var(--text-primary);">${it.qty ?? '—'}</span> <span style="color:var(--text-second);">${escapeHtml(it.unit || '')}</span> ${it.rate ? `<span style="color:var(--text-second);">@ ₹${it.rate}</span>` : ''}</div>`).join('');
-
-    if (currentUser.role === 'planning') {
-      const billingContent = billingDoneItems
-        ? `<div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%; gap:12px; font-size:0.88rem; line-height:1.8;">
-             <div style="display:flex; flex-direction:column; gap:3px;">${buildItemsSummary(billingItems, '💼')}</div>
-             <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="billing" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
-           </div>`
-        : `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="billing" style="font-size:0.85rem;">💼 Enter Billing Qty</button>`;
-
-      const insulationContent = insulationDoneItems
-        ? `<div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%; gap:12px; font-size:0.88rem; line-height:1.8;">
-             <div style="display:flex; flex-direction:column; gap:3px;">${buildItemsSummary(insulationItems, '🧱')}</div>
-             <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="insulation" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
-           </div>`
-        : `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="insulation" style="font-size:0.85rem;">🧱 Enter Insulation Qty</button>`;
-
-      qtyBar = `
-        <div class="qty-actions-bar" style="display:flex; gap:16px; padding:12px 18px; background:var(--success-bg); border-top:1.5px solid #bbf7d0; align-items:flex-start;">
-          <span class="qty-actions-label" style="font-size:0.9rem; font-weight:700; color:var(--success); padding-top:2px;">Quantities:</span>
-          <div style="display:flex; flex-direction:column; gap:10px; flex:1;">
-            ${billingContent}
-            ${insulationContent}
-          </div>
-        </div>
-      `;
-    } else {
-      // Admin / Manager: READ-ONLY
-      const billingDisplay = billingDoneItems
-        ? `<div style="display:flex; flex-direction:column; gap:3px; font-size:0.88rem; line-height:1.8;">${buildItemsSummary(billingItems, '💼')}</div>`
-        : `<div style="font-size:0.85rem; color:#94a3b8; font-weight:500;">Billing qty pending</div>`;
-
-      const insulationDisplay = insulationDoneItems
-        ? `<div style="display:flex; flex-direction:column; gap:3px; font-size:0.88rem; line-height:1.8;">${buildItemsSummary(insulationItems, '🧱')}</div>`
-        : `<div style="font-size:0.85rem; color:#94a3b8; font-weight:500;">Insulation qty pending</div>`;
-
-      const adminUnlockBtn = (currentUser.role === 'admin' && (billingDoneItems || insulationDoneItems))
-        ? `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-action="admin-unlock" style="font-size:0.8rem;">🔓 Unlock Edit for Planning</button>` : '';
-
-      qtyBar = `
-        <div class="qty-actions-bar" style="display:flex; gap:16px; padding:12px 18px; background:var(--success-bg); border-top:1.5px solid #bbf7d0; align-items:flex-start;">
-          <span class="qty-actions-label" style="font-size:0.9rem; font-weight:700; color:var(--success); padding-top:2px;">Quantities:</span>
-          <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-            ${billingDisplay}
-            ${insulationDisplay}
-          </div>
-          ${adminUnlockBtn}
-        </div>
-      `;
+  const getRomanNumeral = (num) => {
+    const roman = { M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1 };
+    let str = '';
+    for (let i in roman) {
+      while (num >= roman[i]) {
+        str += i;
+        num -= roman[i];
+      }
     }
-  }
+    return str;
+  };
 
-  return `
-    <div class="project-card" data-status="${p.status}" data-id="${p.id}">
-      <div class="project-card-header">
-        <div class="project-card-meta">
-          <div class="project-job-no">Job# <span>${escapeHtml(p.job_no)}</span></div>
-          <div class="project-customer">📍 ${escapeHtml(p.customer_name)}</div>
-          <div class="project-date">🕒 ${formatDate(p.created_at)}</div>
-          <span style="font-size:0.75rem; color:var(--text-second); background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:2px 9px; text-transform:uppercase; font-weight:700;">${capitalize(p.branch)}</span>
-        </div>
-        <div class="project-card-actions">
-          ${statusBadge}
-          <button class="btn btn-outline btn-sm" data-id="${p.id}" data-action="view-detail">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            Details
-          </button>
-        </div>
+  // Generate HTML for each upload location under this job number
+  const uploadsHtml = group.uploads.map((p, uIdx) => {
+    const isAdminHolder = currentUser.role === 'admin' || currentUser.hasAdminPower;
+    const showAdminDecisionButtons = isAdminHolder && (p.status === 'pending' || p.status === 'revised');
+
+    const adminDecisionBar = showAdminDecisionButtons ? `
+      <div class="admin-review-bar" style="display:flex; align-items:center; gap:10px; padding:12px 18px; background:#f8fafc; border-top:1.5px solid var(--border); flex-wrap:wrap; border-radius: 8px; margin-top: 8px;">
+        <span style="font-size:0.85rem; font-weight:700; color:var(--text-second); text-transform:uppercase; letter-spacing:0.04em;">Admin Action:</span>
+        <button class="btn btn-success btn-sm" data-id="${p.id}" data-action="quick-approve">
+          ✅ Approve
+        </button>
+        <button class="btn btn-revise btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="quick-revise">
+          🔄 Revise
+        </button>
+        <button class="btn btn-danger btn-sm" data-id="${p.id}" data-action="quick-reject">
+          ❌ Reject
+        </button>
       </div>
+    ` : '';
 
-      ${reviseBanner}
+    const reviseBanner = (p.status === 'revised' && p.revise_remark)
+      ? `<div class="revise-remark-banner" style="border-radius: 8px; margin-top: 6px;">
+          <div class="revise-remark-banner-icon">🔄</div>
+          <div class="revise-remark-banner-text"><strong>Revision note:</strong> ${escapeHtml(p.revise_remark)}</div>
+        </div>` : '';
 
-      <div class="project-card-body">
-        <div class="project-detail-grid">
+    const drawingPill = p.drawing_name
+      ? `<span class="drawing-pill" data-file="${p.drawing_path}" data-name="${escapeHtml(p.drawing_name)}">
+          ${getFileIcon(p.drawing_name)} ${escapeHtml(p.drawing_name)}
+        </span>` : `<span style="font-size:0.78rem; color:var(--text-muted);">No file attached</span>`;
+
+    let qtyBar = '';
+    if (p.status === 'approved') {
+      const billingItems  = safeParseItems(p.billing_items, p.billing_qty, p.billing_unit, p.billing_rate, 'Billing Item');
+      const insulationItems = safeParseItems(p.insulation_items, p.insulation_qty, p.insulation_unit, p.insulation_rate, 'Insulation Item');
+      const billingDoneItems = billingItems.length > 0;
+      const insulationDoneItems = insulationItems.length > 0;
+
+      const buildItemsSummary = (items, icon, type) =>
+        items.map(it => {
+          if (type === 'billing') {
+            const matSpan = it.material ? ` <span style="font-size:0.82rem; color:#0369a1; background:#e0f2fe; padding:1px 6px; border-radius:4px; font-weight:600; margin:0 4px;">${escapeHtml(it.material)}</span>` : '';
+            const rateSpan = it.rate ? ` <span style="color:var(--text-second);">@ ₹${it.rate}</span>` : '';
+            return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-size:0.95rem;">${icon}</span> <strong style="color:var(--text-primary); font-weight:600;">${escapeHtml(it.product)}</strong>${matSpan} <span style="font-weight:700; color:var(--text-primary);">${it.qty ?? '—'}</span> <span style="color:var(--text-second);">${escapeHtml(it.unit || '')}</span>${rateSpan}</div>`;
+          }
+          let extra = '';
+          if (type === 'insulation' && it.make) {
+            extra = ` <span style="font-size:0.75rem; color:#475569; background:#f1f5f9; padding:1px 4px; border-radius:3px; font-weight:normal; margin-left:4px;">[Make: ${escapeHtml(it.make)}]</span>`;
+          }
+          return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-size:0.95rem;">${icon}</span> <strong style="color:var(--text-primary); font-weight:600;">${escapeHtml(it.product)}</strong>${extra}: <span style="font-weight:700; color:var(--text-primary);">${it.qty ?? '—'}</span> <span style="color:var(--text-second);">${escapeHtml(it.unit || '')}</span> ${it.rate ? `<span style="color:var(--text-second);">@ ₹${it.rate}</span>` : ''}</div>`;
+        }).join('');
+
+      const areaListPill = p.area_list_name
+        ? `<div style="margin-top: 6px;"><span class="drawing-pill" data-file="${p.area_list_path}" data-name="${escapeHtml(p.area_list_name)}" style="font-size:0.8rem; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:3px 8px; border-radius:4px; cursor:pointer;">📄 Area List File: ${escapeHtml(p.area_list_name)}</span></div>` : '';
+      const numberingPill = p.numbering_drawing_name
+        ? `<div style="margin-top: 6px;"><span class="drawing-pill" data-file="${p.numbering_drawing_path}" data-name="${escapeHtml(p.numbering_drawing_name)}" style="font-size:0.8rem; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:3px 8px; border-radius:4px; cursor:pointer;">📄 Numbering Drawing File: ${escapeHtml(p.numbering_drawing_name)}</span></div>` : '';
+
+      if (currentUser.role === 'planning') {
+        const billingContent = billingDoneItems
+          ? `<div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%; gap:12px; font-size:0.88rem; line-height:1.8;">
+               <div style="display:flex; flex-direction:column; gap:3px;">
+                 ${buildItemsSummary(billingItems, '💼', 'billing')}
+                 ${areaListPill}
+                 ${numberingPill}
+               </div>
+               <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="billing" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
+             </div>`
+          : `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="billing" style="font-size:0.85rem;">💼 Enter Billing Qty</button>`;
+
+        const insulationContent = insulationDoneItems
+          ? `<div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%; gap:12px; font-size:0.88rem; line-height:1.8;">
+               <div style="display:flex; flex-direction:column; gap:3px;">${buildItemsSummary(insulationItems, '🧱', 'insulation')}</div>
+               <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="insulation" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
+             </div>`
+          : `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="insulation" style="font-size:0.85rem;">🧱 Enter Insulation Qty</button>`;
+
+        qtyBar = `
+          <div class="qty-actions-bar" style="display:flex; gap:16px; padding:12px 18px; background:var(--success-bg); border-top:1.5px solid #bbf7d0; align-items:flex-start; border-radius: 8px; margin-top: 8px;">
+            <span class="qty-actions-label" style="font-size:0.9rem; font-weight:700; color:var(--success); padding-top:2px;">Quantities:</span>
+            <div style="display:flex; flex-direction:column; gap:10px; flex:1;">
+              ${billingContent}
+              ${insulationContent}
+            </div>
+          </div>
+        `;
+      } else {
+        const billingDisplay = billingDoneItems
+          ? `<div style="display:flex; flex-direction:column; gap:3px; font-size:0.88rem; line-height:1.8;">
+               ${buildItemsSummary(billingItems, '💼', 'billing')}
+               ${areaListPill}
+               ${numberingPill}
+             </div>`
+          : `<div style="font-size:0.85rem; color:#94a3b8; font-weight:500;">Billing qty pending</div>`;
+
+        const insulationDisplay = insulationDoneItems
+          ? `<div style="display:flex; flex-direction:column; gap:3px; font-size:0.88rem; line-height:1.8;">${buildItemsSummary(insulationItems, '🧱', 'insulation')}</div>`
+          : `<div style="font-size:0.85rem; color:#94a3b8; font-weight:500;">Insulation qty pending</div>`;
+
+        const adminUnlockBtn = (isAdminHolder && (billingDoneItems || insulationDoneItems))
+          ? `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-action="admin-unlock" style="font-size:0.8rem;">🔓 Unlock Edit</button>` : '';
+
+        qtyBar = `
+          <div class="qty-actions-bar" style="display:flex; gap:16px; padding:12px 18px; background:var(--success-bg); border-top:1.5px solid #bbf7d0; align-items:flex-start; border-radius: 8px; margin-top: 8px;">
+            <span class="qty-actions-label" style="font-size:0.9rem; font-weight:700; color:var(--success); padding-top:2px;">Quantities:</span>
+            <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+              ${billingDisplay}
+              ${insulationDisplay}
+            </div>
+            ${adminUnlockBtn}
+          </div>
+        `;
+      }
+    }
+
+    const poItems = safeParseItems(p.po_items, p.po_quantity, null, null, 'PO Item');
+    const poItemsSummary = poItems.map(it => `<div style="font-size:0.82rem; color:var(--text-primary);"><strong style="font-weight:600;">${escapeHtml(it.product)}:</strong> ${it.qty ?? '—'} ${escapeHtml(it.unit || '')} ${it.rate ? `@ ₹${it.rate}` : ''}</div>`).join('');
+    const poDisplay = poItems.length > 0
+      ? `<div style="display:flex; flex-direction:column; gap:3px;">${poItemsSummary}</div>`
+      : `<span style="font-size:0.8rem; color:var(--text-muted);">No PO items entered yet</span>`;
+
+    const showPoUpdateBtn = (p.status === 'approved') && (currentUser.role === 'planning' || currentUser.role === 'admin' || currentUser.hasAdminPower);
+    const poUpdateBtn = showPoUpdateBtn
+      ? `<div style="margin-top:6px;"><button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="po-update" style="font-size:0.78rem; padding:3px 8px;">📝 Update PO</button></div>`
+      : '';
+
+    return `
+      <div style="padding: 16px; border: 1.5px solid var(--border); border-radius: 8px; background: #ffffff; margin-bottom: 12px; box-shadow: var(--shadow-sm);">
+        <h4 style="margin: 0 0 10px; color: var(--accent); font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+          📍 ${getRomanNumeral(uIdx + 1)}. ${escapeHtml(p.location || 'Location')}
+        </h4>
+        <div class="project-detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
           <div class="project-detail-item">
-            <div class="project-detail-label">PO Quantity</div>
-            <div class="project-detail-value">${p.po_quantity ?? '—'}</div>
+            <div class="project-detail-label">PO Products &amp; Quantities</div>
+            <div class="project-detail-value">${poDisplay} ${poUpdateBtn}</div>
           </div>
           <div class="project-detail-item">
-            <div class="project-detail-label">Drawing</div>
+            <div class="project-detail-label">Drawing File</div>
             <div class="project-detail-value">${drawingPill}</div>
           </div>
           <div class="project-detail-item">
             <div class="project-detail-label">Submitted By</div>
-            <div class="project-detail-value">${escapeHtml(p.submitted_by_name || '—')}</div>
+            <div class="project-detail-value" style="font-size:0.78rem;">${escapeHtml(p.submitted_by_name || '—')}</div>
           </div>
-          <div class="project-detail-item">
-            <div class="project-detail-label">Last Updated</div>
-            <div class="project-detail-value">${formatDate(p.updated_at)}</div>
-          </div>
+        </div>
+        ${reviseBanner}
+        ${qtyBar}
+        ${adminDecisionBar}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="project-card" style="margin-bottom: 18px; border-left: 5px solid ${group.status === 'approved' ? '#10b981' : '#f59e0b'}; padding: 0;">
+      <!-- Single Line Header -->
+      <div class="project-card-header card-toggle-trigger" data-job="${group.job_no}" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; cursor: pointer; user-select: none; background: #f8fafc; border-bottom: 1px solid var(--border);">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-primary);">
+          <span style="font-weight: 800; background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">S.No ${serialNo}</span>
+          <span style="font-family: monospace; font-weight: 700; color: var(--accent); letter-spacing: 0.3px;">#${escapeHtml(group.job_no)}</span>
+          <span style="font-weight: 700;">🏢 ${escapeHtml(group.customer_name)}</span>
+          <span style="color: var(--text-second);">📅 ${new Date(group.created_at).toLocaleDateString('en-IN')}</span>
+          <span class="badge" style="background:#e0e7ff; color:#4338ca; text-transform:uppercase; font-size:0.7rem; font-weight:700;">${(group.branch || '').toUpperCase()}</span>
+          <span style="font-weight: 600; color: var(--text-second);">📁 ${escapeHtml(group.project_name)}</span>
+          <span style="color: var(--text-muted);">📍 ${escapeHtml(group.place)}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          ${statusBadge}
+          <button class="btn btn-outline btn-sm excel-dl-btn" data-id="${latestProj.id}" style="font-size: 0.75rem; padding: 3px 8px;">📊 Download Excel</button>
+          <span class="toggle-icon-indicator" style="font-size: 0.8rem; color: var(--text-second); transition: transform 0.2s;">▼</span>
         </div>
       </div>
 
-      ${qtyBar}
-      ${adminDecisionBar}
+      <!-- Collapsible Body -->
+      <div class="project-card-body-collapsible hidden" id="body-job-${group.job_no}" style="padding: 16px 20px; background: #ffffff; border-top: 1px solid var(--border);">
+        ${uploadsHtml}
+      </div>
     </div>
   `;
 }
 
 // ─── Attach Project Card Events ─────────────────────────────────────────────
 function attachProjectCardEvents() {
+  // Toggle collapse logic
+  document.querySelectorAll('.card-toggle-trigger').forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      // Prevent toggle if Excel button clicked
+      if (e.target.closest('.excel-dl-btn')) return;
+
+      const jobNo = trigger.dataset.job;
+      const body = document.getElementById(`body-job-${jobNo}`);
+      const indicator = trigger.querySelector('.toggle-icon-indicator');
+      if (body) {
+        const isHidden = body.classList.contains('hidden');
+        if (isHidden) {
+          body.classList.remove('hidden');
+          if (indicator) indicator.style.transform = 'rotate(180deg)';
+        } else {
+          body.classList.add('hidden');
+          if (indicator) indicator.style.transform = 'rotate(0deg)';
+        }
+      }
+    });
+  });
+
+  // Excel download button
+  document.querySelectorAll('.excel-dl-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const p = allProjects.find(x => String(x.id) === String(id));
+      if (p) downloadProjectExcel(p);
+    });
+  });
+
   // Drawing pill → view/download
   document.querySelectorAll('.drawing-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
+    pill.addEventListener('click', (e) => {
+      e.stopPropagation();
       const filename = pill.dataset.file;
       if (!filename) return;
       apiFetch(`/planning/drawing/${filename}`).then(r => {
@@ -728,13 +1191,21 @@ function attachProjectCardEvents() {
       const existing = safeParseItems(p && p.billing_items, p && p.billing_qty, p && p.billing_unit, p && p.billing_rate, 'Billing Item');
       populateProductItems('billing-items-container', existing);
       if (existing.length === 0) addProductItemRow('billing-items-container');
+      
+      // Clear file inputs names
+      document.getElementById('area-list-name').textContent = p.area_list_name ? p.area_list_name : 'No file chosen';
+      document.getElementById('numbering-drawing-name').textContent = p.numbering_drawing_name ? p.numbering_drawing_name : 'No file chosen';
+
       document.getElementById('billing-modal').classList.remove('hidden');
     });
   });
 
   // Add Billing item button
   const addBillingBtn = document.getElementById('add-billing-item-btn');
-  if (addBillingBtn) addBillingBtn.addEventListener('click', () => addProductItemRow('billing-items-container'));
+  if (addBillingBtn) {
+    addBillingBtn.replaceWith(addBillingBtn.cloneNode(true));
+    document.getElementById('add-billing-item-btn').addEventListener('click', () => addProductItemRow('billing-items-container'));
+  }
 
   // Insulation quantity button
   document.querySelectorAll('[data-action="insulation"]').forEach(btn => {
@@ -752,7 +1223,31 @@ function attachProjectCardEvents() {
 
   // Add Insulation item button
   const addInsulationBtn = document.getElementById('add-insulation-item-btn');
-  if (addInsulationBtn) addInsulationBtn.addEventListener('click', () => addProductItemRow('insulation-items-container'));
+  if (addInsulationBtn) {
+    addInsulationBtn.replaceWith(addInsulationBtn.cloneNode(true));
+    document.getElementById('add-insulation-item-btn').addEventListener('click', () => addProductItemRow('insulation-items-container'));
+  }
+
+  // PO Update button
+  document.querySelectorAll('[data-action="po-update"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const el = e.currentTarget;
+      currentProjectId = el.getAttribute('data-id');
+      document.getElementById('po-update-job-no').textContent = '#' + el.getAttribute('data-job');
+      const p = allProjects.find(x => String(x.id) === String(currentProjectId));
+      const existing = safeParseItems(p && p.po_items, p && p.po_quantity, null, null, 'PO Item');
+      populateProductItems('po-update-items-container', existing);
+      if (existing.length === 0) addProductItemRow('po-update-items-container');
+      document.getElementById('po-update-modal').classList.remove('hidden');
+    });
+  });
+
+  // Add PO Update item button
+  const addPoUpdateBtn = document.getElementById('add-po-update-item-btn');
+  if (addPoUpdateBtn) {
+    addPoUpdateBtn.replaceWith(addPoUpdateBtn.cloneNode(true));
+    document.getElementById('add-po-update-item-btn').addEventListener('click', () => addProductItemRow('po-update-items-container'));
+  }
 
   // Admin Quick Approve
   document.querySelectorAll('[data-action="quick-approve"]').forEach(btn => {
@@ -760,7 +1255,7 @@ function attachProjectCardEvents() {
       const id = e.currentTarget.getAttribute('data-id');
       const res = await apiFetch(`/planning/projects/${id}/review`, {
         method: 'PATCH',
-        body: JSON.stringify({ action: 'approved', remark: '' }),
+        body: JSON.stringify({ action: 'approved' }),
       });
       if (res && res.ok) {
         showToast('Project approved ✅', 'success');
@@ -772,9 +1267,8 @@ function attachProjectCardEvents() {
   // Admin Quick Revise
   document.querySelectorAll('[data-action="quick-revise"]').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const el = e.currentTarget;
-      currentProjectId = el.getAttribute('data-id');
-      document.getElementById('review-job-no').textContent = '#' + el.getAttribute('data-job');
+      currentProjectId = e.currentTarget.getAttribute('data-id');
+      document.getElementById('review-job-no').textContent = '#' + e.currentTarget.getAttribute('data-job');
       document.getElementById('review-remark').value = '';
       document.getElementById('review-modal').classList.remove('hidden');
     });
@@ -783,10 +1277,11 @@ function attachProjectCardEvents() {
   // Admin Quick Reject
   document.querySelectorAll('[data-action="quick-reject"]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
+      if (!confirm('Reject this project drawing?')) return;
       const id = e.currentTarget.getAttribute('data-id');
       const res = await apiFetch(`/planning/projects/${id}/review`, {
         method: 'PATCH',
-        body: JSON.stringify({ action: 'rejected', remark: '' }),
+        body: JSON.stringify({ action: 'rejected' }),
       });
       if (res && res.ok) {
         showToast('Project rejected ❌', 'error');
@@ -795,7 +1290,7 @@ function attachProjectCardEvents() {
     });
   });
 
-  // Request Edit button (Planning user)
+  // Request quantity edit
   document.querySelectorAll('[data-action="request-edit"]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const el = e.currentTarget;
@@ -840,6 +1335,44 @@ function attachProjectCardEvents() {
   });
 }
 
+// ─── Update PO Modal ──────────────────────────────────────────────────────────
+function setupPoUpdateModal() {
+  const saveBtn = document.getElementById('po-update-save-btn');
+  if (!saveBtn) return;
+  saveBtn.addEventListener('click', async () => {
+    const errEl = document.getElementById('po-update-error');
+    const errMsg = document.getElementById('po-update-error-msg');
+
+    const items = collectProductItems('po-update-items-container');
+    if (items.length === 0) {
+      errMsg.textContent = 'Please select/enter at least one product name.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    errEl.classList.add('hidden');
+
+    try {
+      const res = await apiFetch(`/planning/projects/${currentProjectId}/po`, {
+        method: 'PATCH',
+        body: JSON.stringify({ po_items: items }),
+      });
+      const data = res ? await res.json() : null;
+
+      if (res && res.ok) {
+        showToast('PO Details updated successfully ✅', 'success');
+        document.getElementById('po-update-modal').classList.add('hidden');
+        await loadProjects();
+      } else {
+        errMsg.textContent = (data && data.error) || 'Failed to update PO details.';
+        errEl.classList.remove('hidden');
+      }
+    } catch (err) {
+      errMsg.textContent = err.message || 'Error updating PO details.';
+      errEl.classList.remove('hidden');
+    }
+  });
+}
+
 // ─── Billing Modal ────────────────────────────────────────────────────────────
 function setupBillingModal() {
   const saveBtn = document.getElementById('billing-save-btn');
@@ -854,18 +1387,55 @@ function setupBillingModal() {
       errEl.classList.remove('hidden');
       return;
     }
+
+    const areaListInput = document.getElementById('billing-area-list');
+    const numberingInput = document.getElementById('billing-numbering-drawing');
+
+    const project = allProjects.find(x => String(x.id) === String(currentProjectId));
+    const hasExistingFiles = project && project.area_list_path && project.numbering_drawing_path;
+
+    const areaFile = areaListInput && areaListInput.files ? areaListInput.files[0] : null;
+    const numberingFile = numberingInput && numberingInput.files ? numberingInput.files[0] : null;
+
+    if (!hasExistingFiles) {
+      if (!areaFile) {
+        errMsg.textContent = 'Area List xlsx file is mandatory.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (!numberingFile) {
+        errMsg.textContent = 'Numbering Drawing xlsx file is mandatory.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+    }
+
     errEl.classList.add('hidden');
 
     try {
-      const res = await apiFetch(`/planning/projects/${currentProjectId}/quantities`, {
+      const formData = new FormData();
+      formData.append('billing_items', JSON.stringify(items));
+      if (areaFile) formData.append('area_list', areaFile);
+      if (numberingFile) formData.append('numbering_drawing', numberingFile);
+
+      const token = getToken();
+      const res = await fetch(`/api/planning/projects/${currentProjectId}/quantities`, {
         method: 'PATCH',
-        body: JSON.stringify({ billing_items: items }),
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
       });
       const data = res ? await res.json() : null;
 
       if (res && res.ok) {
         showToast('Billing quantities saved ✅', 'success');
         document.getElementById('billing-modal').classList.add('hidden');
+        // Clear file inputs
+        if (areaListInput) areaListInput.value = '';
+        if (numberingInput) numberingInput.value = '';
+        const aName = document.getElementById('area-list-name');
+        const nName = document.getElementById('numbering-drawing-name');
+        if (aName) aName.textContent = 'No file chosen';
+        if (nName) nName.textContent = 'No file chosen';
         await loadProjects();
       } else {
         errMsg.textContent = (data && data.error) || 'Failed to save billing quantities.';

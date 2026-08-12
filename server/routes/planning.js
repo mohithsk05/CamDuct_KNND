@@ -40,27 +40,78 @@ function notifyAdminAndManagers(projectId, branch, message) {
 
 // ─── Routes ──────────────────────────────────────────────────────────────
 
+// GET /api/planning/next-job-no — Generate next sequence or reuse existing job number
+router.get('/next-job-no', auth, (req, res) => {
+  try {
+    const branch = req.query.branch || req.user.branch || 'maalur';
+    const project_name = (req.query.project_name || '').trim();
+    const place = (req.query.place || '').trim();
+
+    // If there's an existing project with same name and place in this branch, reuse its job number
+    if (project_name && place) {
+      const existing = db.prepare('SELECT job_no FROM projects WHERE LOWER(branch) = LOWER(?) AND LOWER(project_name) = LOWER(?) AND LOWER(place) = LOWER(?)').get(branch, project_name, place);
+      if (existing) {
+        return res.json({ next_job_no: existing.job_no, is_existing: true });
+      }
+    }
+
+    // Generate next sequential number
+    const prefix = branch.toLowerCase() === 'haryana' ? 'HCD' : 'CD';
+    const yy = new Date().getFullYear().toString().slice(-2); // e.g. "26" for 2026
+    const jobNoPattern = `${prefix}-KNND-${yy}-`;
+
+    // Find all projects with this prefix & year
+    const projects = db.prepare('SELECT job_no FROM projects WHERE job_no LIKE ?').all(`${jobNoPattern}%`);
+    let maxSeq = 0;
+    projects.forEach(p => {
+      const parts = p.job_no.split('-');
+      const seq = parseInt(parts[parts.length - 1]);
+      if (!isNaN(seq) && seq > maxSeq) {
+        maxSeq = seq;
+      }
+    });
+
+    const nextSeq = String(maxSeq + 1).padStart(3, '0');
+    res.json({ next_job_no: `${jobNoPattern}${nextSeq}`, is_existing: false });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/planning/submit — Upload drawing & create project
 router.post('/submit', auth, upload.single('drawing'), (req, res) => {
   try {
-    const { job_no, customer_name, po_quantity } = req.body;
+    const { job_no, customer_name, customer_type, project_name, place, location, po_quantity } = req.body;
     const branch = req.user.branch || req.body.branch || 'maalur';
 
-    if (!job_no || !customer_name || !po_quantity) {
-      return res.status(400).json({ error: 'job_no, customer_name and po_quantity are required' });
+    if (!job_no || !customer_name || !customer_type || !project_name || !place || !location) {
+      return res.status(400).json({ error: 'Job No, Customer Category, Customer Name, Project Name, Place, and Location are required' });
     }
-
-    // Check duplicate job_no within branch
-    const existing = db.prepare('SELECT id FROM projects WHERE job_no = ? AND LOWER(branch) = LOWER(?)').get(job_no, branch);
-    if (existing) return res.status(409).json({ error: 'Job number already exists for this branch' });
 
     const drawingPath = req.file ? req.file.filename : null;
     const drawingName = req.file ? req.file.originalname : null;
 
+    // KNND is auto-approved, Others is pending
+    const status = customer_type === 'knnd' ? 'approved' : 'pending';
+
     const result = db.prepare(`
-      INSERT INTO projects (job_no, branch, customer_name, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(job_no, branch.toLowerCase(), customer_name, parseFloat(po_quantity) || 0, req.body.po_items || null, drawingPath, drawingName, 'pending', req.user.id);
+      INSERT INTO projects (job_no, branch, customer_name, customer_type, project_name, place, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      job_no,
+      branch.toLowerCase(),
+      customer_name,
+      customer_type,
+      project_name,
+      place,
+      location,
+      parseFloat(po_quantity) || 0,
+      req.body.po_items || null,
+      drawingPath,
+      drawingName,
+      status,
+      req.user.id
+    );
 
     const projectId = result.lastInsertRowid;
     notifyAdminAndManagers(
@@ -146,28 +197,102 @@ router.patch('/projects/:id/review', auth, (req, res) => {
       : `🔄 Job #${project.job_no} requires REVISION.${remark ? ' Remark: ' + remark : ''}`;
 
   db.prepare(`INSERT INTO notifications (role, branch, type, message, project_id) VALUES ('planning', ?, 'review', ?, ?)`).run(project.branch, msg, project.id);
+  db.prepare(`INSERT INTO notifications (role, branch, type, message, project_id) VALUES ('manager', ?, 'planning', ?, ?)`).run(project.branch, msg, project.id);
+
+  const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+  res.json({ success: true, project: updated });
+});
+
+// PATCH /api/planning/projects/:id/po — Update PO items (planning dept / admin)
+router.patch('/projects/:id/po', auth, (req, res) => {
+  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+
+  const { po_items } = req.body;
+  if (!po_items) return res.status(400).json({ error: 'po_items are required' });
+
+  let items;
+  try {
+    items = typeof po_items === 'string' ? JSON.parse(po_items) : po_items;
+  } catch(e) {
+    items = po_items;
+  }
+
+  const pi = JSON.stringify(items);
+  const totalQty = items.length || 0;
+
+  db.prepare('UPDATE projects SET po_items = ?, po_quantity = ?, updated_at = datetime(\'now\') WHERE id = ?')
+    .run(pi, totalQty, req.params.id);
 
   const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
   res.json({ success: true, project: updated });
 });
 
 // PATCH /api/planning/projects/:id/quantities — Save billing & insulation qty (planning dept)
-router.patch('/projects/:id/quantities', auth, (req, res) => {
+router.patch('/projects/:id/quantities', auth, upload.fields([
+  { name: 'area_list', maxCount: 1 },
+  { name: 'numbering_drawing', maxCount: 1 }
+]), (req, res) => {
   const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
   if (!project) return res.status(404).json({ error: 'Project not found' });
   if (project.status !== 'approved') {
     return res.status(400).json({ error: 'Project must be approved before setting quantities' });
   }
 
-  const { billing_items, insulation_items } = req.body;
+  const billing_items_raw = req.body.billing_items;
+  const insulation_items_raw = req.body.insulation_items;
 
-  if (billing_items !== undefined) {
+  // Edit locking validation
+  if (billing_items_raw !== undefined && project.billing_items && project.billing_items !== '[]') {
+    return res.status(403).json({ error: 'Billing quantities are locked. Click "Request Edit" to modify.' });
+  }
+  if (insulation_items_raw !== undefined && project.insulation_items && project.insulation_items !== '[]') {
+    return res.status(403).json({ error: 'Insulation quantities are locked. Click "Request Edit" to modify.' });
+  }
+
+  if (billing_items_raw !== undefined) {
+    let billing_items;
+    try {
+      billing_items = typeof billing_items_raw === 'string' ? JSON.parse(billing_items_raw) : billing_items_raw;
+    } catch(e) {
+      billing_items = billing_items_raw;
+    }
+
+    const areaFile = req.files && req.files['area_list'] ? req.files['area_list'][0] : null;
+    const numberingFile = req.files && req.files['numbering_drawing'] ? req.files['numbering_drawing'][0] : null;
+
+    if (!project.area_list_path || !project.numbering_drawing_path) {
+      if (!areaFile || !numberingFile) {
+        return res.status(400).json({ error: 'Area List (.xlsx) and Numbering Drawing (.xlsx) are both mandatory.' });
+      }
+    }
+
+    const realProject = db.data.projects.find(x => x.id == req.params.id);
+    if (realProject) {
+      if (areaFile) {
+        realProject.area_list_path = `/uploads/${areaFile.filename}`;
+        realProject.area_list_name = areaFile.originalname;
+      }
+      if (numberingFile) {
+        realProject.numbering_drawing_path = `/uploads/${numberingFile.filename}`;
+        realProject.numbering_drawing_name = numberingFile.originalname;
+      }
+    }
+
     const bi = JSON.stringify(billing_items);
     const first = (Array.isArray(billing_items) && billing_items[0]) || {};
     db.prepare('UPDATE projects SET billing_items = ?, billing_qty = ?, billing_unit = ?, billing_rate = ?, updated_at = datetime(\'now\') WHERE id = ?')
       .run(bi, first.qty || null, first.unit || null, first.rate || null, req.params.id);
   }
-  if (insulation_items !== undefined) {
+
+  if (insulation_items_raw !== undefined) {
+    let insulation_items;
+    try {
+      insulation_items = typeof insulation_items_raw === 'string' ? JSON.parse(insulation_items_raw) : insulation_items_raw;
+    } catch(e) {
+      insulation_items = insulation_items_raw;
+    }
+
     const ii = JSON.stringify(insulation_items);
     const first = (Array.isArray(insulation_items) && insulation_items[0]) || {};
     db.prepare('UPDATE projects SET insulation_items = ?, insulation_qty = ?, insulation_unit = ?, insulation_rate = ?, updated_at = datetime(\'now\') WHERE id = ?')
@@ -175,6 +300,10 @@ router.patch('/projects/:id/quantities', auth, (req, res) => {
   }
 
   const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+  notifyAdminAndManagers(
+    req.params.id, updated.branch,
+    `Quantities updated: Billing/Insulation details saved for Job #${updated.job_no} (${(updated.branch || '').toUpperCase()})`
+  );
   res.json({ success: true, project: updated });
 });
 
@@ -186,6 +315,7 @@ router.post('/projects/:id/request-edit', auth, (req, res) => {
 
   const msg = `⚠️ Edit Request: Planning requested permission to edit ${field || 'quantity'} for Job #${project.job_no} (${(project.branch || '').toUpperCase()})`;
   db.prepare(`INSERT INTO notifications (role, branch, type, message, project_id) VALUES ('admin', NULL, 'planning', ?, ?)`).run(msg, project.id);
+  db.prepare(`INSERT INTO notifications (role, branch, type, message, project_id) VALUES ('manager', ?, 'planning', ?, ?)`).run(project.branch, msg, project.id);
 
   res.json({ success: true, message: 'Edit request sent to Admin' });
 });
@@ -206,6 +336,9 @@ router.post('/projects/:id/unlock-edit', auth, (req, res) => {
   }
 
   db.prepare(`INSERT INTO notifications (role, branch, type, message, project_id) VALUES ('planning', ?, 'review', ?, ?)`).run(
+    project.branch, `🔓 Admin unlocked quantity edit for Job #${project.job_no}`, project.id
+  );
+  db.prepare(`INSERT INTO notifications (role, branch, type, message, project_id) VALUES ('manager', ?, 'planning', ?, ?)`).run(
     project.branch, `🔓 Admin unlocked quantity edit for Job #${project.job_no}`, project.id
   );
 

@@ -15,7 +15,7 @@ const DEPT_LABELS = {
 };
 
 // Departments that can be power-granted
-const GRANTABLE_DEPTS = ['planning','purchase','consumption','accounts','dispatch'];
+const GRANTABLE_DEPTS = ['planning','purchase','consumption','accounts','dispatch','balance','scrap'];
 
 let currentBranch = null;
 let currentRole = null;
@@ -27,8 +27,12 @@ async function initDashboard(role) {
 
   // Auth guard
   const allowedRoles = role === 'admin' ? ['admin'] : role === 'manager' ? ['manager'] : ['planning','purchase','consumption','accounts','dispatch','security'];
-  const user = requireAuth(allowedRoles);
+  let user = requireAuth(allowedRoles);
   if (!user) return;
+
+  // Refresh user object from server to ensure powerGrants are up to date
+  const freshUser = await refreshUser();
+  if (freshUser) user = freshUser;
 
   setupLogout();
   populateTopbar(user);
@@ -130,7 +134,7 @@ async function setupManagerTiles(user) {
       const all = await res.json();
       // Power grants for 'manager' role in this branch
       managerGrants = all
-        .filter(g => g.granted_to_role === 'manager' && g.granted_branch === user.branch)
+        .filter(g => g.granted_to_role === 'manager' && (g.granted_branch || '').toLowerCase() === (user.branch || '').toLowerCase())
         .map(g => g.granted_dept);
     }
   } catch (e) {}
@@ -165,7 +169,12 @@ function setupDeptTiles(user) {
 
   document.querySelectorAll('.dept-tile').forEach(tile => {
     const dept = tile.dataset.dept;
-    const isAccessible = accessible.includes(dept) || dept === 'overview';
+    let isAccessible = accessible.includes(dept) || dept === 'overview';
+
+    // Purchase department has default access to Balance and Scrap
+    if (ownRole === 'purchase' && (dept === 'balance' || dept === 'scrap')) {
+      isAccessible = true;
+    }
 
     if (isAccessible) {
       tile.classList.remove('locked');
@@ -209,8 +218,9 @@ function openDeptPanel(dept, role, user) {
 
 // ─── Planning Panel (inside dashboard) ─────────────────────────────────────
 function renderPlanningPanel(container, role, user) {
-  // Redirect to dedicated planning page
-  window.location.href = `/planning.html?branch=${currentBranch}`;
+  // Redirect to dedicated planning page with correct branch
+  const br = (user && user.branch) ? user.branch : 'maalur';
+  window.location.href = `/planning.html?branch=${br.toLowerCase()}`;
 }
 
 // ─── Users Panel ────────────────────────────────────────────────────────────
@@ -512,54 +522,76 @@ function renderComingSoon(container, info) {
 }
 
 // ─── Power Modal ─────────────────────────────────────────────────────────────
+let isPowerModalSetup = false;
+
 function setupPowerModal(user) {
   const modal = document.getElementById('power-modal');
   const closeBtn = document.getElementById('power-modal-close');
   const cancelBtn = document.getElementById('power-modal-cancel');
   const saveBtn = document.getElementById('power-modal-save');
 
-  if (!modal) return;
+  if (!modal || isPowerModalSetup) return;
+  isPowerModalSetup = true;
 
   [closeBtn, cancelBtn].forEach(b => b && b.addEventListener('click', () => modal.classList.add('hidden')));
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
 
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
+      saveBtn.disabled = true;
       const checkboxes = document.querySelectorAll('#power-dept-list input[type="checkbox"]');
       const requests = [];
 
       for (const cb of checkboxes) {
-        const grantedToDept = cb.dataset.dept;
-        if (cb.checked) {
-          requests.push(apiFetch('/users/power-grants', {
-            method: 'POST',
-            body: JSON.stringify({
-              granted_to_role: grantedToDept,
-              granted_branch: currentBranch,
-              granted_dept: powerModalTargetDept,
-            }),
-          }));
+        const checkedDept = cb.dataset.dept;
+        let roleToGrant, deptToAccess;
+
+        if (powerModalTargetDept === 'users') {
+          roleToGrant = 'manager';
+          deptToAccess = 'users';
         } else {
-          // Find and delete existing grant
-          const existing = existingGrants.find(g =>
-            g.granted_to_role === grantedToDept &&
-            g.granted_branch === currentBranch &&
-            g.granted_dept === powerModalTargetDept
-          );
+          roleToGrant = powerModalTargetDept;
+          deptToAccess = checkedDept;
+        }
+
+        const existing = existingGrants.find(g =>
+          g.granted_to_role === roleToGrant &&
+          (g.granted_branch || '').toLowerCase() === (currentBranch || '').toLowerCase() &&
+          g.granted_dept === deptToAccess
+        );
+
+        if (cb.checked) {
+          if (!existing) {
+            requests.push(apiFetch('/users/power-grants', {
+              method: 'POST',
+              body: JSON.stringify({
+                granted_to_role: roleToGrant,
+                granted_branch: currentBranch,
+                granted_dept: deptToAccess,
+              }),
+            }));
+          }
+        } else {
           if (existing) {
             requests.push(apiFetch(`/users/power-grants/${existing.id}`, { method: 'DELETE' }));
           }
         }
       }
 
-      await Promise.all(requests);
+      try {
+        await Promise.all(requests);
 
-      // Refresh grants
-      const res = await apiFetch('/users/power-grants');
-      if (res && res.ok) existingGrants = await res.json();
+        // Refresh grants
+        const res = await apiFetch('/users/power-grants');
+        if (res && res.ok) existingGrants = await res.json();
 
-      showToast('Power settings saved', 'success');
-      modal.classList.add('hidden');
+        showToast('Power settings saved', 'success');
+        modal.classList.add('hidden');
+      } catch (err) {
+        showToast('Failed to save power settings', 'error');
+      } finally {
+        saveBtn.disabled = false;
+      }
     });
   }
 }
@@ -568,54 +600,116 @@ async function openPowerModal(targetDept, user) {
   powerModalTargetDept = targetDept;
   const modal = document.getElementById('power-modal');
   const titleEl = document.getElementById('power-modal-title');
-  const targetEl = document.getElementById('power-target-dept');
-  const listEl = document.getElementById('power-dept-list');
+  const descEl = document.getElementById('power-modal-desc');
 
   if (!modal) return;
 
-  const info = DEPT_LABELS[targetDept];
-  if (titleEl) titleEl.textContent = `${info.icon} Power Settings — ${info.label}`;
-  if (targetEl) targetEl.textContent = info.label;
+  // Always load latest power grants when opening modal
+  try {
+    const res = await apiFetch('/users/power-grants');
+    if (res && res.ok) existingGrants = await res.json();
+  } catch (e) {}
 
-  if (listEl) {
-    // Users tile: grant manager access to view branch users
+  const info = DEPT_LABELS[targetDept] || { label: capitalize(targetDept), icon: '⚡' };
+  if (titleEl) titleEl.textContent = `${info.icon} Power Settings — ${info.label}`;
+  
+  if (descEl) {
     if (targetDept === 'users') {
-      const hasGrant = existingGrants.some(g =>
-        g.granted_to_role === 'manager' &&
-        g.granted_branch === currentBranch &&
-        g.granted_dept === 'users'
-      );
-      listEl.innerHTML = `
-        <div class="power-dept-item">
-          <label>
-            <input type="checkbox" data-dept="manager" ${hasGrant ? 'checked' : ''}>
-            👔 ${capitalize(currentBranch)} Branch Manager
-          </label>
-          <span style="font-size:0.72rem; color:var(--text-muted);">View-only access</span>
-        </div>
-      `;
+      descEl.innerHTML = `Select which roles can access <strong id="power-target-dept">${info.label}</strong> department:`;
     } else {
-      // Standard dept-to-dept grants
-      const otherDepts = GRANTABLE_DEPTS.filter(d => d !== targetDept);
-      listEl.innerHTML = otherDepts.map(dept => {
-        const hasGrant = existingGrants.some(g =>
-          g.granted_to_role === dept &&
-          g.granted_branch === currentBranch &&
-          g.granted_dept === targetDept
-        );
-        const deptInfo = DEPT_LABELS[dept];
-        return `
-          <div class="power-dept-item">
-            <label>
-              <input type="checkbox" data-dept="${dept}" ${hasGrant ? 'checked' : ''}>
-              ${deptInfo.icon} ${deptInfo.label}
-            </label>
-            <span style="font-size:0.72rem; color:var(--text-muted);">${capitalize(currentBranch)}</span>
-          </div>
-        `;
-      }).join('');
+      descEl.innerHTML = `Select which departments <strong id="power-target-dept">${info.label}</strong> department can access:`;
     }
   }
 
+  renderPowerModalList(targetDept);
   modal.classList.remove('hidden');
+}
+
+function renderPowerModalList(targetDept) {
+  const listEl = document.getElementById('power-dept-list');
+  if (!listEl) return;
+
+  if (targetDept === 'users') {
+    const existing = existingGrants.find(g =>
+      g.granted_to_role === 'manager' &&
+      (g.granted_branch || '').toLowerCase() === (currentBranch || '').toLowerCase() &&
+      g.granted_dept === 'users'
+    );
+    const hasGrant = !!existing;
+    listEl.innerHTML = `
+      <div class="power-dept-item ${hasGrant ? 'active-grant' : ''}">
+        <label>
+          <input type="checkbox" data-dept="manager" ${hasGrant ? 'checked' : ''}>
+          👔 ${capitalize(currentBranch || '')} Branch Manager
+        </label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          ${hasGrant ? `
+            <span class="badge-grant-active">Active</span>
+            <button class="btn-revert-dept-power" data-dept="manager" data-grant-id="${existing.id}" title="Revert Manager Access">🔄 Revert</button>
+          ` : `
+            <span style="font-size:0.72rem; color:var(--text-muted);">View-only</span>
+          `}
+        </div>
+      </div>
+    `;
+  } else {
+    const otherDepts = GRANTABLE_DEPTS.filter(d => d !== targetDept);
+    listEl.innerHTML = otherDepts.map(dept => {
+      const existing = existingGrants.find(g =>
+        g.granted_to_role === targetDept &&
+        (g.granted_branch || '').toLowerCase() === (currentBranch || '').toLowerCase() &&
+        g.granted_dept === dept
+      );
+      const hasGrant = !!existing;
+      const deptInfo = DEPT_LABELS[dept] || { label: capitalize(dept), icon: '📁' };
+      return `
+        <div class="power-dept-item ${hasGrant ? 'active-grant' : ''}">
+          <label>
+            <input type="checkbox" data-dept="${dept}" ${hasGrant ? 'checked' : ''}>
+            ${deptInfo.icon} ${deptInfo.label}
+          </label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${hasGrant ? `
+              <span class="badge-grant-active">Granted</span>
+              <button class="btn-revert-dept-power" data-dept="${dept}" data-grant-id="${existing.id}" title="Revert power for ${deptInfo.label}">🔄 Revert</button>
+            ` : `
+              <span style="font-size:0.72rem; color:var(--text-muted);">${capitalize(currentBranch || '')}</span>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Attach Revert button listeners
+  listEl.querySelectorAll('.btn-revert-dept-power').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const grantId = btn.dataset.grantId;
+      const dept = btn.dataset.dept;
+      const deptName = (DEPT_LABELS[dept] || {}).label || capitalize(dept);
+
+      btn.disabled = true;
+      btn.textContent = 'Reverting...';
+
+      try {
+        const res = await apiFetch(`/users/power-grants/${grantId}`, { method: 'DELETE' });
+        if (res && res.ok) {
+          showToast(`Power access for ${deptName} reverted`, 'success');
+          // Refresh existingGrants and re-render list
+          const fetchRes = await apiFetch('/users/power-grants');
+          if (fetchRes && fetchRes.ok) existingGrants = await fetchRes.json();
+          renderPowerModalList(targetDept);
+        } else {
+          showToast('Failed to revert power', 'error');
+          btn.disabled = false;
+          btn.textContent = '🔄 Revert';
+        }
+      } catch (err) {
+        showToast('Error reverting power', 'error');
+        btn.disabled = false;
+        btn.textContent = '🔄 Revert';
+      }
+    });
+  });
 }

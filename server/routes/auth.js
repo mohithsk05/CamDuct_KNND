@@ -37,12 +37,21 @@ router.post('/login', (req, res) => {
   const valid = bcrypt.compareSync(password, user.password);
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
+  // Check if active admin authority is delegated to this user
+  const authority = db.prepare('SELECT * FROM admin_authority').get();
+  let userRole = user.role;
+  let hasAdminPower = false;
+  if (authority && authority.manager_id == user.id) {
+    hasAdminPower = true;
+    userRole = 'admin';
+  }
+
   // Fetch granted power departments for department users
   let powerGrants = [];
   if (!['admin', 'manager'].includes(user.role)) {
     powerGrants = db
       .prepare(
-        'SELECT granted_dept FROM power_grants WHERE granted_to_role = ? AND granted_branch = ?'
+        'SELECT granted_dept FROM power_grants WHERE granted_to_role = ? AND LOWER(granted_branch) = LOWER(?)'
       )
       .all(user.role, user.branch)
       .map((r) => r.granted_dept);
@@ -51,9 +60,10 @@ router.post('/login', (req, res) => {
   const payload = {
     id: user.id,
     username: user.username,
-    role: user.role,
+    role: userRole,
     branch: user.branch,
     full_name: user.full_name,
+    hasAdminPower,
     powerGrants,
   };
 
@@ -66,14 +76,22 @@ router.get('/me', require('../middleware/auth'), (req, res) => {
   const user = db.prepare('SELECT id, username, role, branch, full_name, created_at FROM users WHERE id = ?').get(req.user.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
+  const authority = db.prepare('SELECT * FROM admin_authority').get();
+  let userRole = user.role;
+  let hasAdminPower = false;
+  if (authority && authority.manager_id == user.id) {
+    hasAdminPower = true;
+    userRole = 'admin';
+  }
+
   let powerGrants = [];
   if (!['admin', 'manager'].includes(user.role)) {
     powerGrants = db
-      .prepare('SELECT granted_dept FROM power_grants WHERE granted_to_role = ? AND granted_branch = ?')
+      .prepare('SELECT granted_dept FROM power_grants WHERE granted_to_role = ? AND LOWER(granted_branch) = LOWER(?)')
       .all(user.role, user.branch)
       .map((r) => r.granted_dept);
   }
-  res.json({ ...user, powerGrants });
+  res.json({ ...user, role: userRole, hasAdminPower, powerGrants });
 });
 
 module.exports = router;

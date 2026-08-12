@@ -29,7 +29,7 @@
       <div class="notif-panel hidden" id="notif-panel">
         <div class="notif-panel-header">
           <h4 style="font-size:0.82rem;">🔔 Alerts &amp; Notifications</h4>
-          <button class="btn btn-ghost btn-sm" id="mark-all-read" style="font-size:0.72rem;">Mark all read</button>
+          <button class="mark-all-read-box-btn" id="mark-all-read" type="button">Mark all read</button>
         </div>
         <div class="notif-list" id="notif-list">
           <div class="empty-state" style="padding:24px 16px;">
@@ -111,7 +111,28 @@
 
   <!-- ─── Projects List ────────────────────────────────────────────────── -->
   <div class="projects-container">
-    <div class="projects-section-label">Projects</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:14px; gap:12px;">
+      <div class="projects-section-label" style="margin-bottom:0;">Projects</div>
+      <!-- Bifurcation Tabs -->
+      <div id="project-bifurcation-tabs" style="display:flex; background:#f1f5f9; border:1px solid #e2e8f0; padding:2px; border-radius:8px;">
+        <button type="button" class="bifurcation-tab-btn active" data-bifurcation="all" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:#ffffff; color:#4f46e5; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.15s ease;">
+          📋 All <span id="cnt-all" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
+        </button>
+        <button type="button" class="bifurcation-tab-btn" data-bifurcation="knnd" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s ease;">
+          🏢 KNND <span id="cnt-knnd" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
+        </button>
+        <button type="button" class="bifurcation-tab-btn" data-bifurcation="others" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s ease;">
+          👤 Others <span id="cnt-others" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div style="margin-bottom: 16px; position: relative; max-width: 380px;">
+      <input type="text" id="project-search-input" placeholder="Search by S.No. (e.g. 1, 2) or Job Number..." style="width: 100%; padding: 10px 14px 10px 38px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.88rem; outline: none; background: #ffffff; color: var(--text-primary); transition: all 0.2s ease-in-out; box-shadow: var(--shadow-sm);" onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79, 70, 229, 0.15)'" onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='var(--shadow-sm)'">
+      <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem; pointer-events: none;">🔍</span>
+    </div>
+
     <div id="projects-list">
       <div style="text-align:center; padding:32px;"><span class="spinner"></span></div>
     </div>
@@ -134,14 +155,50 @@
           <div id="submit-file-size" style="font-size:0.72rem; color:var(--text-muted);"></div>
         </div>
       </div>
+      <!-- Customer Type Bifurcation selection -->
+      <div class="form-group">
+        <label class="form-label">Customer Category *</label>
+        <div style="display:flex; gap:16px; margin-top:4px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--text-primary);">
+            <input type="radio" name="customer_type" id="ctype-knnd" value="knnd" checked style="accent-color:var(--accent);">
+            <span>🏢 KNND (Auto-Approved)</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--text-primary);">
+            <input type="radio" name="customer_type" id="ctype-others" value="others" style="accent-color:var(--accent);">
+            <span>👤 Others (Custom Client)</span>
+          </label>
+        </div>
+      </div>
+
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-        <div class="form-group">
-          <label class="form-label">Job Number *</label>
-          <input class="form-input" id="s-job-no" placeholder="e.g. JOB-2024-001" spellcheck="false">
+        <div class="form-group" id="customer-name-group">
+          <label class="form-label">Customer Name *</label>
+          <input class="form-input" id="s-customer" placeholder="KNND" value="KNND" readonly style="background:#f8fafc; font-weight:600;">
         </div>
         <div class="form-group">
-          <label class="form-label">Customer Name *</label>
-          <input class="form-input" id="s-customer" placeholder="Customer / Client name">
+          <label class="form-label">Project Name *</label>
+          <input class="form-input" id="s-project-name" placeholder="e.g. Manipal Hospital Expansion">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Place (City/Town) *</label>
+          <input class="form-input" id="s-place" placeholder="e.g. Mysore, Bangalore">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location (Floor/Room/Block) *</label>
+          <input class="form-input" id="s-location" placeholder="e.g. 2nd Floor, Room 204, Utility">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Job Number (Auto-Generated by System) *</span>
+          <span id="s-job-no-status" style="font-size:0.72rem; color:#6366f1; font-weight:600;"></span>
+        </label>
+        <div style="display:flex; gap:6px;">
+          <input class="form-input" id="s-job-no" placeholder="e.g. CD-KNND-26-001" style="font-weight:700; color:#4f46e5; letter-spacing:0.5px;">
         </div>
       </div>
 
@@ -167,6 +224,35 @@
   </div>
 </div>
 
+<!-- ─── Update PO Modal ────────────────────────────────────────────────── -->
+<div class="modal-backdrop hidden" id="po-update-modal">
+  <div class="modal" style="max-width: 700px;">
+    <div class="modal-header">
+      <h3>🛍️ Update PO Details</h3>
+      <button class="modal-close" onclick="document.getElementById('po-update-modal').classList.add('hidden')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; max-height:75vh; overflow-y:auto;">
+      <p style="font-size:0.82rem; margin:0;">Update PO product items &amp; quantities for Job <strong id="po-update-job-no"></strong></p>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <label class="form-label" style="margin:0;">PO Product Items</label>
+        <button type="button" class="btn btn-outline btn-sm" id="add-po-update-item-btn" style="font-size:0.75rem; padding:3px 8px;">+ Add Product</button>
+      </div>
+
+      <div id="po-update-items-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+
+      <div id="po-update-error" class="login-error hidden"><span id="po-update-error-msg"></span></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="document.getElementById('po-update-modal').classList.add('hidden')">Cancel</button>
+      <button class="btn btn-primary" id="po-update-save-btn">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        Save PO Details
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ─── Billing Quantity Modal ──────────────────────────────────────────── -->
 <div class="modal-backdrop hidden" id="billing-modal">
   <div class="modal" style="max-width: 700px;">
@@ -183,6 +269,26 @@
       </div>
 
       <div id="billing-items-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+
+      <!-- File Upload Inputs (Area List and Numbering Drawing) -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:#f8fafc; padding:12px; border:1px solid var(--border); border-radius:8px; margin-top:10px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-weight:700;">Area List (.xlsx) *</label>
+          <input type="file" id="billing-area-list" accept=".xlsx" style="display:none;" onchange="document.getElementById('area-list-name').textContent = this.files[0] ? this.files[0].name : 'No file chosen'">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" class="btn btn-outline btn-md" onclick="document.getElementById('billing-area-list').click()" style="padding: 6px 12px; font-size: 0.85rem;">📁 Choose File</button>
+            <span id="area-list-name" style="font-size: 0.8rem; color: var(--text-second); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">No file chosen</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-weight:700;">Numbering Drawing (.xlsx) *</label>
+          <input type="file" id="billing-numbering-drawing" accept=".xlsx" style="display:none;" onchange="document.getElementById('numbering-drawing-name').textContent = this.files[0] ? this.files[0].name : 'No file chosen'">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" class="btn btn-outline btn-md" onclick="document.getElementById('billing-numbering-drawing').click()" style="padding: 6px 12px; font-size: 0.85rem;">📁 Choose File</button>
+            <span id="numbering-drawing-name" style="font-size: 0.8rem; color: var(--text-second); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">No file chosen</span>
+          </div>
+        </div>
+      </div>
 
       <div id="billing-error" class="login-error hidden"><span id="billing-error-msg"></span></div>
     </div>

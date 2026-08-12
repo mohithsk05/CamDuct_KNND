@@ -335,6 +335,69 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   border: 2px solid white;
 }
 
+/* ─── Mark All Read Boxed Button ─────────────────────────────────────────── */
+.mark-all-read-box-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+.mark-all-read-box-btn:hover {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(79,70,229,0.25);
+}
+.mark-all-read-box-btn:active {
+  transform: translateY(0);
+  background: #4338ca;
+}
+
+/* ─── Notification Tabs Bar ────────────────────────────────────────────── */
+.notif-tabs-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: var(--bg-surface, #f8fafc);
+  padding: 4px 10px;
+  gap: 8px;
+}
+.notif-tab-btn {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: var(--text-second, #64748b);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 4px 4px 0 0;
+}
+.notif-tab-btn.active {
+  border-bottom-color: #4f46e5;
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.05);
+}
+.notif-tab-btn:hover:not(.active) {
+  color: var(--text-primary, #0f172a);
+  background: rgba(0, 0, 0, 0.03);
+}
+
 /* ─── User Chip ──────────────────────────────────────────────────────────── */
 .user-chip {
   display: flex;
