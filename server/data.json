@@ -193,19 +193,12 @@
       "drawing_name": "drawing.png",
       "status": "approved",
       "revise_remark": null,
-      "billing_items": "[{\"product\":\"Box Duct with TDF\",\"qty\":12,\"unit\":\"sqft\",\"rate\":12,\"material\":\"120gsm Slit 24G\"}]",
+      "billing_items": null,
       "insulation_items": null,
       "submitted_by": 5,
       "reviewed_by": null,
       "created_at": "2026-08-12T07:09:45.254Z",
-      "updated_at": "2026-08-12T07:50:18.104Z",
-      "area_list_path": "/uploads/1786521018049_Area_sheet.xlsx",
-      "area_list_name": "Area_sheet.xlsx",
-      "numbering_drawing_path": "/uploads/1786521018053_OTF.xlsx",
-      "numbering_drawing_name": "OTF.xlsx",
-      "billing_qty": 12,
-      "billing_unit": "sqft",
-      "billing_rate": 12
+      "updated_at": "2026-08-12T07:09:45.254Z"
     },
     {
       "id": 3,
@@ -228,167 +221,9 @@
       "reviewed_by": null,
       "created_at": "2026-08-12T07:09:45.268Z",
       "updated_at": "2026-08-12T07:09:45.268Z"
-    },
-    {
-      "id": 4,
-      "job_no": "CD-KNND-26-001",
-      "branch": "maalur",
-      "customer_name": "KNND",
-      "customer_type": "knnd",
-      "project_name": "Manipal Hospital",
-      "place": "mysore",
-      "location": "utility",
-      "po_quantity": 0,
-      "po_items": "[]",
-      "drawing_path": "1786518838533_drawing.png",
-      "drawing_name": "drawing.png",
-      "status": "approved",
-      "revise_remark": null,
-      "billing_items": null,
-      "insulation_items": null,
-      "submitted_by": 5,
-      "reviewed_by": null,
-      "created_at": "2026-08-12T07:13:58.559Z",
-      "updated_at": "2026-08-12T07:13:58.559Z"
-    },
-    {
-      "id": 5,
-      "job_no": "CD-KNND-26-004",
-      "branch": "maalur",
-      "customer_name": "KNND",
-      "customer_type": "knnd",
-      "project_name": "Manipal Hospital",
-      "place": "Bangalore",
-      "location": "floor 2",
-      "po_quantity": 0,
-      "po_items": "[]",
-      "drawing_path": "1786520796585_drawing.png",
-      "drawing_name": "drawing.png",
-      "status": "approved",
-      "revise_remark": null,
-      "billing_items": null,
-      "insulation_items": null,
-      "submitted_by": 5,
-      "reviewed_by": null,
-      "created_at": "2026-08-12T07:46:36.688Z",
-      "updated_at": "2026-08-12T07:46:36.688Z"
     }
   ],
   "notifications": [
-    {
-      "id": 36,
-      "sender_id": 2,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "manager",
-      "branch": "maalur",
-      "type": "good morning",
-      "message": "1day",
-      "validity": "2026-08-12T08:03:41.399Z",
-      "is_read": 1,
-      "created_at": "2026-08-11T08:03:41.401Z"
-    },
-    {
-      "id": 37,
-      "sender_id": 5,
-      "sender_name": "Planning – Maalur",
-      "target_user_id": 2,
-      "target_user_name": "Admin / Owner",
-      "role": "admin",
-      "branch": null,
-      "type": "custom",
-      "message": "hieeeeeeee",
-      "validity": "1day",
-      "expires_at": "2026-08-12T08:57:04.759Z",
-      "is_read": 1,
-      "created_at": "2026-08-11T08:57:04.759Z"
-    },
-    {
-      "id": 38,
-      "sender_id": 5,
-      "sender_name": "Planning – Maalur",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "manager",
-      "branch": "maalur",
-      "type": "custom",
-      "message": "hieeeeeeee",
-      "validity": "1day",
-      "expires_at": "2026-08-12T08:57:04.759Z",
-      "is_read": 1,
-      "created_at": "2026-08-11T08:57:04.760Z"
-    },
-    {
-      "id": 39,
-      "sender_id": 5,
-      "sender_name": "Planning – Maalur",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "manager",
-      "branch": "maalur",
-      "type": "custom",
-      "message": "yoooo",
-      "validity": "1day",
-      "expires_at": "2026-08-12T08:59:19.454Z",
-      "is_read": 1,
-      "created_at": "2026-08-11T08:59:19.454Z"
-    },
-    {
-      "id": 40,
-      "sender_id": 5,
-      "sender_name": "Planning – Maalur",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "manager",
-      "branch": "maalur",
-      "type": "custom",
-      "message": "hiiiiiiiii",
-      "validity": "1day",
-      "expires_at": "2026-08-12T09:04:00.887Z",
-      "is_read": 1,
-      "created_at": "2026-08-11T09:04:00.887Z"
-    },
-    {
-      "id": 41,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New KNND Project uploaded: Job #CD-KNND-26-001 (Manipal Hospital) by Planning – Maalur (MAALUR)",
-      "project_id": 1,
-      "is_read": 1,
-      "created_at": "2026-08-11T10:22:10.471Z"
-    },
-    {
-      "id": 42,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New KNND Project uploaded: Job #CD-KNND-26-001 (Manipal Hospital) by Planning – Maalur (MAALUR)",
-      "project_id": 1,
-      "is_read": 1,
-      "created_at": "2026-08-11T10:22:10.479Z"
-    },
-    {
-      "id": 43,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New KNND Project uploaded: Job #CD-KNND-26-001 (Manipal Hospital) by Planning – Maalur (MAALUR)",
-      "project_id": 2,
-      "is_read": 1,
-      "created_at": "2026-08-11T10:24:25.331Z"
-    },
-    {
-      "id": 44,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New KNND Project uploaded: Job #CD-KNND-26-001 (Manipal Hospital) by Planning – Maalur (MAALUR)",
-      "project_id": 2,
-      "is_read": 1,
-      "created_at": "2026-08-11T10:24:25.334Z"
-    },
     {
       "id": 45,
       "role": "admin",
@@ -517,7 +352,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 (KNND) by Planning – Maalur (MAALUR)",
       "project_id": 7,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T06:06:50.392Z"
     },
     {
@@ -537,7 +372,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 1,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:01:09.484Z"
     },
     {
@@ -557,7 +392,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 2,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:01:09.501Z"
     },
     {
@@ -577,7 +412,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 1,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:03:24.702Z"
     },
     {
@@ -597,7 +432,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 2,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:03:24.716Z"
     },
     {
@@ -617,7 +452,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-003 by Planning – Maalur (MAALUR)",
       "project_id": 3,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:03:24.728Z"
     },
     {
@@ -637,7 +472,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 1,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:05:29.050Z"
     },
     {
@@ -657,7 +492,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 2,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:05:29.064Z"
     },
     {
@@ -677,7 +512,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-003 by Planning – Maalur (MAALUR)",
       "project_id": 3,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:05:29.074Z"
     },
     {
@@ -697,7 +532,7 @@
       "type": "planning",
       "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-001 (MAALUR)",
       "project_id": 1,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:05:29.096Z"
     },
     {
@@ -717,7 +552,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 1,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:07:53.217Z"
     },
     {
@@ -737,7 +572,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 2,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:07:53.230Z"
     },
     {
@@ -757,7 +592,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-003 by Planning – Maalur (MAALUR)",
       "project_id": 3,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:07:53.243Z"
     },
     {
@@ -777,7 +612,7 @@
       "type": "planning",
       "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-001 (MAALUR)",
       "project_id": 1,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:07:53.266Z"
     },
     {
@@ -802,7 +637,7 @@
       "message": "Hello Admin, please approve my drawings.",
       "validity": "1day",
       "expires_at": "2026-08-13T07:07:53.281Z",
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:07:53.282Z"
     },
     {
@@ -812,7 +647,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 1,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:09:45.240Z"
     },
     {
@@ -832,7 +667,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 2,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:09:45.255Z"
     },
     {
@@ -852,7 +687,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-003 by Planning – Maalur (MAALUR)",
       "project_id": 3,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:09:45.269Z"
     },
     {
@@ -872,7 +707,7 @@
       "type": "planning",
       "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-001 (MAALUR)",
       "project_id": 1,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-12T07:09:45.292Z"
     },
     {
@@ -917,63 +752,204 @@
     },
     {
       "id": 96,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
-      "project_id": 4,
-      "is_read": 0,
-      "created_at": "2026-08-12T07:13:58.562Z"
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 1,
+      "created_at": "2026-08-12T08:15:52.807Z"
     },
     {
       "id": 97,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
-      "project_id": 4,
-      "is_read": 1,
-      "created_at": "2026-08-12T07:13:58.564Z"
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T08:24:49.629Z"
     },
     {
       "id": 98,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-004 by Planning – Maalur (MAALUR)",
-      "project_id": 5,
-      "is_read": 0,
-      "created_at": "2026-08-12T07:46:36.695Z"
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 1,
+      "created_at": "2026-08-12T08:46:37.141Z"
     },
     {
       "id": 99,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-004 by Planning – Maalur (MAALUR)",
-      "project_id": 5,
-      "is_read": 1,
-      "created_at": "2026-08-12T07:46:36.701Z"
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T08:46:37.344Z"
     },
     {
       "id": 100,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-001 (MAALUR)",
-      "project_id": "2",
-      "is_read": 0,
-      "created_at": "2026-08-12T07:50:18.106Z"
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 1,
+      "created_at": "2026-08-12T09:07:59.763Z"
     },
     {
       "id": 101,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-001 (MAALUR)",
-      "project_id": "2",
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T09:07:59.859Z"
+    },
+    {
+      "id": 102,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
       "is_read": 1,
-      "created_at": "2026-08-12T07:50:18.107Z"
+      "created_at": "2026-08-12T10:00:07.700Z"
+    },
+    {
+      "id": 103,
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T10:26:39.944Z"
+    },
+    {
+      "id": 104,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 1,
+      "created_at": "2026-08-12T10:26:58.847Z"
+    },
+    {
+      "id": 105,
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T10:29:03.026Z"
+    },
+    {
+      "id": 106,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 1,
+      "created_at": "2026-08-12T10:36:00.850Z"
+    },
+    {
+      "id": 107,
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T10:36:00.878Z"
+    },
+    {
+      "id": 108,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 1,
+      "created_at": "2026-08-12T10:38:18.814Z"
+    },
+    {
+      "id": 109,
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T10:38:43.642Z"
+    },
+    {
+      "id": 110,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 1,
+      "created_at": "2026-08-12T10:44:23.389Z"
+    },
+    {
+      "id": 111,
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T10:44:23.412Z"
+    },
+    {
+      "id": 112,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 1,
+      "created_at": "2026-08-12T10:47:48.509Z"
+    },
+    {
+      "id": 113,
+      "sender_id": 0,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 3,
+      "target_user_name": "Manager – Maalur",
+      "role": "maalur",
+      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T11:07:30.783Z"
+    },
+    {
+      "id": 114,
+      "sender_id": 0,
+      "sender_name": "System",
+      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
+      "type": "custom",
+      "is_read": 0,
+      "created_at": "2026-08-12T11:07:52.269Z"
     }
   ],
   "power_grants": [
@@ -992,21 +968,13 @@
       "granted_dept": "balance",
       "granted_by": 2,
       "created_at": "2026-08-11T04:44:36.650Z"
-    },
-    {
-      "id": 13,
-      "granted_to_role": "planning",
-      "granted_branch": "maalur",
-      "granted_dept": "purchase",
-      "granted_by": 2,
-      "created_at": "2026-08-11T08:50:29.789Z"
     }
   ],
   "autoInc": {
     "users": 17,
-    "projects": 6,
-    "notifications": 102,
-    "power_grants": 14
+    "projects": 4,
+    "notifications": 115,
+    "power_grants": 23
   },
   "admin_authority": null
 }

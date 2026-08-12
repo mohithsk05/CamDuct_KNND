@@ -4,35 +4,30 @@ const db = require('../db');
 const auth = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
 
-// GET /api/users — List users (admin sees all; manager with users grant sees own branch)
+// GET /api/users -- List users (admin all; elevated manager own branch; manager with grant own branch)
 router.get('/', auth, (req, res) => {
   const isAdmin = req.user.role === 'admin';
   const isManager = req.user.role === 'manager';
+  const isElevatedManager = isAdmin && req.user.hasAdminPower;
 
   if (!isAdmin && !isManager) return res.status(403).json({ error: 'Not authorized' });
 
-  // Manager: check if they have users-view power grant for their branch
-  if (isManager) {
-    const grant = db.prepare(
-      'SELECT * FROM power_grants WHERE granted_to_role = ? AND granted_branch = ? AND granted_dept = ?'
-    ).get('manager', req.user.branch, 'users');
-    if (!grant) return res.status(403).json({ error: 'Users view not permitted for this branch manager. Contact Admin.' });
+  // Elevated manager: return only their branch users
+  if (isElevatedManager && req.user.branch) {
+    const users = db.prepare("SELECT id, username, role, branch, full_name, created_at FROM users WHERE role != 'gate' AND branch = ? ORDER BY role").all(req.user.branch);
+    return res.json({ maalur: [], haryana: [], admins: [], [req.user.branch]: users });
+  }
 
-    // Return only this manager's branch users
-    const users = db.prepare(`
-      SELECT id, username, role, branch, full_name, created_at
-      FROM users WHERE role != 'gate' AND branch = ?
-      ORDER BY role
-    `).all(req.user.branch);
+  // Regular Manager: check users-view power grant for their branch
+  if (isManager) {
+    const grant = db.prepare('SELECT * FROM power_grants WHERE granted_to_role = ? AND granted_branch = ? AND granted_dept = ?').get('manager', req.user.branch, 'users');
+    if (!grant) return res.status(403).json({ error: 'Users view not permitted for this branch manager. Contact Admin.' });
+    const users = db.prepare("SELECT id, username, role, branch, full_name, created_at FROM users WHERE role != 'gate' AND branch = ? ORDER BY role").all(req.user.branch);
     return res.json({ [req.user.branch]: users });
   }
 
-  // Admin: return all
-  const users = db.prepare(`
-    SELECT id, username, role, branch, full_name, created_at
-    FROM users WHERE role != 'gate'
-    ORDER BY branch, role
-  `).all();
+  // True Admin: return all users
+  const users = db.prepare("SELECT id, username, role, branch, full_name, created_at FROM users WHERE role != 'gate' ORDER BY branch, role").all();
   const maalur = users.filter(u => u.branch === 'maalur');
   const haryana = users.filter(u => u.branch === 'haryana');
   const admins = users.filter(u => !u.branch);
@@ -75,9 +70,8 @@ router.patch('/:id/password', auth, (req, res) => {
 
 // ─── Power Grants ─────────────────────────────────────────────────────────
 
-// GET /api/users/power-grants — List all power grants (admin only)
+// GET /api/users/power-grants — List all power grants (authenticated users)
 router.get('/power-grants', auth, (req, res) => {
-  if (req.user.role !== 'admin' && !req.user.hasAdminPower) return res.status(403).json({ error: 'Admin only' });
   const grants = db.prepare(`
     SELECT pg.*, u.full_name AS granted_by_name
     FROM power_grants pg LEFT JOIN users u ON pg.granted_by = u.id

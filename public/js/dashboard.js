@@ -25,69 +25,137 @@ let existingGrants = [];
 async function initDashboard(role) {
   currentRole = role;
 
-  // Auth guard
-  const allowedRoles = role === 'admin' ? ['admin'] : role === 'manager' ? ['manager'] : ['planning','purchase','consumption','accounts','dispatch','security'];
-  let user = requireAuth(allowedRoles);
-  if (!user) return;
+  // STEP 1: Check token + cached user exist (fast check, no server call)
+  const token = getToken();
+  const cachedUser = getUser();
+  if (!token || !cachedUser) {
+    window.location.href = '/portal.html';
+    return;
+  }
 
-  // Refresh user object from server to ensure powerGrants are up to date
-  const freshUser = await refreshUser();
-  if (freshUser) user = freshUser;
+  // STEP 2: ALWAYS refresh from server first to get accurate role/hasAdminPower
+  // This ensures routing decisions are never made on stale sessionStorage data.
+  let user = await refreshUser();
+  if (!user) {
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_user');
+    window.location.href = '/portal.html';
+    return;
+  }
 
+  // STEP 3: Route on FRESH server data
+  if (role === 'admin') {
+    // admin-dashboard.html: requires role === 'admin'
+    // Both true admins AND elevated managers (server sets role='admin') pass here.
+    if (user.role !== 'admin') {
+      if (user.role === 'manager') {
+        window.location.href = '/manager-dashboard.html';
+      } else {
+        window.location.href = '/portal.html';
+      }
+      return;
+    }
+  } else if (role === 'manager') {
+    // manager-dashboard.html: if manager now has admin power, redirect to admin dashboard
+    if (user.hasAdminPower) {
+      window.location.href = '/admin-dashboard.html';
+      return;
+    }
+    if (user.role !== 'manager') {
+      window.location.href = '/portal.html';
+      return;
+    }
+  } else {
+    // dept-dashboard.html
+    const deptRoles = ['planning','purchase','consumption','accounts','dispatch','security'];
+    if (!deptRoles.includes(user.role)) {
+      window.location.href = '/portal.html';
+      return;
+    }
+  }
+
+  // STEP 4: Initialize UI
   setupLogout();
   populateTopbar(user);
   setupNotifications();
 
   if (role === 'admin') {
-    // Admin: show branch selector first
-    const selector = document.getElementById('branch-selector');
-    const mainDash = document.getElementById('main-dashboard');
-    if (selector) selector.classList.remove('hidden');
-    if (mainDash) mainDash.classList.add('hidden');
-
-    document.querySelectorAll('.branch-card').forEach(card => {
-      card.addEventListener('click', () => {
-        currentBranch = card.dataset.branch;
-        selector.classList.add('hidden');
-        mainDash.classList.remove('hidden');
-        const pill = document.getElementById('branch-pill-text');
-        if (pill) pill.textContent = capitalize(currentBranch);
-        setupAdminTiles(user);
-      });
-    });
-
-    // Switch branch button
+    const selector  = document.getElementById('branch-selector');
+    const mainDash  = document.getElementById('main-dashboard');
     const switchBtn = document.getElementById('switch-branch-btn');
-    if (switchBtn) {
-      switchBtn.addEventListener('click', () => {
-        mainDash.classList.add('hidden');
-        document.getElementById('content-panel').classList.add('hidden');
-        selector.classList.remove('hidden');
+
+    // Elevated Manager (hasAdminPower) - branch-locked admin view
+    if (user.hasAdminPower && user.branch) {
+      currentBranch = user.branch;
+
+      const topbarSub = document.querySelector('.topbar-subtitle');
+      if (topbarSub) topbarSub.textContent = 'Admin Power - ' + capitalize(user.branch);
+
+      if (selector) selector.classList.add('hidden');
+      if (mainDash)  mainDash.classList.remove('hidden');
+
+      const pill = document.getElementById('branch-pill-text');
+      if (pill) pill.textContent = capitalize(user.branch) + ' (Authority)';
+
+      const dashTitle = mainDash ? mainDash.querySelector('h2') : null;
+      if (dashTitle) dashTitle.textContent = 'Branch Admin Dashboard';
+      const dashDesc = mainDash ? mainDash.querySelector('p') : null;
+      if (dashDesc) dashDesc.textContent = 'Admin authority active - ' + capitalize(user.branch) + ' branch only';
+
+      if (switchBtn) switchBtn.style.display = 'none';
+
+      const revertBtn = document.getElementById('revert-power-btn');
+      if (revertBtn) revertBtn.classList.remove('hidden');
+
+      setupAdminTiles(user);
+
+    } else {
+      // True Admin - normal branch selector flow
+      if (selector) selector.classList.remove('hidden');
+      if (mainDash)  mainDash.classList.add('hidden');
+
+      document.querySelectorAll('.branch-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          currentBranch = card.dataset.branch;
+          selector.classList.add('hidden');
+          mainDash.classList.remove('hidden');
+          var pill = document.getElementById('branch-pill-text');
+          if (pill) pill.textContent = capitalize(currentBranch);
+          setupAdminTiles(user);
+        });
       });
+
+      if (switchBtn) {
+        switchBtn.addEventListener('click', function() {
+          mainDash.classList.add('hidden');
+          document.getElementById('content-panel').classList.add('hidden');
+          selector.classList.remove('hidden');
+        });
+      }
     }
+
   } else if (role === 'manager') {
     currentBranch = user.branch;
-    const pill = document.getElementById('branch-pill-text');
+    var pill = document.getElementById('branch-pill-text');
     if (pill) pill.textContent = capitalize(user.branch);
-    const sub = document.getElementById('mgr-branch-sub');
-    if (sub) sub.textContent = `Manager — ${capitalize(user.branch)}`;
+    var sub = document.getElementById('mgr-branch-sub');
+    if (sub) sub.textContent = 'Manager - ' + capitalize(user.branch);
     setupManagerTiles(user);
+
   } else {
-    // Department user
     currentBranch = user.branch;
-    const pill = document.getElementById('branch-pill-text');
-    if (pill) pill.textContent = capitalize(user.branch);
-    const sub = document.getElementById('dept-sub');
-    if (sub) sub.textContent = `${capitalize(user.role)} — ${capitalize(user.branch)}`;
-    const titleEl = document.getElementById('dept-title');
-    if (titleEl) titleEl.textContent = `${capitalize(user.role)} Department`;
+    var pill2 = document.getElementById('branch-pill-text');
+    if (pill2) pill2.textContent = capitalize(user.branch);
+    var sub2 = document.getElementById('dept-sub');
+    if (sub2) sub2.textContent = capitalize(user.role) + ' - ' + capitalize(user.branch);
+    var titleEl = document.getElementById('dept-title');
+    if (titleEl) titleEl.textContent = capitalize(user.role) + ' Department';
     setupDeptTiles(user);
   }
 
-  // Back button
-  const backBtn = document.getElementById('back-to-grid');
+  var backBtn = document.getElementById('back-to-grid');
   if (backBtn) {
-    backBtn.addEventListener('click', () => {
+    backBtn.addEventListener('click', function() {
       document.getElementById('content-panel').classList.add('hidden');
       document.getElementById('main-dashboard').classList.remove('hidden');
     });
@@ -555,9 +623,9 @@ function setupPowerModal(user) {
         }
 
         const existing = existingGrants.find(g =>
-          g.granted_to_role === roleToGrant &&
+          (g.granted_to_role || '').toLowerCase() === (roleToGrant || '').toLowerCase() &&
           (g.granted_branch || '').toLowerCase() === (currentBranch || '').toLowerCase() &&
-          g.granted_dept === deptToAccess
+          (g.granted_dept || '').toLowerCase() === (deptToAccess || '').toLowerCase()
         );
 
         if (cb.checked) {
@@ -631,9 +699,9 @@ function renderPowerModalList(targetDept) {
 
   if (targetDept === 'users') {
     const existing = existingGrants.find(g =>
-      g.granted_to_role === 'manager' &&
+      (g.granted_to_role || '').toLowerCase() === 'manager' &&
       (g.granted_branch || '').toLowerCase() === (currentBranch || '').toLowerCase() &&
-      g.granted_dept === 'users'
+      (g.granted_dept || '').toLowerCase() === 'users'
     );
     const hasGrant = !!existing;
     listEl.innerHTML = `
@@ -656,9 +724,9 @@ function renderPowerModalList(targetDept) {
     const otherDepts = GRANTABLE_DEPTS.filter(d => d !== targetDept);
     listEl.innerHTML = otherDepts.map(dept => {
       const existing = existingGrants.find(g =>
-        g.granted_to_role === targetDept &&
+        (g.granted_to_role || '').toLowerCase() === (targetDept || '').toLowerCase() &&
         (g.granted_branch || '').toLowerCase() === (currentBranch || '').toLowerCase() &&
-        g.granted_dept === dept
+        (g.granted_dept || '').toLowerCase() === (dept || '').toLowerCase()
       );
       const hasGrant = !!existing;
       const deptInfo = DEPT_LABELS[dept] || { label: capitalize(dept), icon: '📁' };

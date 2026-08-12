@@ -1,4 +1,4 @@
-/**
+﻿/**
  * auth.js — Shared authentication utilities for all pages
  */
 const API = '/api';
@@ -37,11 +37,20 @@ async function refreshUser() {
     const res = await apiFetch('/auth/me');
     if (res && res.ok) {
       const freshUser = await res.json();
+      // Always save fresh server data (includes updated role and hasAdminPower)
       sessionStorage.setItem('auth_user', JSON.stringify(freshUser));
       return freshUser;
     }
-  } catch (e) {}
-  return getUser();
+    // 401 = token expired/invalid - clear storage
+    if (res && res.status === 401) {
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_user');
+    }
+    return null;
+  } catch (e) {
+    // Network error - return cached user as fallback so page does not break offline
+    return getUser();
+  }
 }
 
 /** Authenticated fetch helper */
@@ -804,7 +813,7 @@ async function setupAuthorityFeature() {
   if (!me) return;
 
   // ── ADMIN SIDE: Branch Selection Card Authority buttons ───────────────────
-  if (me.role === 'admin' || me.hasAdminPower) {
+  if (me.role === 'admin') {
     /** Refresh authority state on branch cards */
     async function refreshAuthorityUI() {
       try {
@@ -827,79 +836,83 @@ async function setupAuthorityFeature() {
       } catch (e) {}
     }
 
-    // Attach Branch Card Authority buttons listeners
-    document.querySelectorAll('.branch-card-authority-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const targetBranch = btn.dataset.branch;
-        const res = await apiFetch('/users/authority');
-        const { authority } = res ? await res.json() : {};
+    // Attach Branch Card Authority buttons listeners (only for true admin, not elevated manager)
+    if (!me.hasAdminPower) {
+      document.querySelectorAll('.branch-card-authority-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const targetBranch = btn.dataset.branch;
+          const res = await apiFetch('/users/authority');
+          const { authority } = res ? await res.json() : {};
 
-        if (authority && (authority.branch || '').toLowerCase() === targetBranch.toLowerCase()) {
-          if (!confirm(`Revoke Admin Authority from ${authority.manager_name}? Full power will return to Admin.`)) return;
-          btn.disabled = true;
-          try {
-            const r = await apiFetch('/users/authority/revert', { method: 'POST' });
-            const d = await r.json();
-            if (d.success) {
-              showToast('✅ Admin authority revoked', 'success');
-              await refreshAuthorityUI();
-            } else {
-              showToast(d.error || 'Failed to revoke authority', 'error');
-            }
-          } catch (err) {
-            showToast('Error revoking authority', 'error');
-          } finally {
-            btn.disabled = false;
-          }
-        } else {
-          if (!confirm(`Transfer FULL ADMIN POWER to ${capitalize(targetBranch)} Branch Manager while Admin is on leave?`)) return;
-          btn.disabled = true;
-          try {
-            // Find manager_id for target branch
-            let managerId = null;
+          if (authority && (authority.branch || '').toLowerCase() === targetBranch.toLowerCase()) {
+            if (!confirm(`Revoke Admin Authority from ${authority.manager_name}? Full power will return to Admin.`)) return;
+            btn.disabled = true;
             try {
-              const uRes = await apiFetch('/users');
-              if (uRes && uRes.ok) {
-                const uData = await uRes.json();
-                const branchUsers = uData[targetBranch.toLowerCase()] || [];
-                const mgr = branchUsers.find(u => u.role === 'manager');
-                if (mgr) managerId = mgr.id;
+              const r = await apiFetch('/users/authority/revert', { method: 'POST' });
+              const d = await r.json();
+              if (d.success) {
+                showToast('✅ Admin authority revoked', 'success');
+                await refreshAuthorityUI();
+              } else {
+                showToast(d.error || 'Failed to revoke authority', 'error');
               }
-            } catch (e) {}
-
-            const r = await apiFetch('/users/authority/grant', {
-              method: 'POST',
-              body: JSON.stringify({ branch: targetBranch, manager_id: managerId })
-            });
-            const d = await r.json();
-            if (d.success) {
-              showToast(`✅ Full Admin Power transferred to ${capitalize(targetBranch)} Manager`, 'success');
-              await refreshAuthorityUI();
-            } else {
-              showToast(d.error || 'Failed to grant authority', 'error');
+            } catch (err) {
+              showToast('Error revoking authority', 'error');
+            } finally {
+              btn.disabled = false;
             }
-          } catch (err) {
-            showToast('Failed to grant authority', 'error');
-          } finally {
-            btn.disabled = false;
+          } else {
+            if (!confirm(`Transfer FULL ADMIN POWER to ${capitalize(targetBranch)} Branch Manager while Admin is on leave?`)) return;
+            btn.disabled = true;
+            try {
+              // Find manager_id for target branch
+              let managerId = null;
+              try {
+                const uRes = await apiFetch('/users');
+                if (uRes && uRes.ok) {
+                  const uData = await uRes.json();
+                  const branchUsers = uData[targetBranch.toLowerCase()] || [];
+                  const mgr = branchUsers.find(u => u.role === 'manager');
+                  if (mgr) managerId = mgr.id;
+                }
+              } catch (e) {}
+
+              const r = await apiFetch('/users/authority/grant', {
+                method: 'POST',
+                body: JSON.stringify({ branch: targetBranch, manager_id: managerId })
+              });
+              const d = await r.json();
+              if (d.success) {
+                showToast(`✅ Full Admin Power transferred to ${capitalize(targetBranch)} Manager`, 'success');
+                await refreshAuthorityUI();
+              } else {
+                showToast(d.error || 'Failed to grant authority', 'error');
+              }
+            } catch (err) {
+              showToast('Failed to grant authority', 'error');
+            } finally {
+              btn.disabled = false;
+            }
           }
-        }
+        });
       });
-    });
+    }
 
     // Initial refresh
     refreshAuthorityUI();
   }
 
-  // ── MANAGER SIDE: REVERT POWER button ────────────────────────────────────
+  // ── REVERT POWER button: shown when a manager (now elevated to admin) holds authority ──
+  // This handles the revert button on BOTH manager-dashboard and admin-dashboard pages
   const revertBtn = document.getElementById('revert-power-btn');
   if (revertBtn) {
     try {
       const res = await apiFetch('/users/authority');
       if (res && res.ok) {
         const { authority } = await res.json();
-        if (authority && authority.manager_id == me.id) {
+        // Show revert button if this user is the authority holder (hasAdminPower)
+        if (authority && me.hasAdminPower) {
           revertBtn.classList.remove('hidden');
           revertBtn.addEventListener('click', async () => {
             if (!confirm('Return Admin Authority back to Admin / Owner?')) return;
@@ -910,8 +923,12 @@ async function setupAuthorityFeature() {
               if (d.success) {
                 showToast('✅ Admin authority returned to Admin', 'success');
                 revertBtn.classList.add('hidden');
+                // Clear session and redirect to manager dashboard
                 await refreshUser();
-                window.location.reload();
+                // Brief delay then redirect to manager dashboard
+                setTimeout(() => {
+                  window.location.href = '/manager-dashboard.html';
+                }, 1200);
               } else {
                 showToast(d.error || 'Failed to revert authority', 'danger');
                 revertBtn.disabled = false;

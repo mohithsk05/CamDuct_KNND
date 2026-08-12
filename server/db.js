@@ -20,7 +20,9 @@ if (fs.existsSync(DATA_FILE)) {
     const raw = fs.readFileSync(DATA_FILE, 'utf-8');
     data = JSON.parse(raw);
     if (!data.autoInc) data.autoInc = { users: 1, projects: 1, notifications: 1, power_grants: 1 };
-    if (!('admin_authority' in data)) data.admin_authority = null;
+    // Always clear admin_authority on server start — must be granted fresh each session
+    data.admin_authority = null;
+    saveData();
   } catch (e) {
     console.error('Error loading data.json:', e);
   }
@@ -135,30 +137,27 @@ function executeQuery(sql, args) {
     return [...data.users.filter(u => u.role !== 'gate')].sort((a,b) => (a.branch || '').localeCompare(b.branch || ''));
   }
 
-  // Power Grants queries
   // admin_authority queries
   if (sql.includes('FROM admin_authority')) {
     return data.admin_authority ? [data.admin_authority] : [];
   }
 
-  // 3-arg: role + branch + dept (for manager users-view check)
-  if (sql.includes('FROM power_grants WHERE granted_to_role = ? AND granted_branch = ? AND granted_dept = ?')) {
-    const [role, branch, dept] = args;
-    return data.power_grants.filter(p =>
-      p.granted_to_role === role &&
-      p.granted_branch === branch &&
-      p.granted_dept === dept
-    );
-  }
-  // 2-arg: role + branch
-  if (sql.includes('FROM power_grants WHERE granted_to_role = ? AND granted_branch = ?')) {
-    const [role, branch] = args;
-    return data.power_grants.filter(p => p.granted_to_role === role && p.granted_branch === branch);
-  }
+  // Power Grants queries — must come BEFORE the generic 'FROM users' check below
   if (sql.includes('FROM power_grants pg LEFT JOIN users u')) {
     return data.power_grants.map(pg => {
       const u = data.users.find(usr => usr.id == pg.granted_by);
       return { ...pg, granted_by_name: u ? u.full_name : null };
+    });
+  }
+  if (sql.includes('FROM power_grants')) {
+    const role = args[0];
+    const branch = args[1];
+    const dept = args[2];
+    return data.power_grants.filter(p => {
+      const roleMatch = !role || (p.granted_to_role || '').toLowerCase() === (role || '').toLowerCase();
+      const branchMatch = !branch || (p.granted_branch || '').toLowerCase() === (branch || '').toLowerCase();
+      const deptMatch = !dept || (p.granted_dept || '').toLowerCase() === (dept || '').toLowerCase();
+      return roleMatch && branchMatch && deptMatch;
     });
   }
 

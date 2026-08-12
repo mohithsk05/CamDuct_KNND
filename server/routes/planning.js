@@ -132,12 +132,12 @@ router.get('/projects', auth, (req, res) => {
   let projects;
   const userBranch = req.user.branch || req.query.branch;
 
-  if (req.user.role === 'admin') {
-    projects = db.prepare(`
-      SELECT p.*, u.full_name AS submitted_by_name
-      FROM projects p LEFT JOIN users u ON p.submitted_by = u.id
-      ORDER BY p.created_at DESC
-    `).all();
+  if (req.user.role === 'admin' && req.user.hasAdminPower && req.user.branch) {
+    // Elevated manager acting as admin: see only their branch projects
+    projects = db.prepare('SELECT p.*, u.full_name AS submitted_by_name FROM projects p LEFT JOIN users u ON p.submitted_by = u.id WHERE LOWER(p.branch) = LOWER(?) ORDER BY p.created_at DESC').all(userBranch || req.user.branch);
+  } else if (req.user.role === 'admin') {
+    // True admin: see all projects
+    projects = db.prepare('SELECT p.*, u.full_name AS submitted_by_name FROM projects p LEFT JOIN users u ON p.submitted_by = u.id ORDER BY p.created_at DESC').all();
   } else if (req.user.role === 'manager' || req.user.role === 'planning') {
     projects = db.prepare(`
       SELECT p.*, u.full_name AS submitted_by_name
@@ -373,6 +373,8 @@ router.get('/export', auth, (req, res) => {
     query += ' AND LOWER(p.branch) = LOWER(?)'; params.push(req.user.branch);
   }
   query += ' ORDER BY p.created_at DESC';
+
+  const rows = db.prepare(query).all(params);
 
   // Helper to parse JSON items
   function parseItems(raw) {
