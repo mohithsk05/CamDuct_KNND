@@ -81,11 +81,11 @@ router.get('/next-job-no', auth, (req, res) => {
 // POST /api/planning/submit — Upload drawing & create project
 router.post('/submit', auth, upload.single('drawing'), (req, res) => {
   try {
-    const { job_no, customer_name, customer_type, project_name, place, location, po_quantity } = req.body;
+    const { job_no, customer_name, customer_type, project_name, place, zone, location, po_quantity } = req.body;
     const branch = req.user.branch || req.body.branch || 'maalur';
 
-    if (!job_no || !customer_name || !customer_type || !project_name || !place || !location) {
-      return res.status(400).json({ error: 'Job No, Customer Category, Customer Name, Project Name, Place, and Location are required' });
+    if (!job_no || !customer_name || !customer_type || !project_name || !place || !zone || !location) {
+      return res.status(400).json({ error: 'Job No, Customer Category, Customer Name, Project Name, Place, Zone, and Location are required' });
     }
 
     const drawingPath = req.file ? req.file.filename : null;
@@ -95,8 +95,8 @@ router.post('/submit', auth, upload.single('drawing'), (req, res) => {
     const status = customer_type === 'knnd' ? 'approved' : 'pending';
 
     const result = db.prepare(`
-      INSERT INTO projects (job_no, branch, customer_name, customer_type, project_name, place, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO projects (job_no, branch, customer_name, customer_type, project_name, place, zone, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       job_no,
       branch.toLowerCase(),
@@ -104,6 +104,7 @@ router.post('/submit', auth, upload.single('drawing'), (req, res) => {
       customer_type,
       project_name,
       place,
+      zone,
       location,
       parseFloat(po_quantity) || 0,
       req.body.po_items || null,

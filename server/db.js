@@ -306,14 +306,19 @@ function executeMutation(sql, args) {
   // Projects insert
   if (sql.includes('INSERT INTO projects')) {
     const id = data.autoInc.projects++;
-    let job_no, branch, customer_name, customer_type, project_name, place, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by;
+    let job_no, branch, customer_name, customer_type, project_name, place, zone, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by;
     
-    if (args.length === 13) {
+    if (args.length === 14) {
+      [job_no, branch, customer_name, customer_type, project_name, place, zone, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by] = args;
+    } else if (args.length === 13) {
       [job_no, branch, customer_name, customer_type, project_name, place, location, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by] = args;
+      zone = null;
     } else if (sql.includes('po_items')) {
       [job_no, branch, customer_name, po_quantity, po_items, drawing_path, drawing_name, status, submitted_by] = args;
+      zone = null;
     } else {
       [job_no, branch, customer_name, po_quantity, drawing_path, drawing_name, status, submitted_by] = args;
+      zone = null;
     }
 
     const project = {
@@ -324,6 +329,7 @@ function executeMutation(sql, args) {
       customer_type: customer_type || (customer_name && customer_name.toLowerCase() === 'knnd' ? 'knnd' : 'others'),
       project_name: project_name || null,
       place: place || null,
+      zone: zone || null,
       location: location || null,
       po_quantity: Number(po_quantity) || 0,
       po_items: po_items || null,

@@ -189,7 +189,7 @@ function buildProductItemRow(containerId, idx, existing = {}) {
       `<option value="${m}" ${existing.material === m ? 'selected' : ''}>${m}</option>`
     ).join('');
     return `
-      <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+      <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
         <div class="pi-combobox" style="position:relative;">
           <input class="form-input pi-product-search" type="text" placeholder="🔍 Search product..." autocomplete="off" value="${existing.product || ''}" style="font-size:0.85rem; width:100%; box-sizing:border-box;">
           <input class="pi-product-value" type="hidden" value="${existing.product || ''}">
@@ -198,55 +198,45 @@ function buildProductItemRow(containerId, idx, existing = {}) {
           <option value="">Material</option>
           ${matOptions}
         </select>
-        <input class="form-input pi-qty" type="number" placeholder="Qty" min="0" step="0.01" value="${existing.qty || ''}" style="font-size:0.85rem;">
         <select class="form-input pi-unit" style="font-size:0.85rem;">
           <option value="">Unit</option>
           ${unitOptions}
         </select>
-        <input class="form-input pi-rate" type="number" placeholder="Rate (₹)" min="0" step="0.01" value="${existing.rate || ''}" style="font-size:0.85rem;">
+        <input class="form-input pi-qty" type="number" placeholder="Qty" min="0" step="0.01" value="${existing.qty || ''}" style="font-size:0.85rem;">
         <button type="button" class="btn btn-ghost btn-sm pi-remove-btn" style="color:var(--danger); font-size:1.1rem; padding:2px 6px; min-width:28px;" title="Remove">✕</button>
       </div>
     `;
   }
 
   if (containerId === 'insulation-items-container') {
-    const makeOptions = MAKE_LIST.map(mk =>
-      `<option value="${mk}" ${existing.make === mk ? 'selected' : ''}>${mk}</option>`
-    ).join('');
     return `
-      <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+      <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
         <div class="pi-combobox" style="position:relative;">
           <input class="form-input pi-product-search" type="text" placeholder="🔍 Search product..." autocomplete="off" value="${existing.product || ''}" style="font-size:0.85rem; width:100%; box-sizing:border-box;">
           <input class="pi-product-value" type="hidden" value="${existing.product || ''}">
         </div>
-        <input class="form-input pi-qty" type="number" placeholder="Qty" min="0" step="0.01" value="${existing.qty || ''}" style="font-size:0.85rem;">
         <select class="form-input pi-unit" style="font-size:0.85rem;">
           <option value="">Unit</option>
           ${unitOptions}
         </select>
-        <select class="form-input pi-make" style="font-size:0.85rem;">
-          <option value="">Make</option>
-          ${makeOptions}
-        </select>
-        <input class="form-input pi-rate" type="number" placeholder="Rate (₹)" min="0" step="0.01" value="${existing.rate || ''}" style="font-size:0.85rem;">
+        <input class="form-input pi-qty" type="number" placeholder="Qty" min="0" step="0.01" value="${existing.qty || ''}" style="font-size:0.85rem;">
         <button type="button" class="btn btn-ghost btn-sm pi-remove-btn" style="color:var(--danger); font-size:1.1rem; padding:2px 6px; min-width:28px;" title="Remove">✕</button>
       </div>
     `;
   }
 
-  // Fallback for PO (with rate, no material or make)
+  // Fallback for PO (no material, make, or rate)
   return `
-    <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+    <div class="product-item-row" data-row-idx="${idx}" style="display:grid; grid-template-columns: 2fr 1fr 1fr 32px; gap:6px; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
       <div class="pi-combobox" style="position:relative;">
         <input class="form-input pi-product-search" type="text" placeholder="🔍 Search product..." autocomplete="off" value="${existing.product || ''}" style="font-size:0.85rem; width:100%; box-sizing:border-box;">
         <input class="pi-product-value" type="hidden" value="${existing.product || ''}">
       </div>
-      <input class="form-input pi-qty" type="number" placeholder="Qty" min="0" step="0.01" value="${existing.qty || ''}" style="font-size:0.85rem;">
       <select class="form-input pi-unit" style="font-size:0.85rem;">
         <option value="">Unit</option>
         ${unitOptions}
       </select>
-      <input class="form-input pi-rate" type="number" placeholder="Rate (₹)" min="0" step="0.01" value="${existing.rate || ''}" style="font-size:0.85rem;">
+      <input class="form-input pi-qty" type="number" placeholder="Qty" min="0" step="0.01" value="${existing.qty || ''}" style="font-size:0.85rem;">
       <button type="button" class="btn btn-ghost btn-sm pi-remove-btn" style="color:var(--danger); font-size:1.1rem; padding:2px 6px; min-width:28px;" title="Remove">✕</button>
     </div>
   `;
@@ -718,14 +708,15 @@ function setupSubmitModal() {
       const customer = document.getElementById('s-customer').value.trim();
       const projName = document.getElementById('s-project-name').value.trim();
       const place = document.getElementById('s-place').value.trim();
+      const zone = document.getElementById('s-zone').value;
       const location = document.getElementById('s-location').value.trim();
       const customerType = document.querySelector('input[name="customer_type"]:checked').value;
 
       const errEl = document.getElementById('submit-error');
       const errMsg = document.getElementById('submit-error-msg');
 
-      if (!jobNo || !customer || !projName || !place || !location) {
-        errMsg.textContent = 'Job No, Customer, Project Name, Place, and Location are all required.';
+      if (!jobNo || !customer || !projName || !place || !location || !zone) {
+        errMsg.textContent = 'Job No, Customer, Project Name, Place, Zone and Location are all required.';
         errEl.classList.remove('hidden');
         return;
       }
@@ -744,6 +735,7 @@ function setupSubmitModal() {
         formData.append('customer_type', customerType);
         formData.append('project_name', projName);
         formData.append('place', place);
+        formData.append('zone', zone);
         formData.append('location', location);
         formData.append('po_quantity', poItems.length || 0);
         formData.append('po_items', JSON.stringify(poItems));
@@ -768,6 +760,7 @@ function setupSubmitModal() {
         document.getElementById('s-customer').value = '';
         document.getElementById('s-project-name').value = '';
         document.getElementById('s-place').value = '';
+        document.getElementById('s-zone').value = '';
         document.getElementById('s-location').value = '';
         document.getElementById('po-items-container').innerHTML = '';
         await loadProjects();
@@ -989,14 +982,9 @@ function renderProjectCardGroup(group, serialNo) {
         items.map(it => {
           if (type === 'billing') {
             const matSpan = it.material ? ` <span style="font-size:0.82rem; color:#0369a1; background:#e0f2fe; padding:1px 6px; border-radius:4px; font-weight:600; margin:0 4px;">${escapeHtml(it.material)}</span>` : '';
-            const rateSpan = it.rate ? ` <span style="color:var(--text-second);">@ ₹${it.rate}</span>` : '';
-            return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-size:0.95rem;">${icon}</span> <strong style="color:var(--text-primary); font-weight:600;">${escapeHtml(it.product)}</strong>${matSpan} <span style="font-weight:700; color:var(--text-primary);">${it.qty ?? '—'}</span> <span style="color:var(--text-second);">${escapeHtml(it.unit || '')}</span>${rateSpan}</div>`;
+            return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-size:0.95rem;">${icon}</span> <strong style="color:var(--text-primary); font-weight:600;">${escapeHtml(it.product)}</strong>${matSpan} <span style="font-weight:700; color:var(--text-primary);">${it.qty ?? '—'}</span> <span style="color:var(--text-second);">${escapeHtml(it.unit || '')}</span></div>`;
           }
-          let extra = '';
-          if (type === 'insulation' && it.make) {
-            extra = ` <span style="font-size:0.75rem; color:#475569; background:#f1f5f9; padding:1px 4px; border-radius:3px; font-weight:normal; margin-left:4px;">[Make: ${escapeHtml(it.make)}]</span>`;
-          }
-          return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-size:0.95rem;">${icon}</span> <strong style="color:var(--text-primary); font-weight:600;">${escapeHtml(it.product)}</strong>${extra}: <span style="font-weight:700; color:var(--text-primary);">${it.qty ?? '—'}</span> <span style="color:var(--text-second);">${escapeHtml(it.unit || '')}</span> ${it.rate ? `<span style="color:var(--text-second);">@ ₹${it.rate}</span>` : ''}</div>`;
+          return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-size:0.95rem;">${icon}</span> <strong style="color:var(--text-primary); font-weight:600;">${escapeHtml(it.product)}</strong>: <span style="font-weight:700; color:var(--text-primary);">${it.qty ?? '—'}</span> <span style="color:var(--text-second);">${escapeHtml(it.unit || '')}</span></div>`;
         }).join('');
 
       const areaListPill = p.area_list_name
@@ -1006,27 +994,39 @@ function renderProjectCardGroup(group, serialNo) {
 
       if (currentUser.role === 'planning') {
         const billingContent = billingDoneItems
-          ? `<div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%; gap:12px; font-size:0.88rem; line-height:1.8;">
-               <div style="display:flex; flex-direction:column; gap:3px;">
-                 ${buildItemsSummary(billingItems, '💼', 'billing')}
-                 ${areaListPill}
-                 ${numberingPill}
+          ? `<details style="margin-bottom: 8px; cursor: pointer;">
+               <summary style="font-size:0.85rem; font-weight:600; color:#0369a1; background:#e0f2fe; padding:6px 10px; border-radius:4px; border:1px solid #bae6fd; user-select:none; display:inline-flex; align-items:center; gap:6px;">💼 View Billing Quantity</summary>
+               <div style="padding:10px; border-left:2px solid #bae6fd; margin-top:6px; font-size:0.88rem; line-height:1.8;">
+                 <div style="display:flex; flex-direction:column; gap:3px;">
+                   ${buildItemsSummary(billingItems, '💼', 'billing')}
+                   ${areaListPill}
+                   ${numberingPill}
+                 </div>
+                 <div style="margin-top:8px;">
+                   <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="billing" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
+                 </div>
                </div>
-               <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="billing" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
-             </div>`
-          : `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="billing" style="font-size:0.85rem;">💼 Enter Billing Qty</button>`;
+             </details>`
+          : `<div style="margin-bottom:8px;"><button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="billing" style="font-size:0.85rem;">💼 Enter Billing Qty</button></div>`;
 
         const insulationContent = insulationDoneItems
-          ? `<div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%; gap:12px; font-size:0.88rem; line-height:1.8;">
-               <div style="display:flex; flex-direction:column; gap:3px;">${buildItemsSummary(insulationItems, '🧱', 'insulation')}</div>
-               <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="insulation" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
-             </div>`
-          : `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="insulation" style="font-size:0.85rem;">🧱 Enter Insulation Qty</button>`;
+          ? `<details style="margin-bottom: 8px; cursor: pointer;">
+               <summary style="font-size:0.85rem; font-weight:600; color:#b45309; background:#ffedd5; padding:6px 10px; border-radius:4px; border:1px solid #fed7aa; user-select:none; display:inline-flex; align-items:center; gap:6px;">🧱 View Insulation Quantity</summary>
+               <div style="padding:10px; border-left:2px solid #fed7aa; margin-top:6px; font-size:0.88rem; line-height:1.8;">
+                 <div style="display:flex; flex-direction:column; gap:3px;">
+                   ${buildItemsSummary(insulationItems, '🧱', 'insulation')}
+                 </div>
+                 <div style="margin-top:8px;">
+                   <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="insulation" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
+                 </div>
+               </div>
+             </details>`
+          : `<div><button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="insulation" style="font-size:0.85rem;">🧱 Enter Insulation Qty</button></div>`;
 
         qtyBar = `
           <div class="qty-actions-bar" style="display:flex; gap:16px; padding:12px 18px; background:var(--success-bg); border-top:1.5px solid #bbf7d0; align-items:flex-start; border-radius: 8px; margin-top: 8px;">
-            <span class="qty-actions-label" style="font-size:0.9rem; font-weight:700; color:var(--success); padding-top:2px;">Quantities:</span>
-            <div style="display:flex; flex-direction:column; gap:10px; flex:1;">
+            <span class="qty-actions-label" style="font-size:0.9rem; font-weight:700; color:var(--success); padding-top:4px;">Quantities:</span>
+            <div style="display:flex; flex-direction:column; gap:4px; flex:1;">
               ${billingContent}
               ${insulationContent}
             </div>
@@ -1034,24 +1034,36 @@ function renderProjectCardGroup(group, serialNo) {
         `;
       } else {
         const billingDisplay = billingDoneItems
-          ? `<div style="display:flex; flex-direction:column; gap:3px; font-size:0.88rem; line-height:1.8;">
-               ${buildItemsSummary(billingItems, '💼', 'billing')}
-               ${areaListPill}
-               ${numberingPill}
-             </div>`
-          : `<div style="font-size:0.85rem; color:#94a3b8; font-weight:500;">Billing qty pending</div>`;
+          ? `<details style="margin-bottom: 8px; cursor: pointer;">
+               <summary style="font-size:0.85rem; font-weight:600; color:#0369a1; background:#e0f2fe; padding:6px 10px; border-radius:4px; border:1px solid #bae6fd; user-select:none; display:inline-flex; align-items:center; gap:6px;">💼 View Billing Quantity</summary>
+               <div style="padding:10px; border-left:2px solid #bae6fd; margin-top:6px; font-size:0.88rem; line-height:1.8;">
+                 <div style="display:flex; flex-direction:column; gap:3px;">
+                   ${buildItemsSummary(billingItems, '💼', 'billing')}
+                   ${areaListPill}
+                   ${numberingPill}
+                 </div>
+               </div>
+             </details>`
+          : `<div style="font-size:0.85rem; color:#94a3b8; font-weight:500; margin-bottom:8px;">Billing qty pending</div>`;
 
         const insulationDisplay = insulationDoneItems
-          ? `<div style="display:flex; flex-direction:column; gap:3px; font-size:0.88rem; line-height:1.8;">${buildItemsSummary(insulationItems, '🧱', 'insulation')}</div>`
+          ? `<details style="margin-bottom: 8px; cursor: pointer;">
+               <summary style="font-size:0.85rem; font-weight:600; color:#b45309; background:#ffedd5; padding:6px 10px; border-radius:4px; border:1px solid #fed7aa; user-select:none; display:inline-flex; align-items:center; gap:6px;">🧱 View Insulation Quantity</summary>
+               <div style="padding:10px; border-left:2px solid #fed7aa; margin-top:6px; font-size:0.88rem; line-height:1.8;">
+                 <div style="display:flex; flex-direction:column; gap:3px;">
+                   ${buildItemsSummary(insulationItems, '🧱', 'insulation')}
+                 </div>
+               </div>
+             </details>`
           : `<div style="font-size:0.85rem; color:#94a3b8; font-weight:500;">Insulation qty pending</div>`;
 
         const adminUnlockBtn = (isAdminHolder && (billingDoneItems || insulationDoneItems))
-          ? `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-action="admin-unlock" style="font-size:0.8rem;">🔓 Unlock Edit</button>` : '';
+          ? `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-action="admin-unlock" style="font-size:0.8rem; margin-top:4px;">🔓 Unlock Edit</button>` : '';
 
         qtyBar = `
           <div class="qty-actions-bar" style="display:flex; gap:16px; padding:12px 18px; background:var(--success-bg); border-top:1.5px solid #bbf7d0; align-items:flex-start; border-radius: 8px; margin-top: 8px;">
-            <span class="qty-actions-label" style="font-size:0.9rem; font-weight:700; color:var(--success); padding-top:2px;">Quantities:</span>
-            <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+            <span class="qty-actions-label" style="font-size:0.9rem; font-weight:700; color:var(--success); padding-top:4px;">Quantities:</span>
+            <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
               ${billingDisplay}
               ${insulationDisplay}
             </div>
@@ -1062,14 +1074,14 @@ function renderProjectCardGroup(group, serialNo) {
     }
 
     const poItems = safeParseItems(p.po_items, p.po_quantity, null, null, 'PO Item');
-    const poItemsSummary = poItems.map(it => `<div style="font-size:0.82rem; color:var(--text-primary);"><strong style="font-weight:600;">${escapeHtml(it.product)}:</strong> ${it.qty ?? '—'} ${escapeHtml(it.unit || '')} ${it.rate ? `@ ₹${it.rate}` : ''}</div>`).join('');
+    const poItemsSummary = poItems.map(it => `<div style="font-size:0.82rem; color:var(--text-primary);"><strong style="font-weight:600;">${escapeHtml(it.product)}:</strong> ${it.qty ?? '—'} ${escapeHtml(it.unit || '')}</div>`).join('');
     const poDisplay = poItems.length > 0
       ? `<div style="display:flex; flex-direction:column; gap:3px;">${poItemsSummary}</div>`
       : `<span style="font-size:0.8rem; color:var(--text-muted);">No PO items entered yet</span>`;
 
     const showPoUpdateBtn = (p.status === 'approved') && (currentUser.role === 'planning' || currentUser.role === 'admin' || currentUser.hasAdminPower);
     const poUpdateBtn = showPoUpdateBtn
-      ? `<div style="margin-top:6px;"><button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="po-update" style="font-size:0.78rem; padding:3px 8px;">📝 Update PO</button></div>`
+      ? `<button class="btn btn-outline btn-sm" data-id="${p.id}" data-job="${p.job_no}" data-action="po-update" style="font-size:0.7rem; padding:2px 6px;">📝 Update</button>`
       : '';
 
     return `
@@ -1079,8 +1091,11 @@ function renderProjectCardGroup(group, serialNo) {
         </h4>
         <div class="project-detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
           <div class="project-detail-item">
-            <div class="project-detail-label">PO Products &amp; Quantities</div>
-            <div class="project-detail-value">${poDisplay} ${poUpdateBtn}</div>
+            <div class="project-detail-label" style="display:flex; justify-content:flex-start; align-items:center; gap:8px;">
+              <span>PO Quantity</span>
+              ${poUpdateBtn}
+            </div>
+            <div class="project-detail-value">${poDisplay}</div>
           </div>
           <div class="project-detail-item">
             <div class="project-detail-label">Drawing File</div>
@@ -1165,18 +1180,54 @@ function attachProjectCardEvents() {
     pill.addEventListener('click', (e) => {
       e.stopPropagation();
       const filename = pill.dataset.file;
+      const displayName = pill.dataset.name || filename;
       if (!filename) return;
+
       apiFetch(`/planning/drawing/${filename}`).then(r => {
         if (!r || !r.ok) { showToast('File not found', 'error'); return; }
         return r.blob();
       }).then(blob => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.click();
-        URL.revokeObjectURL(url);
+        
+        const modal = document.getElementById('file-viewer-modal');
+        if (modal) {
+          const title = document.getElementById('file-viewer-title');
+          const body = document.getElementById('file-viewer-body');
+          const dlBtn = document.getElementById('file-viewer-download-btn');
+          
+          title.textContent = '📄 ' + displayName;
+          body.innerHTML = ''; // clear
+          
+          const lowerName = filename.toLowerCase();
+          if (lowerName.endsWith('.pdf')) {
+            body.innerHTML = `<iframe src="${url}" style="width: 100%; height: 60vh; border: none;"></iframe>`;
+          } else if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.webp')) {
+            body.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 60vh; object-fit: contain;">`;
+          } else {
+            body.innerHTML = `<div style="text-align:center; padding:40px;">
+              <div style="font-size:3rem; margin-bottom:10px;">📦</div>
+              <p style="font-size:1.1rem; color:var(--text-primary); font-weight:600; margin:0;">Preview not available for this file type</p>
+              <p style="font-size:0.9rem; color:var(--text-muted); margin-top:5px;">Please download the file to view its contents.</p>
+            </div>`;
+          }
+          
+          dlBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = displayName;
+            link.click();
+          };
+          
+          modal.classList.remove('hidden');
+        } else {
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = displayName;
+          link.target = '_blank';
+          link.click();
+          URL.revokeObjectURL(url);
+        }
       });
     });
   });
@@ -1556,8 +1607,8 @@ function openDetailModal(p) {
         const bi = safeParseItems(p.billing_items, p.billing_qty, p.billing_unit, p.billing_rate, 'Billing Item');
         if (!bi.length) return '<div style="font-size:0.82rem; color:var(--text-muted); padding:8px 0;">No billing quantities entered yet.</div>';
         return `<table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-          <tr style="background:var(--bg);"><th style="text-align:left; padding:5px 8px; border:1px solid var(--border);">Product</th><th style="padding:5px 8px; border:1px solid var(--border);">Qty</th><th style="padding:5px 8px; border:1px solid var(--border);">Unit</th><th style="padding:5px 8px; border:1px solid var(--border);">Rate (₹)</th><th style="padding:5px 8px; border:1px solid var(--border);">Total (₹)</th></tr>
-          ${bi.map(it => `<tr><td style="padding:5px 8px; border:1px solid var(--border);">${escapeHtml(it.product)}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.qty ?? '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.unit || '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:right;">${it.rate ?? '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:right; font-weight:600;">${it.qty && it.rate ? (it.qty * it.rate).toFixed(2) : '—'}</td></tr>`).join('')}
+          <tr style="background:var(--bg);"><th style="text-align:left; padding:5px 8px; border:1px solid var(--border);">Product</th><th style="padding:5px 8px; border:1px solid var(--border);">Qty</th><th style="padding:5px 8px; border:1px solid var(--border);">Unit</th></tr>
+          ${bi.map(it => `<tr><td style="padding:5px 8px; border:1px solid var(--border);">${escapeHtml(it.product)}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.qty ?? '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.unit || '—'}</td></tr>`).join('')}
         </table>`;
       })()}
     </div>
@@ -1567,8 +1618,8 @@ function openDetailModal(p) {
         const ii = safeParseItems(p.insulation_items, p.insulation_qty, p.insulation_unit, p.insulation_rate, 'Insulation Item');
         if (!ii.length) return '<div style="font-size:0.82rem; color:var(--text-muted); padding:8px 0;">No insulation quantities entered yet.</div>';
         return `<table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-          <tr style="background:var(--bg);"><th style="text-align:left; padding:5px 8px; border:1px solid var(--border);">Product</th><th style="padding:5px 8px; border:1px solid var(--border);">Qty</th><th style="padding:5px 8px; border:1px solid var(--border);">Unit</th><th style="padding:5px 8px; border:1px solid var(--border);">Rate (₹)</th><th style="padding:5px 8px; border:1px solid var(--border);">Total (₹)</th></tr>
-          ${ii.map(it => `<tr><td style="padding:5px 8px; border:1px solid var(--border);">${escapeHtml(it.product)}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.qty ?? '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.unit || '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:right;">${it.rate ?? '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:right; font-weight:600;">${it.qty && it.rate ? (it.qty * it.rate).toFixed(2) : '—'}</td></tr>`).join('')}
+          <tr style="background:var(--bg);"><th style="text-align:left; padding:5px 8px; border:1px solid var(--border);">Product</th><th style="padding:5px 8px; border:1px solid var(--border);">Qty</th><th style="padding:5px 8px; border:1px solid var(--border);">Unit</th></tr>
+          ${ii.map(it => `<tr><td style="padding:5px 8px; border:1px solid var(--border);">${escapeHtml(it.product)}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.qty ?? '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.unit || '—'}</td></tr>`).join('')}
         </table>`;
       })()}
     </div>` : ''}
@@ -1618,13 +1669,13 @@ function downloadProjectPDF(p) {
     ${p.status === 'approved' ? `
     <div class="section-title">Billing Quantity</div>
     <table>
-      <tr><th>Product</th><th>Qty</th><th>Unit</th><th>Rate (₹)</th><th>Total (₹)</th></tr>
-      ${(() => { const bi = safeParseItems(p.billing_items, p.billing_qty, p.billing_unit, p.billing_rate, 'Billing Item'); return bi.length ? bi.map(it => `<tr><td>${it.product || '—'}</td><td>${it.qty ?? '—'}</td><td>${it.unit || '—'}</td><td>${it.rate ?? '—'}</td><td>${it.qty && it.rate ? (it.qty * it.rate).toFixed(2) : '—'}</td></tr>`).join('') : '<tr><td colspan="5">No billing quantities entered yet</td></tr>'; })()}
+      <tr><th>Product</th><th>Qty</th><th>Unit</th></tr>
+      ${(() => { const bi = safeParseItems(p.billing_items, p.billing_qty, p.billing_unit, p.billing_rate, 'Billing Item'); return bi.length ? bi.map(it => `<tr><td>${it.product || '—'}</td><td>${it.qty ?? '—'}</td><td>${it.unit || '—'}</td></tr>`).join('') : '<tr><td colspan="3">No billing quantities entered yet</td></tr>'; })()}
     </table>
     <div class="section-title">Insulation Quantity</div>
     <table>
-      <tr><th>Product</th><th>Qty</th><th>Unit</th><th>Rate (₹)</th><th>Total (₹)</th></tr>
-      ${(() => { const ii = safeParseItems(p.insulation_items, p.insulation_qty, p.insulation_unit, p.insulation_rate, 'Insulation Item'); return ii.length ? ii.map(it => `<tr><td>${it.product || '—'}</td><td>${it.qty ?? '—'}</td><td>${it.unit || '—'}</td><td>${it.rate ?? '—'}</td><td>${it.qty && it.rate ? (it.qty * it.rate).toFixed(2) : '—'}</td></tr>`).join('') : '<tr><td colspan="5">No insulation quantities entered yet</td></tr>'; })()}
+      <tr><th>Product</th><th>Qty</th><th>Unit</th></tr>
+      ${(() => { const ii = safeParseItems(p.insulation_items, p.insulation_qty, p.insulation_unit, p.insulation_rate, 'Insulation Item'); return ii.length ? ii.map(it => `<tr><td>${it.product || '—'}</td><td>${it.qty ?? '—'}</td><td>${it.unit || '—'}</td></tr>`).join('') : '<tr><td colspan="3">No insulation quantities entered yet</td></tr>'; })()}
     </table>` : ''}
 
     <script>window.print(); window.onafterprint = () => window.close();<\/script>
@@ -1637,8 +1688,8 @@ function downloadProjectPDF(p) {
 async function downloadProjectExcel(p) {
   const headers = [
     'Job No', 'Branch', 'Customer', 'PO Quantity', 'Status', 'Created Date',
-    'Billing Product', 'Billing Qty', 'Billing Unit', 'Billing Rate (₹)', 'Billing Total (₹)',
-    'Insulation Product', 'Insulation Qty', 'Insulation Unit', 'Insulation Rate (₹)', 'Insulation Total (₹)',
+    'Billing Product', 'Billing Qty', 'Billing Unit',
+    'Insulation Product', 'Insulation Qty', 'Insulation Unit',
     'Submitted By', 'Revision Remark'
   ];
 
@@ -1650,8 +1701,6 @@ async function downloadProjectExcel(p) {
   for (let i = 0; i < maxLen; i++) {
     const b = bi[i] || {};
     const ins = ii[i] || {};
-    const bTotal = b.qty && b.rate ? (b.qty * b.rate).toFixed(2) : '—';
-    const iTotal = ins.qty && ins.rate ? (ins.qty * ins.rate).toFixed(2) : '—';
     rows.push([
       `"${i === 0 ? p.job_no : ''}"`,
       `"${i === 0 ? capitalize(p.branch) : ''}"`,
@@ -1662,13 +1711,9 @@ async function downloadProjectExcel(p) {
       `"${b.product || '—'}"`,
       b.qty ?? '—',
       `"${b.unit || '—'}"`,
-      b.rate ?? '—',
-      bTotal,
       `"${ins.product || '—'}"`,
       ins.qty ?? '—',
       `"${ins.unit || '—'}"`,
-      ins.rate ?? '—',
-      iTotal,
       `"${i === 0 ? (p.submitted_by_name || '—') : ''}"`,
       `"${i === 0 ? (p.revise_remark || '—') : ''}"`
     ]);
