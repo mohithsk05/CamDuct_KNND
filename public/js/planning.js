@@ -12,7 +12,22 @@ let allProjects = [];
 let currentBranchProjects = [];
 let currentBifurcation = 'all';
 let currentStatusFilter = 'all';
+let currentConversionFilter = 'all';
 let revisingProject = null; // target project object when revising
+
+function getProjectConversionStatus(p) {
+  if (!p) return 'not_converted';
+  if (p.conversion_status === 'converted' && p.po_file_path) {
+    return 'converted';
+  }
+  if (p.conversion_status === 'not_converted') {
+    return 'not_converted';
+  }
+  // Real-time 15-day check: if no conversion status assigned within 15 days, it is automatically considered Not Converted
+  const createdAt = p.created_at ? new Date(p.created_at).getTime() : Date.now();
+  const ageInDays = (Date.now() - createdAt) / (1000 * 60 * 60 * 24);
+  return 'not_converted';
+}
 
 // ─── Product List ──────────────────────────────────────────────────────────────
 const PRODUCT_LIST = [
@@ -1035,12 +1050,35 @@ async function loadProjects() {
           btn.style.color = '#4f46e5';
           btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
           currentStatusFilter = btn.dataset.status || 'all';
+          updateConversionCounts();
+          renderFilteredList(currentBranchProjects);
+        };
+      });
+    }
+
+    // Attach conversion tab listeners (All Conversion, Converted, Not Converted)
+    const conversionTabsContainer = document.getElementById('project-conversion-tabs');
+    if (conversionTabsContainer) {
+      conversionTabsContainer.querySelectorAll('.conversion-tab-btn').forEach(btn => {
+        btn.onclick = () => {
+          conversionTabsContainer.querySelectorAll('.conversion-tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.background = 'transparent';
+            b.style.color = '#64748b';
+            b.style.boxShadow = 'none';
+          });
+          btn.classList.add('active');
+          btn.style.background = '#ffffff';
+          btn.style.color = '#4f46e5';
+          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          currentConversionFilter = btn.dataset.conversion || 'all';
           renderFilteredList(currentBranchProjects);
         };
       });
     }
 
     updateStatusCounts();
+    updateConversionCounts();
     renderFilteredList(currentBranchProjects);
   } catch (err) {
     listEl.innerHTML = `<p style="color:var(--danger); padding:16px;">Error: ${err.message}</p>`;
@@ -1076,6 +1114,40 @@ function updateStatusCounts() {
   if (elRejected) elRejected.textContent = cntRejected;
 }
 
+function updateConversionCounts() {
+  let catProjects = currentBranchProjects;
+  if (currentBifurcation === 'knnd') {
+    catProjects = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd');
+  } else if (currentBifurcation === 'others') {
+    catProjects = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others');
+  }
+
+  if (currentStatusFilter === 'accepted') {
+    catProjects = catProjects.filter(p => (p.status || '').toLowerCase() === 'approved');
+  } else if (currentStatusFilter === 'rejected') {
+    catProjects = catProjects.filter(p => (p.status || '').toLowerCase() !== 'approved');
+  }
+
+  const jobConvMap = {};
+  catProjects.forEach(p => {
+    if (!jobConvMap[p.job_no]) {
+      jobConvMap[p.job_no] = getProjectConversionStatus(p);
+    }
+  });
+
+  const convStatuses = Object.values(jobConvMap);
+  const cntConvAll = convStatuses.length;
+  const cntConvConverted = convStatuses.filter(s => s === 'converted').length;
+  const cntConvNotConverted = convStatuses.filter(s => s === 'not_converted').length;
+
+  const elConvAll = document.getElementById('cnt-conv-all');
+  const elConvConverted = document.getElementById('cnt-conv-converted');
+  const elConvNotConverted = document.getElementById('cnt-conv-not-converted');
+  if (elConvAll) elConvAll.textContent = cntConvAll;
+  if (elConvConverted) elConvConverted.textContent = cntConvConverted;
+  if (elConvNotConverted) elConvNotConverted.textContent = cntConvNotConverted;
+}
+
 function renderFilteredList(branchProjects) {
   const listEl = document.getElementById('projects-list');
   if (!listEl) return;
@@ -1093,12 +1165,19 @@ function renderFilteredList(branchProjects) {
     filtered = filtered.filter(p => (p.status || '').toLowerCase() !== 'approved');
   }
 
+  if (currentConversionFilter === 'converted') {
+    filtered = filtered.filter(p => getProjectConversionStatus(p) === 'converted');
+  } else if (currentConversionFilter === 'not_converted') {
+    filtered = filtered.filter(p => getProjectConversionStatus(p) === 'not_converted');
+  }
+
   if (filtered.length === 0) {
     const statusLabel = currentStatusFilter === 'all' ? '' : ` ${currentStatusFilter.toUpperCase()}`;
+    const convLabel = currentConversionFilter === 'all' ? '' : ` (${currentConversionFilter.replace('_', ' ').toUpperCase()})`;
     listEl.innerHTML = `
       <div class="no-projects" style="text-align:center; padding:32px; color:var(--text-muted);">
         <div style="font-size:2rem; margin-bottom:10px; opacity:0.4;">📋</div>
-        <p>No${statusLabel} projects found under "${currentBifurcation.toUpperCase()}" category.</p>
+        <p>No${statusLabel} projects${convLabel} found under "${currentBifurcation.toUpperCase()}" category.</p>
       </div>
     `;
     return;
@@ -1253,6 +1332,9 @@ function renderProjectCardGroup(group, serialNo) {
         ? `<div style="margin-top: 6px;"><span class="drawing-pill" data-file="${p.area_list_path}" data-name="${escapeHtml(p.area_list_name)}" style="font-size:0.8rem; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:3px 8px; border-radius:4px; cursor:pointer;">📄 Area List File: ${escapeHtml(p.area_list_name)}</span></div>` : '';
       const numberingPill = p.numbering_drawing_name
         ? `<div style="margin-top: 6px;"><span class="drawing-pill" data-file="${p.numbering_drawing_path}" data-name="${escapeHtml(p.numbering_drawing_name)}" style="font-size:0.8rem; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:3px 8px; border-radius:4px; cursor:pointer;">📄 Numbering Drawing File: ${escapeHtml(p.numbering_drawing_name)}</span></div>` : '';
+      const poFilePill = (p.conversion_status === 'converted' && p.po_file_path)
+        ? `<div style="margin-top: 6px;"><span class="drawing-pill" data-file="${p.po_file_path}" data-name="${escapeHtml(p.po_file_name)}" style="font-size:0.8rem; background:#ecfdf5; border:1px solid #6ee7b7; color:#047857; padding:3px 8px; border-radius:4px; cursor:pointer;">📄 PO Document: ${escapeHtml(p.po_file_name || 'View PO')}</span></div>`
+        : `<div style="margin-top: 6px; font-size:0.8rem; color:#b45309; font-weight:600;">⏳ Conversion Status: Not Converted</div>`;
 
       if (currentUser.role === 'planning') {
         const billingContent = billingDoneItems
@@ -1263,6 +1345,7 @@ function renderProjectCardGroup(group, serialNo) {
                    ${buildItemsSummary(billingItems, '💼', 'billing')}
                    ${areaListPill}
                    ${numberingPill}
+                   ${poFilePill}
                  </div>
                  <div style="margin-top:8px;">
                    <button class="btn btn-ghost btn-sm" data-id="${p.id}" data-field="billing" data-action="request-edit" style="font-size:0.8rem; color:var(--text-second); padding:3px 10px; flex-shrink:0;">🔒 Request Edit</button>
@@ -1506,8 +1589,44 @@ function attachProjectCardEvents() {
       if (existing.length === 0) addProductItemRow('billing-items-container');
 
       // Clear file inputs names
-      document.getElementById('area-list-name').textContent = p.area_list_name ? p.area_list_name : 'No file chosen';
-      document.getElementById('numbering-drawing-name').textContent = p.numbering_drawing_name ? p.numbering_drawing_name : 'No file chosen';
+      document.getElementById('area-list-name').textContent = (p && p.area_list_name) ? p.area_list_name : 'No file chosen';
+      document.getElementById('numbering-drawing-name').textContent = (p && p.numbering_drawing_name) ? p.numbering_drawing_name : 'No file chosen';
+
+      // Set conversion status & PO file fields
+      const convSelect = document.getElementById('billing-conversion-status');
+      const poContainer = document.getElementById('po-file-container');
+      const poFileName = document.getElementById('po-file-name');
+      const poFileInput = document.getElementById('billing-po-file');
+      const existingPoDisplay = document.getElementById('existing-po-display');
+
+      if (poFileInput) poFileInput.value = '';
+      const isConv = p && p.conversion_status === 'converted' && p.po_file_path;
+      if (convSelect) {
+        convSelect.value = isConv ? 'converted' : (p && p.conversion_status === 'not_converted' ? 'not_converted' : 'not_converted');
+      }
+      if (poContainer) {
+        if (convSelect && convSelect.value === 'converted') {
+          poContainer.classList.remove('hidden');
+        } else {
+          poContainer.classList.add('hidden');
+        }
+      }
+      if (poFileName) poFileName.textContent = 'No file chosen';
+      if (existingPoDisplay) {
+        existingPoDisplay.innerHTML = (p && p.po_file_name)
+          ? `📄 Current PO: <span class="drawing-pill" data-file="${p.po_file_path}" data-name="${escapeHtml(p.po_file_name)}" style="font-size:0.78rem; cursor:pointer;">${escapeHtml(p.po_file_name)}</span>`
+          : '';
+      }
+
+      if (convSelect && poContainer) {
+        convSelect.onchange = () => {
+          if (convSelect.value === 'converted') {
+            poContainer.classList.remove('hidden');
+          } else {
+            poContainer.classList.add('hidden');
+          }
+        };
+      }
 
       document.getElementById('billing-modal').classList.remove('hidden');
     });
@@ -1739,13 +1858,29 @@ function setupBillingModal() {
       }
     }
 
+    const conversionStatusSelect = document.getElementById('billing-conversion-status');
+    const conversionStatus = conversionStatusSelect ? conversionStatusSelect.value : 'not_converted';
+    const poFileInput = document.getElementById('billing-po-file');
+    const poFile = poFileInput && poFileInput.files ? poFileInput.files[0] : null;
+
+    if (conversionStatus === 'converted') {
+      const hasExistingPo = project && project.po_file_path;
+      if (!poFile && !hasExistingPo) {
+        errMsg.textContent = 'Uploading a PO file is mandatory when marking status as Converted.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+    }
+
     errEl.classList.add('hidden');
 
     try {
       const formData = new FormData();
       formData.append('billing_items', JSON.stringify(items));
+      formData.append('conversion_status', conversionStatus);
       if (areaFile) formData.append('area_list', areaFile);
       if (numberingFile) formData.append('numbering_drawing', numberingFile);
+      if (poFile) formData.append('po_file', poFile);
 
       const token = getToken();
       const res = await fetch(`/api/planning/projects/${currentProjectId}/quantities`, {
@@ -1756,18 +1891,21 @@ function setupBillingModal() {
       const data = res ? await res.json() : null;
 
       if (res && res.ok) {
-        showToast('Billing quantities saved ✅', 'success');
+        showToast('Billing details and conversion status saved ✅', 'success');
         document.getElementById('billing-modal').classList.add('hidden');
         // Clear file inputs
         if (areaListInput) areaListInput.value = '';
         if (numberingInput) numberingInput.value = '';
+        if (poFileInput) poFileInput.value = '';
         const aName = document.getElementById('area-list-name');
         const nName = document.getElementById('numbering-drawing-name');
+        const pName = document.getElementById('po-file-name');
         if (aName) aName.textContent = 'No file chosen';
         if (nName) nName.textContent = 'No file chosen';
+        if (pName) pName.textContent = 'No file chosen';
         await loadProjects();
       } else {
-        errMsg.textContent = (data && data.error) || 'Failed to save billing quantities.';
+        errMsg.textContent = (data && data.error) || 'Failed to save billing details.';
         errEl.classList.remove('hidden');
       }
     } catch (err) {

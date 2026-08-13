@@ -237,7 +237,8 @@ router.patch('/projects/:id/po', auth, (req, res) => {
 // PATCH /api/planning/projects/:id/quantities — Save billing & insulation qty (planning dept)
 router.patch('/projects/:id/quantities', auth, upload.fields([
   { name: 'area_list', maxCount: 1 },
-  { name: 'numbering_drawing', maxCount: 1 }
+  { name: 'numbering_drawing', maxCount: 1 },
+  { name: 'po_file', maxCount: 1 }
 ]), (req, res) => {
   const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -247,6 +248,7 @@ router.patch('/projects/:id/quantities', auth, upload.fields([
 
   const billing_items_raw = req.body.billing_items;
   const insulation_items_raw = req.body.insulation_items;
+  const conversion_status = req.body.conversion_status;
 
   // Edit locking validation
   if (billing_items_raw !== undefined && project.billing_items && project.billing_items !== '[]') {
@@ -256,16 +258,23 @@ router.patch('/projects/:id/quantities', auth, upload.fields([
     return res.status(403).json({ error: 'Insulation quantities are locked. Click "Request Edit" to modify.' });
   }
 
-  if (billing_items_raw !== undefined) {
-    let billing_items;
-    try {
-      billing_items = typeof billing_items_raw === 'string' ? JSON.parse(billing_items_raw) : billing_items_raw;
-    } catch(e) {
-      billing_items = billing_items_raw;
+  if (billing_items_raw !== undefined || conversion_status !== undefined) {
+    let billing_items = [];
+    if (billing_items_raw !== undefined) {
+      try {
+        billing_items = typeof billing_items_raw === 'string' ? JSON.parse(billing_items_raw) : billing_items_raw;
+      } catch(e) {
+        billing_items = billing_items_raw;
+      }
+    } else {
+      try {
+        billing_items = project.billing_items ? JSON.parse(project.billing_items) : [];
+      } catch(e) { billing_items = []; }
     }
 
     const areaFile = req.files && req.files['area_list'] ? req.files['area_list'][0] : null;
     const numberingFile = req.files && req.files['numbering_drawing'] ? req.files['numbering_drawing'][0] : null;
+    const poFile = req.files && req.files['po_file'] ? req.files['po_file'][0] : null;
 
     if (!project.area_list_path || !project.numbering_drawing_path) {
       if (!areaFile || !numberingFile) {
@@ -283,12 +292,20 @@ router.patch('/projects/:id/quantities', auth, upload.fields([
         realProject.numbering_drawing_path = `/uploads/${numberingFile.filename}`;
         realProject.numbering_drawing_name = numberingFile.originalname;
       }
+      if (conversion_status !== undefined) {
+        realProject.conversion_status = conversion_status;
+      }
+      if (poFile) {
+        realProject.po_file_path = `/uploads/${poFile.filename}`;
+        realProject.po_file_name = poFile.originalname;
+      }
     }
 
     const bi = JSON.stringify(billing_items);
     const first = (Array.isArray(billing_items) && billing_items[0]) || {};
     db.prepare('UPDATE projects SET billing_items = ?, billing_qty = ?, billing_unit = ?, billing_rate = ?, updated_at = datetime(\'now\') WHERE id = ?')
       .run(bi, first.qty || null, first.unit || null, first.rate || null, req.params.id);
+    db.saveData();
   }
 
   if (insulation_items_raw !== undefined) {
