@@ -11,6 +11,7 @@ let selectedFile = null;
 let allProjects = [];
 let currentBranchProjects = [];
 let currentBifurcation = 'all';
+let currentStatusFilter = 'all';
 let revisingProject = null; // target project object when revising
 
 // ─── Product List ──────────────────────────────────────────────────────────────
@@ -600,6 +601,7 @@ async function initPlanning() {
   setupInsulationModal();
   setupReviewModal();
   setupDetailModal();
+  setupCalendarExportModal();
 
   const searchInput = document.getElementById('project-search-input');
   if (searchInput) {
@@ -1011,15 +1013,67 @@ async function loadProjects() {
           btn.style.color = '#4f46e5';
           btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
           currentBifurcation = btn.dataset.bifurcation || 'all';
+          updateStatusCounts();
           renderFilteredList(currentBranchProjects);
         };
       });
     }
 
+    // Attach status tab listeners (All Status, Accepted, Rejected)
+    const statusTabsContainer = document.getElementById('project-status-tabs');
+    if (statusTabsContainer) {
+      statusTabsContainer.querySelectorAll('.status-tab-btn').forEach(btn => {
+        btn.onclick = () => {
+          statusTabsContainer.querySelectorAll('.status-tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.background = 'transparent';
+            b.style.color = '#64748b';
+            b.style.boxShadow = 'none';
+          });
+          btn.classList.add('active');
+          btn.style.background = '#ffffff';
+          btn.style.color = '#4f46e5';
+          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          currentStatusFilter = btn.dataset.status || 'all';
+          renderFilteredList(currentBranchProjects);
+        };
+      });
+    }
+
+    updateStatusCounts();
     renderFilteredList(currentBranchProjects);
   } catch (err) {
     listEl.innerHTML = `<p style="color:var(--danger); padding:16px;">Error: ${err.message}</p>`;
   }
+}
+
+function updateStatusCounts() {
+  let catProjects = currentBranchProjects;
+  if (currentBifurcation === 'knnd') {
+    catProjects = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd');
+  } else if (currentBifurcation === 'others') {
+    catProjects = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others');
+  }
+
+  // Count unique job groups status
+  const jobStatusMap = {};
+  catProjects.forEach(p => {
+    if (!jobStatusMap[p.job_no]) {
+      jobStatusMap[p.job_no] = (p.status || '').toLowerCase();
+    }
+  });
+
+  const statuses = Object.values(jobStatusMap);
+  const cntAll = statuses.length;
+  const cntAccepted = statuses.filter(s => s === 'approved').length;
+  const cntRejected = statuses.filter(s => s !== 'approved').length;
+
+  const elStatusAll = document.getElementById('cnt-status-all');
+  const elAccepted = document.getElementById('cnt-accepted');
+  const elRejected = document.getElementById('cnt-rejected');
+  if (elStatusAll) elStatusAll.textContent = cntAll;
+  if (elAccepted) elAccepted.textContent = cntAccepted;
+  if (elRejected) elRejected.textContent = cntRejected;
 }
 
 function renderFilteredList(branchProjects) {
@@ -1033,11 +1087,18 @@ function renderFilteredList(branchProjects) {
     filtered = branchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others');
   }
 
+  if (currentStatusFilter === 'accepted') {
+    filtered = filtered.filter(p => (p.status || '').toLowerCase() === 'approved');
+  } else if (currentStatusFilter === 'rejected') {
+    filtered = filtered.filter(p => (p.status || '').toLowerCase() !== 'approved');
+  }
+
   if (filtered.length === 0) {
+    const statusLabel = currentStatusFilter === 'all' ? '' : ` ${currentStatusFilter.toUpperCase()}`;
     listEl.innerHTML = `
-      <div class="no-projects">
+      <div class="no-projects" style="text-align:center; padding:32px; color:var(--text-muted);">
         <div style="font-size:2rem; margin-bottom:10px; opacity:0.4;">📋</div>
-        <p>No projects found under "${currentBifurcation.toUpperCase()}" category.</p>
+        <p>No${statusLabel} projects found under "${currentBifurcation.toUpperCase()}" category.</p>
       </div>
     `;
     return;
@@ -1943,6 +2004,97 @@ async function downloadProjectExcel(p) {
   link.download = `project_${p.job_no}_${p.branch}.csv`;
   link.click();
   showToast('Project data downloaded', 'success');
+}
+
+// ─── Calendar Export Modal ───────────────────────────────────────────────────
+function setupCalendarExportModal() {
+  const modal = document.getElementById('calendar-export-modal');
+  const openBtn = document.getElementById('open-calendar-dl-btn');
+  const closeBtn = document.getElementById('calendar-export-modal-close');
+  const cancelBtn = document.getElementById('calendar-export-modal-cancel');
+  const confirmBtn = document.getElementById('calendar-export-modal-confirm');
+  const categorySelect = document.getElementById('cal-export-category');
+  const statusSelect = document.getElementById('cal-export-status');
+  const fromInput = document.getElementById('cal-export-from');
+  const toInput = document.getElementById('cal-export-to');
+
+  if (!modal || !openBtn) return;
+
+  const closeModal = () => modal.classList.add('hidden');
+  const openModal = () => {
+    if (categorySelect) categorySelect.value = currentBifurcation;
+    if (statusSelect) statusSelect.value = currentStatusFilter;
+    modal.classList.remove('hidden');
+  };
+
+  openBtn.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  // Preset buttons
+  document.querySelectorAll('.cal-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = btn.dataset.preset;
+      const today = new Date().toISOString().split('T')[0];
+      if (preset === 'today') {
+        fromInput.value = today;
+        toInput.value = today;
+      } else if (preset === 'this-week') {
+        const d = new Date();
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(d.setDate(diff)).toISOString().split('T')[0];
+        fromInput.value = monday;
+        toInput.value = today;
+      } else if (preset === 'this-month') {
+        const d = new Date();
+        const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+        fromInput.value = firstDay;
+        toInput.value = today;
+      } else if (preset === 'all-time') {
+        fromInput.value = '';
+        toInput.value = '';
+      }
+    });
+  });
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', async () => {
+      const cat = categorySelect ? categorySelect.value : currentBifurcation;
+      const st = statusSelect ? statusSelect.value : currentStatusFilter;
+      const from = fromInput ? fromInput.value : '';
+      const to = toInput ? toInput.value : '';
+      const branchParam = new URLSearchParams(window.location.search).get('branch') || (currentUser ? currentUser.branch : '') || 'maalur';
+
+      const queryParams = new URLSearchParams();
+      if (branchParam) queryParams.set('branch', branchParam);
+      if (cat && cat !== 'all') queryParams.set('customer_type', cat);
+      if (st && st !== 'all') queryParams.set('status', st);
+      if (from) queryParams.set('from', from);
+      if (to) queryParams.set('to', to);
+
+      try {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '⏳ Exporting...';
+        const res = await apiFetch(`/planning/export?${queryParams.toString()}`);
+        if (!res || !res.ok) throw new Error('Failed to export report');
+        const blob = await res.blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const fileName = `projects_export_${cat}_${st}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showToast('Excel report downloaded successfully!', 'success');
+        closeModal();
+      } catch (err) {
+        showToast(`Export error: ${err.message}`, 'error');
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '📊 Export Excel';
+      }
+    });
+  }
 }
 
 // ─── Overall Download Bar ────────────────────────────────────────────────────

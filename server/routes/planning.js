@@ -366,10 +366,10 @@ router.get('/download/:id', auth, (req, res) => {
 
 // GET /api/planning/export — Date-range Excel export with clean headings
 router.get('/export', auth, (req, res) => {
-  if (!['admin', 'manager'].includes(req.user.role)) {
+  if (!['admin', 'manager', 'planning'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Access denied' });
   }
-  const { from, to, branch } = req.query;
+  const { from, to, branch, customer_type, status } = req.query;
   let query = `SELECT p.*, u.full_name AS submitted_by_name FROM projects p LEFT JOIN users u ON p.submitted_by = u.id WHERE 1=1`;
   const params = [];
   if (from) { query += ' AND p.created_at >= ?'; params.push(from); }
@@ -377,6 +377,16 @@ router.get('/export', auth, (req, res) => {
   if (branch) { query += ' AND LOWER(p.branch) = LOWER(?)'; params.push(branch); }
   if (req.user.role === 'manager' && req.user.branch) {
     query += ' AND LOWER(p.branch) = LOWER(?)'; params.push(req.user.branch);
+  }
+  if (customer_type && customer_type !== 'all') {
+    query += ' AND LOWER(p.customer_type) = LOWER(?)'; params.push(customer_type);
+  }
+  if (status && status !== 'all') {
+    if (status === 'accepted' || status === 'approved') {
+      query += ' AND LOWER(p.status) = "approved"';
+    } else if (status === 'rejected') {
+      query += ' AND LOWER(p.status) != "approved"';
+    }
   }
   query += ' ORDER BY p.created_at DESC';
 

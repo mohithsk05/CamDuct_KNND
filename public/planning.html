@@ -107,18 +107,35 @@
   <!-- ─── Projects List ────────────────────────────────────────────────── -->
   <div class="projects-container">
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:14px; gap:12px;">
-      <div class="projects-section-label" style="margin-bottom:0;">Projects</div>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div class="projects-section-label" style="margin-bottom:0;">Projects</div>
+        <!-- Status Tabs: All, Accepted, Rejected -->
+        <div id="project-status-tabs" style="display:flex; background:#f1f5f9; border:1px solid #e2e8f0; padding:2px; border-radius:8px;">
+          <button type="button" class="status-tab-btn active" data-status="all" style="padding:4px 12px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:#ffffff; color:#4f46e5; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.15s ease;">
+            📋 All Status <span id="cnt-status-all" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
+          </button>
+          <button type="button" class="status-tab-btn" data-status="accepted" style="padding:4px 12px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s ease;">
+            ✅ Accepted <span id="cnt-accepted" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#dcfce7; color:#15803d; margin-left:4px;">0</span>
+          </button>
+          <button type="button" class="status-tab-btn" data-status="rejected" style="padding:4px 12px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s ease;">
+            ❌ Rejected <span id="cnt-rejected" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#fee2e2; color:#b91c1c; margin-left:4px;">0</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Bifurcation Tabs -->
-      <div id="project-bifurcation-tabs" style="display:flex; background:#f1f5f9; border:1px solid #e2e8f0; padding:2px; border-radius:8px;">
-        <button type="button" class="bifurcation-tab-btn active" data-bifurcation="all" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:#ffffff; color:#4f46e5; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.15s ease;">
-          📋 All <span id="cnt-all" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
-        </button>
-        <button type="button" class="bifurcation-tab-btn" data-bifurcation="knnd" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s ease;">
-          🏢 KNND <span id="cnt-knnd" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
-        </button>
-        <button type="button" class="bifurcation-tab-btn" data-bifurcation="others" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s ease;">
-          👤 Others <span id="cnt-others" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
-        </button>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div id="project-bifurcation-tabs" style="display:flex; background:#f1f5f9; border:1px solid #e2e8f0; padding:2px; border-radius:8px;">
+          <button type="button" class="bifurcation-tab-btn active" data-bifurcation="all" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:#ffffff; color:#4f46e5; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.15s ease;">
+            📋 All <span id="cnt-all" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
+          </button>
+          <button type="button" class="bifurcation-tab-btn" data-bifurcation="knnd" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s ease;">
+            🏢 KNND <span id="cnt-knnd" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
+          </button>
+          <button type="button" class="bifurcation-tab-btn" data-bifurcation="others" style="padding:4px 14px; border:none; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s ease;">
+            👤 Others <span id="cnt-others" style="font-size:0.72rem; padding:1px 6px; border-radius:99px; background:#e2e8f0; color:#475569; margin-left:4px;">0</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -400,6 +417,65 @@
       <button class="btn btn-primary" id="detail-dl-excel">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         Download Excel
+      </button>
+    </div>
+  </div>
+<!-- ─── Calendar Export Modal ────────────────────────────────────────── -->
+<div class="modal-backdrop hidden" id="calendar-export-modal">
+  <div class="modal" style="max-width: 480px;">
+    <div class="modal-header">
+      <h3 style="display:flex; align-items:center; gap:8px; margin:0;">
+        <span>📅</span> Download Projects Excel
+      </h3>
+      <button class="modal-close" id="calendar-export-modal-close">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+      <p style="font-size:0.83rem; color:var(--text-second); margin:0;">
+        Select date range and filter criteria to export project details to Excel.
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-input" id="cal-export-category" style="font-size:0.85rem;">
+            <option value="all">📋 All Categories</option>
+            <option value="knnd">🏢 KNND</option>
+            <option value="others">👤 Others</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-input" id="cal-export-status" style="font-size:0.85rem;">
+            <option value="all">📋 All Statuses</option>
+            <option value="accepted">✅ Accepted (Approved)</option>
+            <option value="rejected">❌ Rejected (Not Approved)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">From Date 📅</label>
+          <input type="date" class="form-input" id="cal-export-from" style="font-size:0.85rem;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">To Date 📅</label>
+          <input type="date" class="form-input" id="cal-export-to" style="font-size:0.85rem;">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; margin-right:4px;">Quick Presets:</span>
+        <button type="button" class="btn btn-outline btn-sm cal-preset-btn" data-preset="today" style="font-size:0.75rem; padding:3px 8px;">Today</button>
+        <button type="button" class="btn btn-outline btn-sm cal-preset-btn" data-preset="this-week" style="font-size:0.75rem; padding:3px 8px;">This Week</button>
+        <button type="button" class="btn btn-outline btn-sm cal-preset-btn" data-preset="this-month" style="font-size:0.75rem; padding:3px 8px;">This Month</button>
+        <button type="button" class="btn btn-outline btn-sm cal-preset-btn" data-preset="all-time" style="font-size:0.75rem; padding:3px 8px;">All Time</button>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn btn-outline" id="calendar-export-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="calendar-export-modal-confirm" style="display:inline-flex; align-items:center; gap:6px;">
+        <span>📊 Export Excel</span>
       </button>
     </div>
   </div>

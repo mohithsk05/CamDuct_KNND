@@ -349,165 +349,6 @@
   ],
   "notifications": [
     {
-      "id": 100,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-12T09:07:59.763Z"
-    },
-    {
-      "id": 101,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-12T09:07:59.859Z"
-    },
-    {
-      "id": 102,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-12T10:00:07.700Z"
-    },
-    {
-      "id": 103,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-12T10:26:39.944Z"
-    },
-    {
-      "id": 104,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-12T10:26:58.847Z"
-    },
-    {
-      "id": 105,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-12T10:29:03.026Z"
-    },
-    {
-      "id": 106,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-12T10:36:00.850Z"
-    },
-    {
-      "id": 107,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-12T10:36:00.878Z"
-    },
-    {
-      "id": 108,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-12T10:38:18.814Z"
-    },
-    {
-      "id": 109,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-12T10:38:43.642Z"
-    },
-    {
-      "id": 110,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-12T10:44:23.389Z"
-    },
-    {
-      "id": 111,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-12T10:44:23.412Z"
-    },
-    {
-      "id": 112,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-12T10:47:48.509Z"
-    },
-    {
-      "id": 113,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-12T11:07:30.783Z"
-    },
-    {
-      "id": 114,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-12T11:07:52.269Z"
-    },
-    {
       "id": 115,
       "sender_id": 0,
       "sender_name": "Admin / Owner",
@@ -727,7 +568,7 @@
       "type": "planning",
       "message": "New project submitted: Job #HCD-KNND-26-001 by Planning – Haryana (HARYANA)",
       "project_id": 5,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-13T07:39:54.738Z"
     },
     {
@@ -747,7 +588,7 @@
       "type": "planning",
       "message": "🔄 Revised project resubmitted for approval: Job #CD-KNND-26-003 (REVISED) by Planning – Maalur (MAALUR)",
       "project_id": "3",
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-13T07:45:52.038Z"
     },
     {
@@ -767,7 +608,7 @@
       "type": "review",
       "message": "✅ Job #CD-KNND-26-003 has been APPROVED.",
       "project_id": 3,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-13T07:46:25.084Z"
     },
     {
@@ -787,7 +628,7 @@
       "type": "planning",
       "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-003 (MAALUR)",
       "project_id": "3",
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-13T07:47:32.100Z"
     },
     {
@@ -807,7 +648,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 6,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-13T07:48:42.377Z"
     },
     {
@@ -827,7 +668,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-003 by Planning – Maalur (MAALUR)",
       "project_id": 7,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-13T07:49:50.762Z"
     },
     {
@@ -847,7 +688,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 8,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-13T07:55:09.732Z"
     },
     {
@@ -867,7 +708,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
       "project_id": 9,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-13T08:05:13.090Z"
     },
     {
