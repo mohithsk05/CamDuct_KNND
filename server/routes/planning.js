@@ -43,31 +43,34 @@ function notifyAdminAndManagers(projectId, branch, message) {
 // GET /api/planning/next-job-no — Generate next sequence or reuse existing job number
 router.get('/next-job-no', auth, (req, res) => {
   try {
-    const branch = req.query.branch || req.user.branch || 'maalur';
+    const branchParam = req.query.branch || req.headers['x-branch'];
+    const branch = (branchParam || req.user.branch || 'maalur').toLowerCase();
     const project_name = (req.query.project_name || '').trim();
     const place = (req.query.place || '').trim();
 
     // If there's an existing project with same name and place in this branch, reuse its job number
     if (project_name && place) {
       const existing = db.prepare('SELECT job_no FROM projects WHERE LOWER(branch) = LOWER(?) AND LOWER(project_name) = LOWER(?) AND LOWER(place) = LOWER(?)').get(branch, project_name, place);
-      if (existing) {
+      if (existing && existing.job_no) {
         return res.json({ next_job_no: existing.job_no, is_existing: true });
       }
     }
 
-    // Generate next sequential number
-    const prefix = branch.toLowerCase() === 'haryana' ? 'HCD' : 'CD';
+    // Generate next sequential number for branch (HCD for haryana, CD for maalur)
+    const prefix = branch === 'haryana' ? 'HCD' : 'CD';
     const yy = new Date().getFullYear().toString().slice(-2); // e.g. "26" for 2026
     const jobNoPattern = `${prefix}-KNND-${yy}-`;
 
-    // Find all projects with this prefix & year
-    const projects = db.prepare('SELECT job_no FROM projects WHERE job_no LIKE ?').all(`${jobNoPattern}%`);
+    // Query projects strictly for this branch
+    const projects = db.prepare('SELECT job_no FROM projects WHERE LOWER(branch) = ?').all(branch);
     let maxSeq = 0;
-    projects.forEach(p => {
-      const parts = p.job_no.split('-');
-      const seq = parseInt(parts[parts.length - 1]);
-      if (!isNaN(seq) && seq > maxSeq) {
-        maxSeq = seq;
+    (projects || []).forEach(p => {
+      if (p.job_no && p.job_no.toLowerCase().startsWith(jobNoPattern.toLowerCase())) {
+        const parts = p.job_no.split('-');
+        const seq = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(seq) && seq > maxSeq) {
+          maxSeq = seq;
+        }
       }
     });
 
@@ -131,29 +134,31 @@ router.post('/submit', auth, upload.single('drawing'), (req, res) => {
 // GET /api/planning/projects — List projects (scoped by role/branch)
 router.get('/projects', auth, (req, res) => {
   let projects;
-  const userBranch = req.user.branch || req.query.branch;
+  // ?branch= query param lets admin/manager pick which branch to view
+  const queryBranch = req.query.branch ? req.query.branch.toLowerCase() : null;
+  const userBranch = (queryBranch || req.user.branch || 'maalur').toLowerCase();
 
   if (req.user.role === 'admin' && req.user.hasAdminPower && req.user.branch) {
-    // Elevated manager acting as admin: see only their branch projects
-    projects = db.prepare('SELECT p.*, u.full_name AS submitted_by_name FROM projects p LEFT JOIN users u ON p.submitted_by = u.id WHERE LOWER(p.branch) = LOWER(?) ORDER BY p.created_at DESC').all(userBranch || req.user.branch);
+    // Elevated manager acting as admin: STRICTLY their own branch only
+    const branch = req.user.branch.toLowerCase();
+    projects = db.prepare('SELECT p.*, u.full_name AS submitted_by_name FROM projects p LEFT JOIN users u ON p.submitted_by = u.id WHERE LOWER(p.branch) = ? ORDER BY p.created_at DESC').all(branch);
   } else if (req.user.role === 'admin') {
-    // True admin: see all projects
-    projects = db.prepare('SELECT p.*, u.full_name AS submitted_by_name FROM projects p LEFT JOIN users u ON p.submitted_by = u.id ORDER BY p.created_at DESC').all();
-  } else if (req.user.role === 'manager' || req.user.role === 'planning') {
-    projects = db.prepare(`
-      SELECT p.*, u.full_name AS submitted_by_name
-      FROM projects p LEFT JOIN users u ON p.submitted_by = u.id
-      WHERE LOWER(p.branch) = LOWER(?)
-      ORDER BY p.created_at DESC
-    `).all(userBranch || 'maalur');
+    // True admin: filter strictly by ?branch= query param. If no branch is provided, return empty array (preventing accidental default branch leakage)
+    if (queryBranch) {
+      projects = db.prepare('SELECT p.*, u.full_name AS submitted_by_name FROM projects p LEFT JOIN users u ON p.submitted_by = u.id WHERE LOWER(p.branch) = ? ORDER BY p.created_at DESC').all(queryBranch);
+    } else if (req.query.all === 'true') {
+      projects = db.prepare('SELECT p.*, u.full_name AS submitted_by_name FROM projects p LEFT JOIN users u ON p.submitted_by = u.id ORDER BY p.created_at DESC').all();
+    } else {
+      projects = [];
+    }
   } else {
-    // Other department users see branch projects
+    // Manager, planning, and all other dept roles: always scoped to their own branch
     projects = db.prepare(`
       SELECT p.*, u.full_name AS submitted_by_name
       FROM projects p LEFT JOIN users u ON p.submitted_by = u.id
-      WHERE LOWER(p.branch) = LOWER(?)
+      WHERE LOWER(p.branch) = ?
       ORDER BY p.created_at DESC
-    `).all(userBranch || 'maalur');
+    `).all(userBranch);
   }
   res.json(projects);
 });
@@ -458,6 +463,55 @@ router.get('/export', auth, (req, res) => {
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.send(buffer);
 });
+
+// Handler for project revision resubmissions
+const handleProjectRevision = (req, res) => {
+  if (req.user.role !== 'planning' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Only planning department can resubmit a revision' });
+  }
+
+  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+
+  const { job_no, customer_name, customer_type, project_name, place, zone, location, po_quantity } = req.body;
+
+  if (!job_no || !customer_name || !project_name || !place || !zone || !location) {
+    return res.status(400).json({ error: 'All project fields are required' });
+  }
+
+  // If a new drawing file was uploaded, use it; otherwise keep existing
+  const drawingPath = req.file ? req.file.filename : project.drawing_path;
+  const drawingName = req.file ? req.file.originalname : project.drawing_name;
+
+  db.prepare(`
+    UPDATE projects SET
+      job_no = ?, customer_name = ?, customer_type = ?, project_name = ?,
+      place = ?, zone = ?, location = ?, po_quantity = ?, po_items = ?,
+      drawing_path = ?, drawing_name = ?,
+      status = 'pending', is_revised = 1, revise_remark = NULL,
+      updated_at = datetime('now')
+    WHERE id = ?
+  `).run(
+    job_no, customer_name, customer_type || project.customer_type,
+    project_name, place, zone, location,
+    parseFloat(po_quantity) || project.po_quantity,
+    req.body.po_items || project.po_items,
+    drawingPath, drawingName,
+    req.params.id
+  );
+
+  notifyAdminAndManagers(
+    req.params.id, project.branch,
+    `🔄 Revised project resubmitted for approval: Job #${job_no} (REVISED) by ${req.user.full_name} (${(project.branch || '').toUpperCase()})`
+  );
+
+  const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+  res.json({ success: true, project: updated });
+};
+
+// Support both PATCH and POST HTTP methods for revision endpoint
+router.patch('/projects/:id/revise', auth, upload.single('drawing'), handleProjectRevision);
+router.post('/projects/:id/revise', auth, upload.single('drawing'), handleProjectRevision);
 
 // GET /api/planning/drawing/:filename — Serve uploaded drawing file
 router.get('/drawing/:filename', auth, (req, res) => {

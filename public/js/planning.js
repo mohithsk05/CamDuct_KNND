@@ -11,6 +11,7 @@ let selectedFile = null;
 let allProjects = [];
 let currentBranchProjects = [];
 let currentBifurcation = 'all';
+let revisingProject = null; // target project object when revising
 
 // ─── Product List ──────────────────────────────────────────────────────────────
 const PRODUCT_LIST = [
@@ -178,6 +179,47 @@ const MAKE_LIST = ['Paramount', 'Vidoflex', 'Acoustic', 'Thermal', 'Supreme', 'T
 
 const UNIT_LIST = ['sqft', 'sqmt', 'nos', 'rmt', 'kg', 'ltr', 'set', 'pcs', 'mtr'];
 
+// ─── All Indian States & UTs for Zone Dropdown ──────────────────────────────
+const INDIA_STATES = [
+  { code: 'KA', name: 'Karnataka' },
+  { code: 'HR', name: 'Haryana' },
+  { code: 'TN', name: 'Tamil Nadu' },
+  { code: 'KL', name: 'Kerala' },
+  { code: 'AP', name: 'Andhra Pradesh' },
+  { code: 'TS', name: 'Telangana' },
+  { code: 'MH', name: 'Maharashtra' },
+  { code: 'DL', name: 'Delhi' },
+  { code: 'GJ', name: 'Gujarat' },
+  { code: 'RJ', name: 'Rajasthan' },
+  { code: 'UP', name: 'Uttar Pradesh' },
+  { code: 'WB', name: 'West Bengal' },
+  { code: 'PB', name: 'Punjab' },
+  { code: 'MP', name: 'Madhya Pradesh' },
+  { code: 'BR', name: 'Bihar' },
+  { code: 'OD', name: 'Odisha' },
+  { code: 'AS', name: 'Assam' },
+  { code: 'JH', name: 'Jharkhand' },
+  { code: 'CG', name: 'Chhattisgarh' },
+  { code: 'UK', name: 'Uttarakhand' },
+  { code: 'HP', name: 'Himachal Pradesh' },
+  { code: 'GA', name: 'Goa' },
+  { code: 'JK', name: 'Jammu and Kashmir' },
+  { code: 'LA', name: 'Ladakh' },
+  { code: 'CH', name: 'Chandigarh' },
+  { code: 'PY', name: 'Puducherry' },
+  { code: 'TR', name: 'Tripura' },
+  { code: 'ML', name: 'Meghalaya' },
+  { code: 'MN', name: 'Manipur' },
+  { code: 'NL', name: 'Nagaland' },
+  { code: 'GA', name: 'Goa' },
+  { code: 'AR', name: 'Arunachal Pradesh' },
+  { code: 'MZ', name: 'Mizoram' },
+  { code: 'SK', name: 'Sikkim' },
+  { code: 'AN', name: 'Andaman and Nicobar Islands' },
+  { code: 'DN', name: 'Dadra and Nagar Haveli and Daman and Diu' },
+  { code: 'LD', name: 'Lakshadweep' }
+];
+
 // Build a product item row for PO / Billing / Insulation modals
 function buildProductItemRow(containerId, idx, existing = {}) {
   const unitOptions = UNIT_LIST.map(u =>
@@ -296,7 +338,7 @@ function getPortalDropdown() {
 function _positionPortalDropdown(inputEl) {
   const dd = getPortalDropdown();
   const rect = inputEl.getBoundingClientRect();
-  dd.style.top  = (rect.bottom + 4) + 'px';
+  dd.style.top = (rect.bottom + 4) + 'px';
   dd.style.left = rect.left + 'px';
   dd.style.width = Math.max(rect.width, 260) + 'px';
 }
@@ -327,9 +369,9 @@ function _renderPortalDropdown(query) {
       const escaped = p.replace(/"/g, '&quot;');
       const hl = q
         ? p.replace(
-            new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-            '<mark style="background:#ede9fe; color:#4f46e5; font-weight:700; border-radius:3px; padding:0 2px;">$1</mark>'
-          )
+          new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+          '<mark style="background:#ede9fe; color:#4f46e5; font-weight:700; border-radius:3px; padding:0 2px;">$1</mark>'
+        )
         : p;
       return `<div class="pi-combo-item"
         data-value="${escaped}"
@@ -506,17 +548,34 @@ async function initPlanning() {
 
   // Branch pill
   const branchFromQuery = new URLSearchParams(window.location.search).get('branch');
-  currentBranch = branchFromQuery || currentUser.branch || 'maalur';
+  const storedBranch = sessionStorage.getItem('active_branch');
+  currentBranch = (branchFromQuery || storedBranch || currentUser.branch || 'maalur').toLowerCase();
+  sessionStorage.setItem('active_branch', currentBranch);
   const pillText = document.getElementById('branch-pill-text');
   if (pillText) pillText.textContent = capitalize(currentBranch || '—');
 
-  // Back button
+  // Back button — navigate directly to role dashboard page
   const backBtn = document.getElementById('back-btn');
   if (backBtn) {
     backBtn.addEventListener('click', () => {
-      if (currentUser.role === 'admin') window.location.href = '/admin-dashboard.html';
-      else if (currentUser.role === 'manager') window.location.href = '/manager-dashboard.html';
+      const brParam = currentBranch ? `?branch=${currentBranch}` : '';
+      if (currentUser.role === 'admin') window.location.href = `/admin-dashboard.html${brParam}`;
+      else if (currentUser.role === 'manager') window.location.href = `/manager-dashboard.html${brParam}`;
       else window.location.href = '/dept-dashboard.html';
+    });
+  }
+
+  // Refresh button — animate spin icon & stay on page while refreshing data
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      const icon = refreshBtn.querySelector('.refresh-icon');
+      if (icon) {
+        icon.style.transform = 'rotate(360deg)';
+        setTimeout(() => { icon.style.transform = 'rotate(0deg)'; }, 500);
+      }
+      showToast('Page refreshed successfully', 'success');
+      await loadProjects();
     });
   }
 
@@ -535,6 +594,7 @@ async function initPlanning() {
 
   setupUploadZone();
   setupSubmitModal();
+  setupZoneCombobox();
   setupPoUpdateModal();
   setupBillingModal();
   setupInsulationModal();
@@ -593,21 +653,53 @@ function handleFileSelected(file) {
   if (sizeEl) sizeEl.textContent = formatFileSize(file.size);
   if (iconEl) iconEl.textContent = getFileIcon(file.name);
 
-  // Initialize Customer category fields
-  const knndRadio = document.getElementById('ctype-knnd');
-  const othersRadio = document.getElementById('ctype-others');
-  const customerInput = document.getElementById('s-customer');
-  if (knndRadio) {
-    knndRadio.checked = true;
-    if (customerInput) {
-      customerInput.value = 'KNND';
-      customerInput.readOnly = true;
-      customerInput.style.background = '#f8fafc';
+  const reviseIdEl = document.getElementById('s-revise-project-id');
+  const titleEl = document.getElementById('submit-modal-title');
+  const confirmBtn = document.getElementById('submit-modal-confirm');
+
+  if (revisingProject) {
+    if (reviseIdEl) reviseIdEl.value = revisingProject.id;
+    if (titleEl) titleEl.textContent = `🔄 Revise Project #${revisingProject.job_no}`;
+    if (confirmBtn) confirmBtn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Submit Project`;
+
+    document.getElementById('s-job-no').value = revisingProject.job_no || '';
+    document.getElementById('s-job-no').readOnly = true;
+
+    document.getElementById('s-customer').value = revisingProject.customer_name || '';
+    document.getElementById('s-project-name').value = revisingProject.project_name || '';
+    document.getElementById('s-place').value = revisingProject.place || '';
+    document.getElementById('s-location').value = revisingProject.location || '';
+
+    const zoneSearch = document.getElementById('s-zone-search');
+    const zoneHidden = document.getElementById('s-zone');
+    if (zoneSearch && zoneHidden) {
+      zoneSearch.value = revisingProject.zone || '';
+      zoneHidden.value = revisingProject.zone || '';
     }
+
+    if ((revisingProject.customer_type || '').toLowerCase() === 'knnd') {
+      const knndRadio = document.getElementById('ctype-knnd');
+      if (knndRadio) knndRadio.checked = true;
+      document.getElementById('s-customer').readOnly = true;
+      document.getElementById('s-customer').style.background = '#f8fafc';
+    } else {
+      const othersRadio = document.getElementById('ctype-others');
+      if (othersRadio) othersRadio.checked = true;
+      document.getElementById('s-customer').readOnly = false;
+      document.getElementById('s-customer').style.background = '#ffffff';
+    }
+
+    const existingPo = safeParseItems(revisingProject.po_items, revisingProject.po_quantity, null, null, 'PO Item');
+    populateProductItems('po-items-container', existingPo);
+  } else {
+    if (reviseIdEl) reviseIdEl.value = '';
+    if (titleEl) titleEl.textContent = '📋 New Project Details';
+    if (confirmBtn) confirmBtn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Submit Project`;
+    document.getElementById('s-job-no').readOnly = false;
+    fetchNextJobNo();
   }
 
   document.getElementById('submit-modal').classList.remove('hidden');
-  fetchNextJobNo();
 }
 
 function formatFileSize(bytes) {
@@ -623,6 +715,8 @@ function getFileIcon(filename) {
 }
 
 async function fetchNextJobNo() {
+  if (revisingProject || document.getElementById('s-revise-project-id').value) return;
+
   const projNameEl = document.getElementById('s-project-name');
   const placeEl = document.getElementById('s-place');
   const jobNoEl = document.getElementById('s-job-no');
@@ -631,7 +725,9 @@ async function fetchNextJobNo() {
 
   const projName = projNameEl ? projNameEl.value.trim() : '';
   const place = placeEl ? placeEl.value.trim() : '';
-  const branch = currentBranch || (currentUser && currentUser.branch) || 'maalur';
+  const urlBranch = new URLSearchParams(window.location.search).get('branch');
+  const storedBranch = sessionStorage.getItem('active_branch');
+  const branch = (urlBranch || storedBranch || currentBranch || (currentUser && currentUser.branch) || 'maalur').toLowerCase();
 
   try {
     const res = await apiFetch(`/planning/next-job-no?branch=${branch}&project_name=${encodeURIComponent(projName)}&place=${encodeURIComponent(place)}`);
@@ -692,6 +788,8 @@ function setupSubmitModal() {
   [closeBtn, cancelBtn].forEach(b => b && b.addEventListener('click', () => {
     modal.classList.add('hidden');
     selectedFile = null;
+    revisingProject = null;
+    document.getElementById('s-revise-project-id').value = '';
     document.getElementById('file-input').value = '';
   }));
 
@@ -699,6 +797,8 @@ function setupSubmitModal() {
     if (e.target === modal) {
       modal.classList.add('hidden');
       selectedFile = null;
+      revisingProject = null;
+      document.getElementById('s-revise-project-id').value = '';
     }
   });
 
@@ -708,7 +808,11 @@ function setupSubmitModal() {
       const customer = document.getElementById('s-customer').value.trim();
       const projName = document.getElementById('s-project-name').value.trim();
       const place = document.getElementById('s-place').value.trim();
-      const zone = document.getElementById('s-zone').value;
+      const zoneSearch = document.getElementById('s-zone-search');
+      const zoneHidden = document.getElementById('s-zone');
+      const zone = (zoneSearch?.value || zoneHidden?.value || '').trim();
+      if (zoneHidden) zoneHidden.value = zone;
+
       const location = document.getElementById('s-location').value.trim();
       const customerType = document.querySelector('input[name="customer_type"]:checked').value;
 
@@ -743,26 +847,44 @@ function setupSubmitModal() {
         if (selectedFile) formData.append('drawing', selectedFile);
 
         const token = getToken();
-        const res = await fetch(`${API_PLANNING}/submit`, {
-          method: 'POST',
+        const reviseId = document.getElementById('s-revise-project-id').value;
+        const endpoint = reviseId ? `${API_PLANNING}/projects/${reviseId}/revise` : `${API_PLANNING}/submit`;
+        const method = reviseId ? 'PATCH' : 'POST';
+
+        const res = await fetch(endpoint, {
+          method: method,
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData,
         });
-        const data = await res.json();
+
+        let data;
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          data = await res.json();
+        } else {
+          const rawText = await res.text();
+          throw new Error(rawText || `Server error (${res.status})`);
+        }
 
         if (!res.ok) throw new Error(data.error || 'Submission failed');
 
-        showToast(`Project ${jobNo} created successfully ✅`, 'success');
+        showToast(reviseId ? `Project #${jobNo} revised & resubmitted for approval 🔄` : `Project ${jobNo} created successfully ✅`, 'success');
         modal.classList.add('hidden');
         selectedFile = null;
+        revisingProject = null;
+        document.getElementById('s-revise-project-id').value = '';
         document.getElementById('file-input').value = '';
         document.getElementById('s-job-no').value = '';
+        document.getElementById('s-job-no').readOnly = false;
         document.getElementById('s-customer').value = '';
         document.getElementById('s-project-name').value = '';
         document.getElementById('s-place').value = '';
         document.getElementById('s-zone').value = '';
+        document.getElementById('s-zone-search').value = '';
         document.getElementById('s-location').value = '';
         document.getElementById('po-items-container').innerHTML = '';
+        const titleEl = document.getElementById('submit-modal-title');
+        if (titleEl) titleEl.textContent = '📋 New Project Details';
         await loadProjects();
       } catch (err) {
         errMsg.textContent = err.message;
@@ -773,6 +895,73 @@ function setupSubmitModal() {
       }
     });
   }
+}
+
+// ─── Setup Zone Combobox ──────────────────────────────────────────────────
+function setupZoneCombobox() {
+  const searchInput = document.getElementById('s-zone-search');
+  const hiddenInput = document.getElementById('s-zone');
+  if (!searchInput || !hiddenInput) return;
+
+  let dd = document.getElementById('zone-portal-dropdown');
+  if (!dd) {
+    dd = document.createElement('div');
+    dd.id = 'zone-portal-dropdown';
+    dd.style.cssText = `
+      display: none; position: fixed; z-index: 99999; background: #ffffff;
+      border: 2px solid #4f46e5; border-radius: 10px; max-height: 240px; overflow-y: auto;
+      box-shadow: 0 12px 40px rgba(79,70,229,0.18), 0 2px 8px rgba(0,0,0,0.12);
+      min-width: 240px; padding: 4px 0;
+    `;
+    document.body.appendChild(dd);
+  }
+
+  const renderZoneDropdown = (q) => {
+    const query = (q || '').toLowerCase().trim();
+    const filtered = query
+      ? INDIA_STATES.filter(s => s.code.toLowerCase().includes(query) || s.name.toLowerCase().includes(query))
+      : INDIA_STATES;
+
+    if (!filtered.length) {
+      dd.innerHTML = `<div style="padding:10px 14px; font-size:0.83rem; color:#9ca3af;">No state/zone found</div>`;
+    } else {
+      dd.innerHTML = filtered.map(s => {
+        const val = `${s.code} (${s.name})`;
+        return `<div class="zone-combo-item" data-value="${val}"
+          style="padding:9px 14px; font-size:0.84rem; cursor:pointer; border-bottom:1px solid #f3f4f6; transition:background 0.12s;"
+          onmouseenter="this.style.background='#f5f3ff'; this.style.color='#4f46e5';"
+          onmouseleave="this.style.background=''; this.style.color='';">
+          <strong>${s.code}</strong> — ${s.name}
+        </div>`;
+      }).join('');
+    }
+
+    const rect = searchInput.getBoundingClientRect();
+    dd.style.top = (rect.bottom + 4) + 'px';
+    dd.style.left = rect.left + 'px';
+    dd.style.width = Math.max(rect.width, 240) + 'px';
+    dd.style.display = 'block';
+  };
+
+  dd.onmousedown = (e) => {
+    const item = e.target.closest('.zone-combo-item');
+    if (item) {
+      e.preventDefault();
+      const val = item.dataset.value;
+      searchInput.value = val;
+      hiddenInput.value = val;
+      dd.style.display = 'none';
+    }
+  };
+
+  searchInput.addEventListener('focus', () => renderZoneDropdown(searchInput.value));
+  searchInput.addEventListener('input', () => {
+    hiddenInput.value = searchInput.value;
+    renderZoneDropdown(searchInput.value);
+  });
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => { dd.style.display = 'none'; }, 200);
+  });
 }
 
 // ─── Load Projects ─────────────────────────────────────────────────────────────
@@ -792,9 +981,6 @@ async function loadProjects() {
 
     // Filter by branch
     let branchProjects = allProjects.filter(p => p.branch && p.branch.toLowerCase() === targetBranch);
-    if (branchProjects.length === 0 && allProjects.length > 0 && currentUser.role === 'admin') {
-      branchProjects = allProjects; // admin fallback
-    }
     currentBranchProjects = branchProjects;
 
     // Update bifurcation counts
@@ -878,10 +1064,15 @@ function renderFilteredList(branchProjects) {
     groupsMap[p.job_no].uploads.push(p);
   });
 
-  // Assign serial numbers dynamically
-  groups.forEach((g, idx) => {
-    g.serial_no = groups.length - idx;
+  // Assign serial numbers directly according to Job Number (e.g. CD-001 -> Sl.No 1)
+  groups.forEach((g) => {
+    const parts = (g.job_no || '').split('-');
+    const seqNum = parseInt(parts[parts.length - 1], 10);
+    g.serial_no = !isNaN(seqNum) ? seqNum : 1;
   });
+
+  // Keep display order newest (highest serial number) first
+  groups.sort((a, b) => (b.serial_no || 0) - (a.serial_no || 0));
 
   // Filter groups by search query
   const searchInput = document.getElementById('project-search-input');
@@ -897,9 +1088,9 @@ function renderFilteredList(branchProjects) {
           return true;
         }
         return (g.job_no || '').toLowerCase().includes(query) ||
-               (g.project_name || '').toLowerCase().includes(query) ||
-               (g.place || '').toLowerCase().includes(query) ||
-               (g.customer_name || '').toLowerCase().includes(query);
+          (g.project_name || '').toLowerCase().includes(query) ||
+          (g.place || '').toLowerCase().includes(query) ||
+          (g.customer_name || '').toLowerCase().includes(query);
       });
     }
   }
@@ -921,12 +1112,15 @@ function renderFilteredList(branchProjects) {
 // ─── Render Grouped Project Card ────────────────────────────────────────────
 function renderProjectCardGroup(group, serialNo) {
   const latestProj = group.uploads[0];
-  const statusBadge = {
-    pending:  `<span class="badge badge-pending">⏳ Pending Review</span>`,
-    approved: `<span class="badge badge-approved">✅ Approved</span>`,
-    rejected: `<span class="badge badge-rejected">❌ Rejected</span>`,
-    revised:  `<span class="badge badge-revised">🔄 Revision Requested</span>`,
-  }[group.status] || `<span class="badge">${group.status}</span>`;
+  const isRevisedPending = (group.status === 'pending' && latestProj.is_revised);
+  const statusBadge = isRevisedPending
+    ? `<span class="badge badge-revised" style="background:#fff7ed; color:#c2410c; border:1.5px solid #fdba74; font-weight:700;">🔄 Revised (Pending Approval)</span>`
+    : ({
+      pending: `<span class="badge badge-pending">⏳ Pending Review</span>`,
+      approved: `<span class="badge badge-approved">✅ Approved</span>`,
+      rejected: `<span class="badge badge-rejected">❌ Rejected</span>`,
+      revised: `<span class="badge badge-revised">🔄 Revision Requested</span>`,
+    }[group.status] || `<span class="badge">${group.status}</span>`);
 
   const getRomanNumeral = (num) => {
     const roman = { M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1 };
@@ -961,9 +1155,16 @@ function renderProjectCardGroup(group, serialNo) {
     ` : '';
 
     const reviseBanner = (p.status === 'revised' && p.revise_remark)
-      ? `<div class="revise-remark-banner" style="border-radius: 8px; margin-top: 6px;">
-          <div class="revise-remark-banner-icon">🔄</div>
-          <div class="revise-remark-banner-text"><strong>Revision note:</strong> ${escapeHtml(p.revise_remark)}</div>
+      ? `<div class="revise-remark-banner" style="border-radius: 8px; margin-top: 6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div class="revise-remark-banner-icon">🔄</div>
+            <div class="revise-remark-banner-text"><strong>Revision note:</strong> ${escapeHtml(p.revise_remark)}</div>
+          </div>
+          ${(currentUser.role === 'planning' || currentUser.role === 'admin') ? `
+            <button class="btn btn-warning btn-sm" data-id="${p.id}" data-action="reupload-revise" style="font-size:0.8rem; font-weight:700; white-space:nowrap; background:#f59e0b; color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer;">
+              ✏️ Re-upload &amp; Revise
+            </button>
+          ` : ''}
         </div>` : '';
 
     const drawingPill = p.drawing_name
@@ -973,7 +1174,7 @@ function renderProjectCardGroup(group, serialNo) {
 
     let qtyBar = '';
     if (p.status === 'approved') {
-      const billingItems  = safeParseItems(p.billing_items, p.billing_qty, p.billing_unit, p.billing_rate, 'Billing Item');
+      const billingItems = safeParseItems(p.billing_items, p.billing_qty, p.billing_unit, p.billing_rate, 'Billing Item');
       const insulationItems = safeParseItems(p.insulation_items, p.insulation_qty, p.insulation_unit, p.insulation_rate, 'Insulation Item');
       const billingDoneItems = billingItems.length > 0;
       const insulationDoneItems = insulationItems.length > 0;
@@ -1189,16 +1390,16 @@ function attachProjectCardEvents() {
       }).then(blob => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
-        
+
         const modal = document.getElementById('file-viewer-modal');
         if (modal) {
           const title = document.getElementById('file-viewer-title');
           const body = document.getElementById('file-viewer-body');
           const dlBtn = document.getElementById('file-viewer-download-btn');
-          
+
           title.textContent = '📄 ' + displayName;
           body.innerHTML = ''; // clear
-          
+
           const lowerName = filename.toLowerCase();
           if (lowerName.endsWith('.pdf')) {
             body.innerHTML = `<iframe src="${url}" style="width: 100%; height: 60vh; border: none;"></iframe>`;
@@ -1211,14 +1412,14 @@ function attachProjectCardEvents() {
               <p style="font-size:0.9rem; color:var(--text-muted); margin-top:5px;">Please download the file to view its contents.</p>
             </div>`;
           }
-          
+
           dlBtn.onclick = () => {
             const link = document.createElement('a');
             link.href = url;
             link.download = displayName;
             link.click();
           };
-          
+
           modal.classList.remove('hidden');
         } else {
           const link = document.createElement('a');
@@ -1242,7 +1443,7 @@ function attachProjectCardEvents() {
       const existing = safeParseItems(p && p.billing_items, p && p.billing_qty, p && p.billing_unit, p && p.billing_rate, 'Billing Item');
       populateProductItems('billing-items-container', existing);
       if (existing.length === 0) addProductItemRow('billing-items-container');
-      
+
       // Clear file inputs names
       document.getElementById('area-list-name').textContent = p.area_list_name ? p.area_list_name : 'No file chosen';
       document.getElementById('numbering-drawing-name').textContent = p.numbering_drawing_name ? p.numbering_drawing_name : 'No file chosen';
@@ -1369,6 +1570,22 @@ function attachProjectCardEvents() {
       if (res && res.ok) {
         showToast('Quantity editing unlocked for Planning department 🔓', 'success');
         await loadProjects();
+      }
+    });
+  });
+
+  // Re-upload & Revise button
+  document.querySelectorAll('[data-action="reupload-revise"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-id');
+      revisingProject = allProjects.find(x => String(x.id) === String(id));
+      if (!revisingProject) return;
+
+      // Start from drawing file upload: open native file picker!
+      const fileInput = document.getElementById('file-input');
+      if (fileInput) {
+        fileInput.value = '';
+        fileInput.click();
       }
     });
   });
@@ -1546,8 +1763,8 @@ function setupReviewModal() {
 
   const actions = [
     { id: 'review-approve-btn', action: 'approved' },
-    { id: 'review-revise-btn',  action: 'revised' },
-    { id: 'review-reject-btn',  action: 'rejected' },
+    { id: 'review-revise-btn', action: 'revised' },
+    { id: 'review-reject-btn', action: 'rejected' },
   ];
 
   actions.forEach(({ id, action }) => {
@@ -1735,10 +1952,10 @@ function setupDownloadBar() {
 
   excelBtn.addEventListener('click', () => {
     const from = document.getElementById('dl-from').value;
-    const to   = document.getElementById('dl-to').value;
+    const to = document.getElementById('dl-to').value;
     const branchParam = new URLSearchParams(window.location.search).get('branch') || '';
 
-    apiFetch(`/planning/export?${from ? 'from='+from+'&' : ''}${to ? 'to='+to+'&' : ''}${branchParam ? 'branch='+branchParam : ''}`)
+    apiFetch(`/planning/export?${from ? 'from=' + from + '&' : ''}${to ? 'to=' + to + '&' : ''}${branchParam ? 'branch=' + branchParam : ''}`)
       .then(r => r.blob())
       .then(blob => {
         const link = document.createElement('a');
@@ -1766,7 +1983,7 @@ function safeParseItems(raw, legacyQty, legacyUnit, legacyRate, defaultLabel = '
     try {
       const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    } catch {}
+    } catch { }
   }
   if (legacyQty != null && legacyQty !== '') {
     return [{ product: defaultLabel, qty: Number(legacyQty), unit: legacyUnit || '', rate: legacyRate ? Number(legacyRate) : null }];

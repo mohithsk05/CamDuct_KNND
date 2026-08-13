@@ -3,21 +3,22 @@
  */
 
 const DEPT_LABELS = {
-  planning:    { label: 'Planning',    icon: '📋', desc: 'Projects & drawings' },
-  purchase:    { label: 'Purchase',    icon: '🛒', desc: 'PO & raw materials' },
+  planning: { label: 'Planning', icon: '📋', desc: 'Projects & drawings' },
+  purchase: { label: 'Purchase', icon: '🛒', desc: 'PO & raw materials' },
   consumption: { label: 'Consumption', icon: '🔧', desc: 'Material & tools usage' },
-  accounts:    { label: 'Accounts',    icon: '💼', desc: 'Billing & invoices' },
-  dispatch:    { label: 'Dispatch',    icon: '🚚', desc: 'Shipment & delivery' },
-  balance:     { label: 'Balance',     icon: '⚖️',  desc: 'Financial overview' },
-  scrap:       { label: 'Scrap',       icon: '♻️',  desc: 'Scrap management' },
-  users:       { label: 'Users',       icon: '👥', desc: 'User management' },
-  overview:    { label: 'Overview',    icon: '📊', desc: 'Reports & summary' },
+  accounts: { label: 'Accounts', icon: '💼', desc: 'Billing & invoices' },
+  dispatch: { label: 'Dispatch', icon: '🚚', desc: 'Shipment & delivery' },
+  balance: { label: 'Balance', icon: '⚖️', desc: 'Financial overview' },
+  scrap: { label: 'Scrap', icon: '♻️', desc: 'Scrap management' },
+  users: { label: 'Users', icon: '👥', desc: 'User management' },
+  overview: { label: 'Overview', icon: '📊', desc: 'Reports & summary' },
 };
 
 // Departments that can be power-granted
-const GRANTABLE_DEPTS = ['planning','purchase','consumption','accounts','dispatch','balance','scrap'];
+const GRANTABLE_DEPTS = ['planning', 'purchase', 'consumption', 'accounts', 'dispatch', 'balance', 'scrap'];
 
 let currentBranch = null;
+let activePanelDept = null;
 let currentRole = null;
 let powerModalTargetDept = null;
 let existingGrants = [];
@@ -67,7 +68,7 @@ async function initDashboard(role) {
     }
   } else {
     // dept-dashboard.html
-    const deptRoles = ['planning','purchase','consumption','accounts','dispatch','security'];
+    const deptRoles = ['planning', 'purchase', 'consumption', 'accounts', 'dispatch', 'security'];
     if (!deptRoles.includes(user.role)) {
       window.location.href = '/portal.html';
       return;
@@ -79,20 +80,69 @@ async function initDashboard(role) {
   populateTopbar(user);
   setupNotifications();
 
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      const icon = refreshBtn.querySelector('.refresh-icon');
+      if (icon) {
+        icon.style.transform = 'rotate(360deg)';
+        setTimeout(() => { icon.style.transform = 'rotate(0deg)'; }, 600);
+      }
+      showToast('Refreshed successfully', 'success');
+
+      const panel = document.getElementById('content-panel');
+      const contentEl = document.getElementById('panel-content');
+      if (panel && !panel.classList.contains('hidden') && contentEl && activePanelDept) {
+        if (activePanelDept === 'overview') await renderOverviewPanel(contentEl, role, user);
+        else if (activePanelDept === 'users') await renderUsersPanel(contentEl, role, user);
+      } else {
+        if (role === 'admin') await setupAdminTiles(user);
+        else if (role === 'manager') await setupManagerTiles(user);
+        else setupDeptTiles(user);
+      }
+    });
+  }
+
   if (role === 'admin') {
-    const selector  = document.getElementById('branch-selector');
-    const mainDash  = document.getElementById('main-dashboard');
+    const selector = document.getElementById('branch-selector');
+    const mainDash = document.getElementById('main-dashboard');
     const switchBtn = document.getElementById('switch-branch-btn');
+    const backBtn = document.getElementById('back-btn');
+
+    // Check if branch stored in query param or sessionStorage
+    const urlBranch = new URLSearchParams(window.location.search).get('branch');
+    const storedBranch = sessionStorage.getItem('active_branch');
+    const initialBranch = urlBranch || storedBranch;
+
+    // Helper to activate branch dashboard
+    const activateBranchDashboard = (branchName) => {
+      currentBranch = branchName.toLowerCase();
+      sessionStorage.setItem('active_branch', currentBranch);
+      try {
+        history.replaceState(null, '', `?branch=${currentBranch}`);
+      } catch (e) { }
+
+      if (selector) selector.classList.add('hidden');
+      if (mainDash) mainDash.classList.remove('hidden');
+
+      const pill = document.getElementById('branch-pill-text');
+      if (pill) pill.textContent = capitalize(currentBranch);
+
+      if (backBtn) backBtn.classList.remove('hidden');
+
+      setupAdminTiles(user);
+    };
 
     // Elevated Manager (hasAdminPower) - branch-locked admin view
     if (user.hasAdminPower && user.branch) {
-      currentBranch = user.branch;
+      currentBranch = user.branch.toLowerCase();
+      sessionStorage.setItem('active_branch', currentBranch);
 
       const topbarSub = document.querySelector('.topbar-subtitle');
       if (topbarSub) topbarSub.textContent = 'Admin Power - ' + capitalize(user.branch);
 
       if (selector) selector.classList.add('hidden');
-      if (mainDash)  mainDash.classList.remove('hidden');
+      if (mainDash) mainDash.classList.remove('hidden');
 
       const pill = document.getElementById('branch-pill-text');
       if (pill) pill.textContent = capitalize(user.branch) + ' (Authority)';
@@ -109,41 +159,84 @@ async function initDashboard(role) {
 
       setupAdminTiles(user);
 
+    } else if (initialBranch) {
+      // True Admin — auto-restore active branch if previously selected
+      activateBranchDashboard(initialBranch);
     } else {
-      // True Admin - normal branch selector flow
+      // True Admin — normal branch selector flow
       if (selector) selector.classList.remove('hidden');
-      if (mainDash)  mainDash.classList.add('hidden');
+      if (mainDash) mainDash.classList.add('hidden');
+      if (backBtn) backBtn.classList.add('hidden');
+    }
 
-      document.querySelectorAll('.branch-card').forEach(function(card) {
-        card.addEventListener('click', function() {
-          currentBranch = card.dataset.branch;
-          selector.classList.add('hidden');
-          mainDash.classList.remove('hidden');
-          var pill = document.getElementById('branch-pill-text');
-          if (pill) pill.textContent = capitalize(currentBranch);
-          setupAdminTiles(user);
-        });
+    // Branch card click listeners
+    document.querySelectorAll('.branch-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        activateBranchDashboard(card.dataset.branch);
       });
+    });
 
-      if (switchBtn) {
-        switchBtn.addEventListener('click', function() {
-          mainDash.classList.add('hidden');
-          document.getElementById('content-panel').classList.add('hidden');
-          selector.classList.remove('hidden');
-        });
-      }
+    if (switchBtn) {
+      switchBtn.addEventListener('click', function () {
+        sessionStorage.removeItem('active_branch');
+        currentBranch = null;
+        try {
+          history.replaceState(null, '', window.location.pathname);
+        } catch (e) { }
+        if (mainDash) mainDash.classList.add('hidden');
+        const panel = document.getElementById('content-panel');
+        if (panel) panel.classList.add('hidden');
+        if (selector) selector.classList.remove('hidden');
+        if (backBtn) backBtn.classList.add('hidden');
+      });
+    }
+
+    // Topbar Back button for Admin
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        const panel = document.getElementById('content-panel');
+        if (panel && !panel.classList.contains('hidden')) {
+          panel.classList.add('hidden');
+          if (mainDash) mainDash.classList.remove('hidden');
+        } else {
+          // In grid view: return to branch selector
+          sessionStorage.removeItem('active_branch');
+          currentBranch = null;
+          try {
+            history.replaceState(null, '', window.location.pathname);
+          } catch (e) { }
+          if (mainDash) mainDash.classList.add('hidden');
+          if (selector) selector.classList.remove('hidden');
+          backBtn.classList.add('hidden');
+        }
+      });
     }
 
   } else if (role === 'manager') {
-    currentBranch = user.branch;
+    currentBranch = user.branch.toLowerCase();
+    sessionStorage.setItem('active_branch', currentBranch);
     var pill = document.getElementById('branch-pill-text');
     if (pill) pill.textContent = capitalize(user.branch);
     var sub = document.getElementById('mgr-branch-sub');
     if (sub) sub.textContent = 'Manager - ' + capitalize(user.branch);
     setupManagerTiles(user);
 
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        const panel = document.getElementById('content-panel');
+        if (panel && !panel.classList.contains('hidden')) {
+          panel.classList.add('hidden');
+          const mainDash = document.getElementById('main-dashboard');
+          if (mainDash) mainDash.classList.remove('hidden');
+          backBtn.classList.add('hidden');
+        }
+      });
+    }
+
   } else {
-    currentBranch = user.branch;
+    currentBranch = user.branch.toLowerCase();
+    sessionStorage.setItem('active_branch', currentBranch);
     var pill2 = document.getElementById('branch-pill-text');
     if (pill2) pill2.textContent = capitalize(user.branch);
     var sub2 = document.getElementById('dept-sub');
@@ -151,15 +244,21 @@ async function initDashboard(role) {
     var titleEl = document.getElementById('dept-title');
     if (titleEl) titleEl.textContent = capitalize(user.role) + ' Department';
     setupDeptTiles(user);
+
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        const panel = document.getElementById('content-panel');
+        if (panel && !panel.classList.contains('hidden')) {
+          panel.classList.add('hidden');
+          const mainDash = document.getElementById('main-dashboard');
+          if (mainDash) mainDash.classList.remove('hidden');
+          backBtn.classList.add('hidden');
+        }
+      });
+    }
   }
 
-  var backBtn = document.getElementById('back-to-grid');
-  if (backBtn) {
-    backBtn.addEventListener('click', function() {
-      document.getElementById('content-panel').classList.add('hidden');
-      document.getElementById('main-dashboard').classList.remove('hidden');
-    });
-  }
 }
 
 // ─── Admin Tiles Setup ──────────────────────────────────────────────────────
@@ -168,7 +267,7 @@ async function setupAdminTiles(user) {
   try {
     const res = await apiFetch('/users/power-grants');
     if (res && res.ok) existingGrants = await res.json();
-  } catch (e) {}
+  } catch (e) { }
 
   document.querySelectorAll('.dept-tile').forEach(tile => {
     const dept = tile.dataset.dept;
@@ -205,7 +304,7 @@ async function setupManagerTiles(user) {
         .filter(g => g.granted_to_role === 'manager' && (g.granted_branch || '').toLowerCase() === (user.branch || '').toLowerCase())
         .map(g => g.granted_dept);
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const usersTile = document.getElementById('tile-users');
   const hasUsersGrant = managerGrants.includes('users');
@@ -255,6 +354,7 @@ function setupDeptTiles(user) {
 
 // ─── Open Department Panel ──────────────────────────────────────────────────
 function openDeptPanel(dept, role, user) {
+  activePanelDept = dept;
   const mainDash = document.getElementById('main-dashboard');
   const panel = document.getElementById('content-panel');
   const titleEl = document.getElementById('panel-title');
@@ -267,6 +367,9 @@ function openDeptPanel(dept, role, user) {
 
   mainDash && mainDash.classList.add('hidden');
   panel.classList.remove('hidden');
+
+  const backBtn = document.getElementById('back-btn');
+  if (backBtn) backBtn.classList.remove('hidden');
 
   // Route to department-specific content
   switch (dept) {
@@ -284,22 +387,24 @@ function openDeptPanel(dept, role, user) {
   }
 }
 
-// ─── Planning Panel (inside dashboard) ─────────────────────────────────────
+// ─── Planning Panel (inside dashboard) ─────────────────────────────────────────────
 function renderPlanningPanel(container, role, user) {
-  // Redirect to dedicated planning page with correct branch
-  const br = (user && user.branch) ? user.branch : 'maalur';
-  window.location.href = `/planning.html?branch=${br.toLowerCase()}`;
+  // STRICT BRANCH ISOLATION: always use currentBranch (admin-selected branch), never user.branch
+  const br = (currentBranch || (user && user.branch) || 'maalur').toLowerCase();
+  window.location.href = `/planning.html?branch=${br}`;
 }
 
-// ─── Users Panel ────────────────────────────────────────────────────────────
+// ─── Users Panel ──────────────────────────────────────────────────
 async function renderUsersPanel(container, role, user) {
   const isAdmin = role === 'admin';
+  // STRICT BRANCH ISOLATION: admin always sees only the currently-selected branch
+  const scopedBranch = currentBranch ? currentBranch.toLowerCase() : null;
 
   container.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
       <div>
         <h3 style="margin-bottom:3px;">System Users</h3>
-        <p style="font-size:0.8rem;">${isAdmin ? 'All registered users bifurcated by branch' : capitalize(user.branch) + ' Branch Users'}</p>
+        <p style="font-size:0.8rem;">${isAdmin ? capitalize(scopedBranch || '') + ' Branch Users' : capitalize(user.branch) + ' Branch Users'}</p>
       </div>
       ${isAdmin ? `<button class="btn btn-primary btn-sm" id="add-user-btn">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -315,7 +420,6 @@ async function renderUsersPanel(container, role, user) {
     const res = await apiFetch('/users');
     if (!res || !res.ok) {
       const errData = await res.json().catch(() => ({}));
-      // Show locked message for manager if not permitted
       if (!isAdmin) {
         document.getElementById('users-panel').innerHTML = `
           <div style="text-align:center; padding:48px 24px;">
@@ -358,19 +462,17 @@ async function renderUsersPanel(container, role, user) {
     };
 
     if (isAdmin) {
-      document.getElementById('users-panel').innerHTML = `
-        ${renderTable(data.maalur, '🏭 Maalur Branch')}
-        ${renderTable(data.haryana, '🏗️ Haryana Branch')}
-        ${renderTable(data.admins, '🔑 Administrators')}
-      `;
+      // STRICT BRANCH ISOLATION: show only the currently selected branch users
+      const branchKey = scopedBranch || 'maalur';
+      const branchLabel = branchKey === 'maalur' ? '🏗️ Maalur Branch Users' : '🏗️️ Haryana Branch Users';
+      document.getElementById('users-panel').innerHTML = renderTable(data[branchKey] || [], branchLabel);
     } else {
-      // Manager: only their branch (API returns { [branch]: [...] })
+      // Manager: only their branch
       const branchUsers = data[user.branch] || [];
       document.getElementById('users-panel').innerHTML =
         renderTable(branchUsers, '👥 ' + capitalize(user.branch) + ' Branch Users');
     }
 
-    // Add user button (admin only)
     const addBtn = document.getElementById('add-user-btn');
     if (addBtn) addBtn.addEventListener('click', () => showAddUserModal());
   } catch (err) {
@@ -478,17 +580,27 @@ function showAddUserModal() {
   });
 }
 
+// ─── Planning Panel (inside dashboard) ─────────────────────────────────────────────
+function renderPlanningPanel(container, role, user) {
+  // STRICT BRANCH ISOLATION: always use currentBranch (admin-selected branch), never user.branch
+  const br = (currentBranch || (user && user.branch) || 'maalur').toLowerCase();
+  window.location.href = `/planning.html?branch=${br}`;
+}
+
 // ─── Overview Panel ─────────────────────────────────────────────────────────
 async function renderOverviewPanel(container, role, user) {
+  // STRICT BRANCH ISOLATION: scope to current active branch
+  const overviewBranch = (currentBranch || sessionStorage.getItem('active_branch') || (user && user.branch) || 'maalur').toLowerCase();
+
   container.innerHTML = `
     <div style="margin-bottom:24px;">
       <h3 style="margin-bottom:3px;">Summary &amp; Reports</h3>
-      <p style="font-size:0.8rem;">Download reports by date range</p>
+      <p style="font-size:0.8rem;">Branch: <strong>${capitalize(overviewBranch)}</strong></p>
     </div>
 
     <!-- Date Range Export -->
     <div class="card" style="margin-bottom:24px;">
-      <div class="card-header"><h4>📥 Export Planning Data</h4></div>
+      <div class="card-header"><h4>📥 Export Planning Data — ${capitalize(overviewBranch)} Branch</h4></div>
       <div class="card-body">
         <div class="download-controls">
           <div class="form-group">
@@ -499,15 +611,6 @@ async function renderOverviewPanel(container, role, user) {
             <label class="form-label">To Date</label>
             <input type="date" id="export-to" class="form-input" style="width:auto;">
           </div>
-          ${role === 'admin' ? `
-          <div class="form-group">
-            <label class="form-label">Branch</label>
-            <select class="form-select" id="export-branch" style="width:auto;">
-              <option value="">All Branches</option>
-              <option value="maalur">Maalur</option>
-              <option value="haryana">Haryana</option>
-            </select>
-          </div>` : ''}
           <div class="form-group" style="justify-content:flex-end; padding-top:18px;">
             <button class="btn btn-primary" id="export-xlsx-btn">
               <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
@@ -524,58 +627,45 @@ async function renderOverviewPanel(container, role, user) {
     </div>
   `;
 
-  // Export button
+  // Export button — always scoped to overviewBranch (no cross-branch leakage)
   document.getElementById('export-xlsx-btn').addEventListener('click', () => {
     const from = document.getElementById('export-from').value;
     const to = document.getElementById('export-to').value;
-    const branchEl = document.getElementById('export-branch');
-    const branch = branchEl ? branchEl.value : currentBranch;
+    const branch = overviewBranch;
 
-    let url = `/api/planning/export?`;
-    if (from) url += `from=${from}&`;
-    if (to)   url += `to=${to}&`;
-    if (branch) url += `branch=${branch}&`;
-
-    // Trigger download
-    const a = document.createElement('a');
-    a.href = url;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    // Need auth header — use fetch + blob
-    apiFetch(`/planning/export?${from ? 'from='+from+'&' : ''}${to ? 'to='+to+'&' : ''}${branch ? 'branch='+branch : ''}`)
+    apiFetch(`/planning/export?${from ? 'from=' + from + '&' : ''}${to ? 'to=' + to + '&' : ''}${branch ? 'branch=' + branch : ''}`)
       .then(r => r.blob())
       .then(blob => {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `planning_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+        link.download = `planning_report_${overviewBranch}_${new Date().toISOString().split('T')[0]}.xlsx`;
         link.click();
         URL.revokeObjectURL(link.href);
         showToast('Export downloaded', 'success');
       });
-    a.remove();
   });
 
-  // Load stats
+  // Load stats — STRICTLY scoped to overviewBranch
   try {
-    const res = await apiFetch(`/planning/projects`);
+    const res = await apiFetch(`/planning/projects?branch=${overviewBranch}`);
     if (!res || !res.ok) return;
     const projects = await res.json();
 
-    const branchProjects = currentBranch ? projects.filter(p => p.branch === currentBranch) : projects;
-    const pending  = branchProjects.filter(p => p.status === 'pending').length;
-    const approved = branchProjects.filter(p => p.status === 'approved').length;
-    const rejected = branchProjects.filter(p => p.status === 'rejected').length;
-    const revised  = branchProjects.filter(p => p.status === 'revised').length;
+    const pending = projects.filter(p => p.status === 'pending').length;
+    const approved = projects.filter(p => p.status === 'approved').length;
+    const rejected = projects.filter(p => p.status === 'rejected').length;
+    const revised = projects.filter(p => p.status === 'revised').length;
 
     document.getElementById('overview-stats').innerHTML = `
-      <div class="stat-card"><div class="stat-card-label">Total Projects</div><div class="stat-card-value">${branchProjects.length}</div></div>
+      <div class="stat-card"><div class="stat-card-label">Total Projects</div><div class="stat-card-value">${projects.length}</div></div>
       <div class="stat-card"><div class="stat-card-label">Pending</div><div class="stat-card-value" style="color:var(--warning);">${pending}</div></div>
       <div class="stat-card"><div class="stat-card-label">Approved</div><div class="stat-card-value" style="color:var(--success);">${approved}</div></div>
       <div class="stat-card"><div class="stat-card-label">Rejected</div><div class="stat-card-value" style="color:var(--danger);">${rejected}</div></div>
       <div class="stat-card"><div class="stat-card-label">Revision Pending</div><div class="stat-card-value" style="color:var(--revise);">${revised}</div></div>
     `;
-  } catch (e) {}
+  } catch (e) { }
 }
+
 
 // ─── Coming Soon Panel ──────────────────────────────────────────────────────
 function renderComingSoon(container, info) {
@@ -676,11 +766,11 @@ async function openPowerModal(targetDept, user) {
   try {
     const res = await apiFetch('/users/power-grants');
     if (res && res.ok) existingGrants = await res.json();
-  } catch (e) {}
+  } catch (e) { }
 
   const info = DEPT_LABELS[targetDept] || { label: capitalize(targetDept), icon: '⚡' };
   if (titleEl) titleEl.textContent = `${info.icon} Power Settings — ${info.label}`;
-  
+
   if (descEl) {
     if (targetDept === 'users') {
       descEl.innerHTML = `Select which roles can access <strong id="power-target-dept">${info.label}</strong> department:`;

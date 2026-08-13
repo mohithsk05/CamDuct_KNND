@@ -45,12 +45,11 @@
       <span style="font-size:0.95rem;">🔄</span>
       <span style="font-size:0.72rem; font-weight:700; letter-spacing:0.03em;">REVERT POWER</span>
     </button>
-    <button class="btn btn-outline btn-sm" id="logout-btn">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-      </svg>
-      Logout
+    <button class="btn btn-outline btn-sm hidden" id="back-btn">Back</button>
+    <button class="btn btn-outline btn-sm" id="refresh-btn" title="Refresh Page">
+      <span class="refresh-icon" style="display:inline-block; transition:transform 0.5s ease-in-out;">🔄</span> Refresh
     </button>
+    <button class="btn btn-outline btn-sm" id="logout-btn">Logout</button>
   </div>
 </header>
 
@@ -107,6 +106,14 @@
 
     <!-- Department Grid: Row 1 -->
     <div class="dept-grid" id="dept-grid">
+      <!-- Overview -->
+      <div class="dept-tile tile-overview" data-dept="overview" id="tile-overview">
+        <div class="dept-tile-icon">📊</div>
+        <div>
+          <h4>Overview</h4>
+          <p>Reports &amp; summary</p>
+        </div>
+      </div>
       <!-- Planning -->
       <div class="dept-tile tile-planning" data-dept="planning" id="tile-planning">
         <div class="dept-tile-icon">📋</div>
@@ -179,14 +186,6 @@
         </div>
         <button class="tile-power-btn" data-dept="users" title="Grant manager access to Users">⚡ Power</button>
       </div>
-      <!-- Overview -->
-      <div class="dept-tile tile-overview" data-dept="overview" id="tile-overview">
-        <div class="dept-tile-icon">📊</div>
-        <div>
-          <h4>Overview</h4>
-          <p>Reports &amp; summary</p>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -194,10 +193,6 @@
 <!-- ─── Content Panel (shown when tile is clicked) ─────────────────────── -->
 <div id="content-panel" class="hidden" style="padding:28px; max-width:1000px; margin:0 auto;">
   <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
-    <button class="btn btn-outline btn-sm" id="back-to-grid">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      Back
-    </button>
     <h2 id="panel-title" style="margin:0;"></h2>
   </div>
   <div id="panel-content"></div>

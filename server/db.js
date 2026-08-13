@@ -183,28 +183,54 @@ function executeQuery(sql, args) {
     );
   }
 
-  // Projects queries: List projects
+  // Projects queries: Single project lookup by ID, pattern matching, or List projects
   if (sql.includes('FROM projects')) {
     let list = [...data.projects];
 
-    // Branch filter check
-    const branchArg = args.find(a => typeof a === 'string' && (a.toLowerCase() === 'maalur' || a.toLowerCase() === 'haryana'));
-    if (branchArg && (sql.includes('branch') || sql.includes('LOWER'))) {
-      list = list.filter(p => (p.branch || '').toLowerCase() === branchArg.toLowerCase());
+    if (sql.includes('job_no LIKE') || sql.includes('LIKE')) {
+      const pattern = (args[0] || '').replace(/%/g, '');
+      const branchArg = args.find(a => typeof a === 'string' && (a.toLowerCase() === 'maalur' || a.toLowerCase() === 'haryana'));
+      return list.filter(p => {
+        const matchPattern = p.job_no && p.job_no.startsWith(pattern);
+        const matchBranch = !branchArg || (p.branch || '').toLowerCase() === branchArg.toLowerCase();
+        return matchPattern && matchBranch;
+      });
     }
 
-    // Date range filter check
-    if (sql.includes('WHERE 1=1')) {
-      let paramIdx = 0;
-      if (sql.includes('p.created_at >= ?')) { list = list.filter(p => p.created_at >= args[paramIdx++]); }
-      if (sql.includes('p.created_at <= ?')) { list = list.filter(p => p.created_at <= args[paramIdx++]); }
-      if (branchArg) { list = list.filter(p => (p.branch || '').toLowerCase() === branchArg.toLowerCase()); }
+    if (sql.includes('LOWER(project_name)') && sql.includes('LOWER(place)')) {
+      const [branch, projName, place] = args;
+      const found = list.find(p =>
+        (p.branch || '').toLowerCase() === (branch || '').toLowerCase() &&
+        (p.project_name || '').toLowerCase() === (projName || '').toLowerCase() &&
+        (p.place || '').toLowerCase() === (place || '').toLowerCase()
+      );
+      return found || null;
+    }
+
+    if (sql.includes('WHERE p.id = ?') || sql.includes('WHERE id = ?') || sql.includes('p.id = ?')) {
+      const idArg = args[0];
+      list = list.filter(p => String(p.id) === String(idArg));
+    } else {
+      // Branch filter check
+      const branchArg = args.find(a => typeof a === 'string' && (a.toLowerCase() === 'maalur' || a.toLowerCase() === 'haryana'));
+      if (branchArg && (sql.includes('branch') || sql.includes('LOWER'))) {
+        list = list.filter(p => (p.branch || '').toLowerCase() === branchArg.toLowerCase());
+      }
+
+      // Date range filter check
+      if (sql.includes('WHERE 1=1')) {
+        let paramIdx = 0;
+        if (sql.includes('p.created_at >= ?')) { list = list.filter(p => p.created_at >= args[paramIdx++]); }
+        if (sql.includes('p.created_at <= ?')) { list = list.filter(p => p.created_at <= args[paramIdx++]); }
+        if (branchArg) { list = list.filter(p => (p.branch || '').toLowerCase() === branchArg.toLowerCase()); }
+      }
     }
 
     list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
     return list.map(p => {
       const sub = data.users.find(u => u.id == p.submitted_by);
-      return { ...p, submitted_by_name: sub ? sub.full_name : null };
+      const rev = data.users.find(u => u.id == p.reviewed_by);
+      return { ...p, submitted_by_name: sub ? sub.full_name : null, reviewed_by_name: rev ? rev.full_name : null };
     });
   }
 
@@ -349,8 +375,8 @@ function executeMutation(sql, args) {
     return { lastInsertRowid: id };
   }
 
-  // Projects review update
-  if (sql.includes('UPDATE projects SET status = ?')) {
+  // Projects review update (Admin action: approved/rejected/revised)
+  if (sql.includes('UPDATE projects SET status = ?') && sql.includes('reviewed_by = ?')) {
     const [status, remark, reviewed_by, id] = args;
     const p = data.projects.find(x => x.id == id);
     if (p) {
@@ -362,6 +388,33 @@ function executeMutation(sql, args) {
     saveData();
     return { changes: 1 };
   }
+
+  // Projects revision resubmit update (Planning re-upload & resubmit)
+  if (sql.includes('UPDATE projects SET job_no = ?') || (sql.includes('UPDATE projects SET') && sql.includes('is_revised'))) {
+    const id = args[args.length - 1];
+    const [job_no, customer_name, customer_type, project_name, place, zone, location, po_quantity, po_items, drawing_path, drawing_name] = args;
+    const p = data.projects.find(x => x.id == id);
+    if (p) {
+      p.job_no = job_no;
+      p.customer_name = customer_name;
+      if (customer_type) p.customer_type = customer_type;
+      p.project_name = project_name;
+      p.place = place;
+      p.zone = zone;
+      p.location = location;
+      p.po_quantity = Number(po_quantity) || 0;
+      p.po_items = po_items;
+      if (drawing_path) p.drawing_path = drawing_path;
+      if (drawing_name) p.drawing_name = drawing_name;
+      p.status = 'pending';
+      p.is_revised = 1;
+      p.revise_remark = null;
+      p.updated_at = now;
+    }
+    saveData();
+    return { changes: 1 };
+  }
+
 
   // Projects quantities update (new JSON items format + summary fields)
   if (sql.includes('UPDATE projects SET billing_items = ?')) {
