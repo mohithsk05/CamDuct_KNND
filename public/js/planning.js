@@ -1559,37 +1559,57 @@ function openFileViewerModal(rawFilePath, displayName) {
             let currentSheetName = sheets[0];
             let currentZoom = 1.0;
 
+            // Show duct search ONLY for Area Sheet files, not for Numbering Drawings / OTF / PO files
+            const showDuctSearch = lowerName.includes('area');
+
             const renderExactDocumentView = (activeSheetName) => {
               const worksheet = workbook.Sheets[activeSheetName];
               let htmlContent = XLSX.utils.sheet_to_html(worksheet, { editable: false });
-              htmlContent = htmlContent.replace('<table>', '<table class="exact-excel-rendered-table">');
+              htmlContent = htmlContent.replace('<table>', '<table id="xlsx-main-table" class="exact-excel-rendered-table">');
 
               return `
                 <div style="width:100%; height:100%; display:flex; flex-direction:column; gap:8px;">
+                  <!-- Toolbar row -->
                   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; flex-shrink:0;">
+                    <!-- Sheet tabs -->
                     <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                       <span style="font-size:0.78rem; font-weight:700; color:#475569; margin-right:4px;">Sheets (${sheets.length}):</span>
-                      ${sheets.map(sName => `
-                        <button type="button" class="sheet-tab-btn ${sName === activeSheetName ? 'active' : ''}" data-sheet="${escapeHtml(sName)}"
+                      ${sheets.map((sName, sIdx) => `
+                        <button type="button" class="sheet-tab-btn ${sName === activeSheetName ? 'active' : ''}" data-sheet-index="${sIdx}"
                           style="font-size:0.8rem; font-weight:700; padding:4px 12px; border-radius:6px; border:1px solid ${sName === activeSheetName ? '#2563eb' : '#cbd5e1'}; background:${sName === activeSheetName ? '#eff6ff' : '#ffffff'}; color:${sName === activeSheetName ? '#1d4ed8' : '#475569'}; cursor:pointer; transition:all 0.15s;">
                           📊 ${escapeHtml(sName)}
                         </button>
                       `).join('')}
                     </div>
+                    <!-- Controls: Fit Width + Duct Search + Zoom -->
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                       <button type="button" class="btn btn-outline btn-sm zoom-action-btn" data-zoom="fit" style="font-size:0.78rem; padding:3px 10px; font-weight:700; background:#f0fdf4; color:#15803d; border-color:#86efac;">🔍 Fit Width</button>
+                      ${showDuctSearch ? `
+                      <!-- Duct Number Search -->
+                      <div id="duct-search-wrapper" style="display:flex; align-items:center; background:#ffffff; border:2px solid #cbd5e1; border-radius:7px; overflow:hidden; height:30px; transition:border-color 0.15s, box-shadow 0.15s;">
+                        <span style="padding:0 8px; font-size:0.78rem; color:#475569; font-weight:700; white-space:nowrap; border-right:2px solid #e2e8f0; height:100%; display:flex; align-items:center; background:#f8fafc; user-select:none;">🔢 Duct No.</span>
+                        <input type="text" id="duct-search-input" placeholder="e.g. P-12" autocomplete="off"
+                          style="border:none; outline:none; background:transparent; padding:0 8px; font-size:0.85rem; font-weight:600; color:#1e293b; width:90px; height:100%; letter-spacing:0.02em;">
+                        <button type="button" id="duct-search-clear" title="Clear search (Esc)"
+                          style="border:none; background:transparent; cursor:pointer; padding:0 10px; color:#94a3b8; font-size:1rem; height:100%; font-weight:700; transition:color 0.15s, background 0.15s; display:flex; align-items:center;">✕</button>
+                      </div>
+                      <span id="duct-match-count" style="font-size:0.78rem; font-weight:700; display:none; padding:3px 10px; border-radius:5px; border:1px solid #86efac; align-items:center; gap:4px;"></span>
+                      ` : ''}
+                      <!-- Zoom -->
                       <button type="button" class="btn btn-outline btn-sm zoom-action-btn" data-zoom="out" style="font-size:0.78rem; padding:3px 8px; font-weight:700;">➖ Zoom Out</button>
                       <span id="zoom-level-indicator" style="font-size:0.78rem; font-weight:700; color:#334155; min-width:45px; text-align:center;">100%</span>
                       <button type="button" class="btn btn-outline btn-sm zoom-action-btn" data-zoom="in" style="font-size:0.78rem; padding:3px 8px; font-weight:700;">➕ Zoom In</button>
                       <button type="button" class="btn btn-outline btn-sm zoom-action-btn" data-zoom="reset" style="font-size:0.78rem; padding:3px 8px; color:#64748b;">Reset</button>
                     </div>
                   </div>
+                  <!-- Document content -->
                   <div id="xlsx-exact-container" style="flex:1; width:100%; height:62vh; overflow:auto; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:16px; display:flex; justify-content:center; align-items:flex-start;">
                     <div id="xlsx-zoom-target" style="transform-origin: top center; transition: transform 0.15s ease-out; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,0.06); padding:16px; width:fit-content; min-width:80%;">
                       <style>
                         .exact-excel-rendered-table { border-collapse: collapse !important; width: 100% !important; font-family: Calibri, Arial, sans-serif !important; font-size: 13px !important; color: #1e293b !important; }
                         .exact-excel-rendered-table td, .exact-excel-rendered-table th { border: 1px solid #cbd5e1 !important; padding: 6px 10px !important; min-width: 60px !important; text-align: left !important; vertical-align: middle !important; background: #ffffff !important; }
                         .exact-excel-rendered-table tr:first-child td, .exact-excel-rendered-table tr:first-child th { background: #f1f5f9 !important; font-weight: bold !important; color: #0f172a !important; }
+                        .duct-row-hidden { display: none !important; }
                       </style>
                       ${htmlContent}
                     </div>
@@ -1609,14 +1629,134 @@ function openFileViewerModal(rawFilePath, displayName) {
               if (indicator) indicator.textContent = `${Math.round(currentZoom * 100)}%`;
             };
 
+            // ── Duct number search logic ──────────────────────────────────
+            const runDuctSearch = (query) => {
+              const table = body.querySelector('#xlsx-main-table');
+              const matchCount = body.querySelector('#duct-match-count');
+              const clearBtn = body.querySelector('#duct-search-clear');
+              if (!table) return;
+
+              const trimmed = (query || '').trim();
+
+              // ── UI feedback ──────────────────────────────────────────────
+              if (clearBtn) {
+                clearBtn.style.color = trimmed ? '#ef4444' : '#94a3b8';
+              }
+              const wrapper = body.querySelector('#duct-search-wrapper');
+              if (wrapper) {
+                wrapper.style.borderColor = trimmed ? '#2563eb' : '#cbd5e1';
+                wrapper.style.boxShadow = trimmed ? '0 0 0 3px rgba(37,99,235,0.15)' : 'none';
+              }
+
+              const allRows = Array.from(table.querySelectorAll('tr'));
+
+              // ── Find Duct No. column (scan first 10 rows) ───────────────
+              let ductColIdx = -1;
+              let headerRowIdx = -1;
+
+              for (let ri = 0; ri < Math.min(10, allRows.length); ri++) {
+                const cells = Array.from(allRows[ri].querySelectorAll('td, th'));
+                const idx2 = cells.findIndex(c => {
+                  const t = c.textContent.trim().toUpperCase().replace(/\s+/g, ' ');
+                  return t === 'DUCT NO.' || t === 'DUCT NO' || t === 'DUCT NO:' ||
+                         t === 'DUCT NUMBER' || (t.startsWith('DUCT') && t.includes('NO'));
+                });
+                if (idx2 >= 0) { ductColIdx = idx2; headerRowIdx = ri; break; }
+              }
+
+              // ── Filter rows ──────────────────────────────────────────────
+              let count = 0;
+              allRows.forEach((row, ri) => {
+                // Always remove previous state first
+                row.classList.remove('duct-row-hidden', 'duct-row-highlight');
+
+                // Keep ALL rows visible when query is empty
+                if (!trimmed) return;
+
+                // Skip header rows (row 0 always; also the detected header row)
+                if (ri === 0) return;
+                if (headerRowIdx > 0 && ri <= headerRowIdx) return;
+
+                // Get the duct cell text
+                const cells = Array.from(row.querySelectorAll('td, th'));
+                let cellText = '';
+
+                if (ductColIdx >= 0 && cells[ductColIdx]) {
+                  cellText = cells[ductColIdx].textContent.trim();
+                } else {
+                  // Fallback: scan every cell looking for a duct-like value (e.g. P-1, P-12, 113)
+                  for (const c of cells) {
+                    const t = c.textContent.trim();
+                    if (/^[A-Za-z]{0,3}-?\d+$/.test(t) && t.length <= 10) {
+                      cellText = t;
+                      break;
+                    }
+                  }
+                }
+
+                if (!cellText) {
+                  row.classList.add('duct-row-hidden');
+                  return;
+                }
+
+                // ── Matching ─────────────────────────────────────────────
+                const upper = cellText.toUpperCase();
+                const queryUp = trimmed.toUpperCase();
+
+                const numSuffix = cellText.replace(/^[A-Za-z]+-?/, '');
+
+                const isMatch =
+                  upper === queryUp ||                        // exact full match
+                  numSuffix === trimmed ||                    // pure number matches suffix
+                  upper.startsWith(queryUp);                  // prefix match
+
+                if (isMatch) {
+                  row.classList.add('duct-row-highlight');
+                  count++;
+                } else {
+                  row.classList.add('duct-row-hidden');
+                }
+              });
+
+              // ── Badge ────────────────────────────────────────────────────
+              if (trimmed && matchCount) {
+                if (count > 0) {
+                  matchCount.textContent = `✓ ${count} match${count > 1 ? 'es' : ''}`;
+                  matchCount.style.cssText = 'display:inline-flex; align-items:center; font-size:0.78rem; font-weight:700; padding:3px 10px; border-radius:5px; color:#15803d; background:#f0fdf4; border:1px solid #86efac;';
+                  const first = table.querySelector('.duct-row-highlight');
+                  if (first) setTimeout(() => first.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+                } else {
+                  matchCount.textContent = '0 matches';
+                  matchCount.style.cssText = 'display:inline-flex; align-items:center; font-size:0.78rem; font-weight:700; padding:3px 10px; border-radius:5px; color:#64748b; background:#f1f5f9; border:1px solid #cbd5e1;';
+                }
+              } else if (matchCount) {
+                matchCount.style.display = 'none';
+              }
+            };
+
+            const wireSearchAndFullscreen = () => {
+              const inp = body.querySelector('#duct-search-input');
+              if (inp) {
+                inp.oninput = () => runDuctSearch(inp.value);
+                inp.onkeydown = (e) => { if (e.key === 'Escape') { inp.value = ''; runDuctSearch(''); } };
+              }
+            };
+            wireSearchAndFullscreen();
+
+            // ── Event delegation ──────────────────────────────────────────
             body.onclick = (e) => {
               const tabBtn = e.target.closest('.sheet-tab-btn');
               if (tabBtn) {
-                const targetSheet = tabBtn.dataset.sheet;
-                if (targetSheet && targetSheet !== currentSheetName) {
-                  currentSheetName = targetSheet;
-                  body.innerHTML = renderExactDocumentView(currentSheetName);
-                  applyZoom(currentZoom);
+                const sIdxStr = tabBtn.dataset.sheetIndex;
+                if (sIdxStr !== undefined && sIdxStr !== null) {
+                  const sIdx = parseInt(sIdxStr, 10);
+                  const targetSheet = sheets[sIdx];
+                  if (targetSheet && targetSheet !== currentSheetName) {
+                    currentSheetName = targetSheet;
+                    body.innerHTML = renderExactDocumentView(currentSheetName);
+                    applyZoom(currentZoom);
+                    wireSearchAndFullscreen();
+                  }
                 }
                 return;
               }
@@ -1627,14 +1767,26 @@ function openFileViewerModal(rawFilePath, displayName) {
                 else if (action === 'out') applyZoom(currentZoom - 0.15);
                 else if (action === 'reset') applyZoom(1.0);
                 else if (action === 'fit') {
-                  const container = body.querySelector('#xlsx-exact-container');
-                  const target = body.querySelector('#xlsx-zoom-target');
-                  if (container && target) {
-                    const cWidth = container.clientWidth - 40;
-                    const tWidth = target.scrollWidth || target.clientWidth;
-                    if (tWidth > 0) applyZoom(Math.min(1.2, Math.max(0.35, cWidth / tWidth)));
+                  const cont = body.querySelector('#xlsx-exact-container');
+                  const tgt = body.querySelector('#xlsx-zoom-target');
+                  if (cont && tgt) {
+                    const cW = cont.clientWidth - 40;
+                    const tW = tgt.scrollWidth || tgt.clientWidth;
+                    if (tW > 0) applyZoom(Math.min(1.2, Math.max(0.35, cW / tW)));
                   }
                 }
+                return;
+              }
+              // Inline fullscreen button
+              if (e.target.id === 'inline-fullscreen-btn' || e.target.closest('#inline-fullscreen-btn')) {
+                toggleFullscreen();
+                return;
+              }
+              // Clear search button
+              if (e.target.id === 'duct-search-clear' || e.target.closest('#duct-search-clear')) {
+                const inp = body.querySelector('#duct-search-input');
+                if (inp) { inp.value = ''; inp.focus(); runDuctSearch(''); }
+                return;
               }
             };
           }
@@ -1678,6 +1830,20 @@ function openFileViewerModal(rawFilePath, displayName) {
 
     if (dlBtn) {
       dlBtn.onclick = () => triggerDownload(blobUrl, safeDisplayName);
+    }
+
+    // Wire the header fullscreen button — works for ALL file types (images, PDF, xlsx)
+    const fsBtn = document.getElementById('file-viewer-fullscreen-btn');
+    if (fsBtn) {
+      fsBtn.onclick = () => {
+        const container = document.getElementById('file-viewer-modal-container');
+        if (!container) return;
+        const isFs = container.classList.toggle('fullscreen-modal');
+        container.style.cssText = isFs
+          ? 'width:100vw; height:100vh; max-width:100vw; max-height:100vh; border-radius:0; display:flex; flex-direction:column; padding:0; overflow:hidden; transition:all 0.2s;'
+          : 'width:95vw; height:92vh; max-width:1320px; max-height:92vh; border-radius:12px; display:flex; flex-direction:column; padding:0; overflow:hidden; transition:all 0.2s;';
+        fsBtn.textContent = isFs ? '🗗 Exit Fullscreen' : '⛶ Fullscreen';
+      };
     }
 
     modal.classList.remove('hidden');
