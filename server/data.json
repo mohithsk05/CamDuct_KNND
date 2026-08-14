@@ -378,7 +378,7 @@
       "type": "planning",
       "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-003 (MAALUR)",
       "project_id": 3,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-14T15:36:54.962Z"
     },
     {
@@ -388,7 +388,7 @@
       "type": "review",
       "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-003",
       "project_id": 3,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-14T15:37:25.379Z"
     },
     {
@@ -398,7 +398,7 @@
       "type": "planning",
       "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-003",
       "project_id": 3,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-14T15:37:25.389Z"
     }
   ],

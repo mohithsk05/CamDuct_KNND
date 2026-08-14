@@ -1496,7 +1496,6 @@ function triggerDownload(url, filename) {
   link.click();
   document.body.removeChild(link);
 }
-
 function openFileViewerModal(rawFilePath, displayName) {
   if (!rawFilePath) {
     showToast('File path missing', 'error');
@@ -1556,36 +1555,88 @@ function openFileViewerModal(rawFilePath, displayName) {
           const buffer = await blob.arrayBuffer();
           const workbook = XLSX.read(buffer, { type: 'array' });
           if (workbook && workbook.SheetNames && workbook.SheetNames.length > 0) {
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            const sheets = workbook.SheetNames;
+            let currentSheetName = sheets[0];
+            let currentZoom = 1.0;
 
-            if (jsonRows && jsonRows.length > 0) {
-              const maxCols = Math.max(...jsonRows.map(r => Array.isArray(r) ? r.length : 0));
-              let tableHtml = `
-                <div style="width:100%; max-height:60vh; overflow:auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-                  <div style="padding:10px 14px; background:#f8fafc; border-bottom:1px solid #e2e8f0; font-size:0.82rem; font-weight:700; color:#334155; display:flex; justify-content:space-between; align-items:center;">
-                    <span>📊 Sheet: ${escapeHtml(firstSheetName)}</span>
-                    <span style="background:#eff6ff; color:#1d4ed8; padding:2px 8px; border-radius:4px; border:1px solid #bfdbfe;">${jsonRows.length} Rows × ${maxCols} Columns</span>
+            const renderExactDocumentView = (activeSheetName) => {
+              const worksheet = workbook.Sheets[activeSheetName];
+              let htmlContent = XLSX.utils.sheet_to_html(worksheet, { editable: false });
+              htmlContent = htmlContent.replace('<table>', '<table class="exact-excel-rendered-table">');
+
+              return `
+                <div style="width:100%; height:100%; display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; flex-shrink:0;">
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                      <span style="font-size:0.78rem; font-weight:700; color:#475569; margin-right:4px;">Sheets (${sheets.length}):</span>
+                      ${sheets.map(sName => `
+                        <button type="button" class="sheet-tab-btn ${sName === activeSheetName ? 'active' : ''}" data-sheet="${escapeHtml(sName)}"
+                          style="font-size:0.8rem; font-weight:700; padding:4px 12px; border-radius:6px; border:1px solid ${sName === activeSheetName ? '#2563eb' : '#cbd5e1'}; background:${sName === activeSheetName ? '#eff6ff' : '#ffffff'}; color:${sName === activeSheetName ? '#1d4ed8' : '#475569'}; cursor:pointer; transition:all 0.15s;">
+                          📊 ${escapeHtml(sName)}
+                        </button>
+                      `).join('')}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <button type="button" class="btn btn-outline btn-sm zoom-action-btn" data-zoom="fit" style="font-size:0.78rem; padding:3px 10px; font-weight:700; background:#f0fdf4; color:#15803d; border-color:#86efac;">🔍 Fit Width</button>
+                      <button type="button" class="btn btn-outline btn-sm zoom-action-btn" data-zoom="out" style="font-size:0.78rem; padding:3px 8px; font-weight:700;">➖ Zoom Out</button>
+                      <span id="zoom-level-indicator" style="font-size:0.78rem; font-weight:700; color:#334155; min-width:45px; text-align:center;">100%</span>
+                      <button type="button" class="btn btn-outline btn-sm zoom-action-btn" data-zoom="in" style="font-size:0.78rem; padding:3px 8px; font-weight:700;">➕ Zoom In</button>
+                      <button type="button" class="btn btn-outline btn-sm zoom-action-btn" data-zoom="reset" style="font-size:0.78rem; padding:3px 8px; color:#64748b;">Reset</button>
+                    </div>
                   </div>
-                  <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+                  <div id="xlsx-exact-container" style="flex:1; width:100%; height:62vh; overflow:auto; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:16px; display:flex; justify-content:center; align-items:flex-start;">
+                    <div id="xlsx-zoom-target" style="transform-origin: top center; transition: transform 0.15s ease-out; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,0.06); padding:16px; width:fit-content; min-width:80%;">
+                      <style>
+                        .exact-excel-rendered-table { border-collapse: collapse !important; width: 100% !important; font-family: Calibri, Arial, sans-serif !important; font-size: 13px !important; color: #1e293b !important; }
+                        .exact-excel-rendered-table td, .exact-excel-rendered-table th { border: 1px solid #cbd5e1 !important; padding: 6px 10px !important; min-width: 60px !important; text-align: left !important; vertical-align: middle !important; background: #ffffff !important; }
+                        .exact-excel-rendered-table tr:first-child td, .exact-excel-rendered-table tr:first-child th { background: #f1f5f9 !important; font-weight: bold !important; color: #0f172a !important; }
+                      </style>
+                      ${htmlContent}
+                    </div>
+                  </div>
+                </div>
               `;
+            };
 
-              jsonRows.forEach((row, rIdx) => {
-                const isHeader = (rIdx === 0);
-                tableHtml += `<tr style="${isHeader ? 'background:#f1f5f9; font-weight:700; color:#0f172a;' : 'border-bottom:1px solid #f1f5f9;'}">`;
-                for (let colIdx = 0; colIdx < maxCols; colIdx++) {
-                  const val = (row && row[colIdx] !== undefined) ? String(row[colIdx]) : '';
-                  const cellTag = isHeader ? 'th' : 'td';
-                  tableHtml += `<${cellTag} style="padding:8px 12px; border-right:1px solid #f1f5f9; white-space:nowrap;">${escapeHtml(val)}</${cellTag}>`;
+            body.innerHTML = renderExactDocumentView(currentSheetName);
+            renderedTable = true;
+
+            const applyZoom = (newZoom) => {
+              currentZoom = Math.min(2.5, Math.max(0.3, newZoom));
+              const target = body.querySelector('#xlsx-zoom-target');
+              const indicator = body.querySelector('#zoom-level-indicator');
+              if (target) target.style.transform = `scale(${currentZoom})`;
+              if (indicator) indicator.textContent = `${Math.round(currentZoom * 100)}%`;
+            };
+
+            body.onclick = (e) => {
+              const tabBtn = e.target.closest('.sheet-tab-btn');
+              if (tabBtn) {
+                const targetSheet = tabBtn.dataset.sheet;
+                if (targetSheet && targetSheet !== currentSheetName) {
+                  currentSheetName = targetSheet;
+                  body.innerHTML = renderExactDocumentView(currentSheetName);
+                  applyZoom(currentZoom);
                 }
-                tableHtml += `</tr>`;
-              });
-
-              tableHtml += `</table></div>`;
-              body.innerHTML = tableHtml;
-              renderedTable = true;
-            }
+                return;
+              }
+              const zoomBtn = e.target.closest('.zoom-action-btn');
+              if (zoomBtn) {
+                const action = zoomBtn.dataset.zoom;
+                if (action === 'in') applyZoom(currentZoom + 0.15);
+                else if (action === 'out') applyZoom(currentZoom - 0.15);
+                else if (action === 'reset') applyZoom(1.0);
+                else if (action === 'fit') {
+                  const container = body.querySelector('#xlsx-exact-container');
+                  const target = body.querySelector('#xlsx-zoom-target');
+                  if (container && target) {
+                    const cWidth = container.clientWidth - 40;
+                    const tWidth = target.scrollWidth || target.clientWidth;
+                    if (tWidth > 0) applyZoom(Math.min(1.2, Math.max(0.35, cWidth / tWidth)));
+                  }
+                }
+              }
+            };
           }
         } catch(err) {
           console.warn('XLSX rendering fallback:', err);
@@ -1597,7 +1648,7 @@ function openFileViewerModal(rawFilePath, displayName) {
           <div style="text-align:center; padding:36px 24px; background:#ffffff; border:1px dashed #bfdbfe; border-radius:12px; width:100%; max-width:480px;">
             <div style="font-size:3.5rem; margin-bottom:12px; line-height:1;">📊</div>
             <h4 style="font-size:1.1rem; margin:0 0 6px 0; color:#0f172a; font-weight:700;">${escapeHtml(safeDisplayName)}</h4>
-            <p style="font-size:0.88rem; color:#64748b; margin:0 0 18px 0;">Excel Spreadsheet File</p>
+            <p style="font-size:0.88rem; color:#64748b; margin:0 0 18px 0;">Excel Spreadsheet Document</p>
             <button class="btn btn-primary direct-modal-dl-btn" style="padding:9px 22px; font-size:0.92rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
               <span>⬇ Download &amp; View Excel</span>
             </button>

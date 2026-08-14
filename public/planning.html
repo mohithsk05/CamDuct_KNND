@@ -425,10 +425,15 @@
 
 <!-- ─── File Viewer Modal ──────────────────────────────────────────────────── -->
 <div class="modal-backdrop hidden" id="file-viewer-modal">
-  <div class="modal" style="width: 92vw; max-width: 960px; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 12px;">
-    <div class="modal-header" style="flex-shrink: 0; padding: 14px 20px; border-bottom: 1px solid var(--border); background: #ffffff;">
-      <h3 id="file-viewer-title" style="word-break: break-all; margin: 0; font-size: 1.1rem; color: var(--text-primary);">📄 File Viewer</h3>
-      <button class="modal-close" onclick="document.getElementById('file-viewer-modal').classList.add('hidden')">✕</button>
+  <div class="modal" id="file-viewer-modal-container" style="width: 95vw; max-width: 1320px; height: 92vh; max-height: 92vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 12px; transition: all 0.2s;">
+    <div class="modal-header" style="flex-shrink: 0; padding: 12px 20px; border-bottom: 1px solid var(--border); background: #ffffff; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <h3 id="file-viewer-title" style="word-break: break-all; margin: 0; font-size: 1.1rem; color: var(--text-primary);">📄 File Viewer</h3>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button type="button" class="btn btn-outline btn-sm" id="file-viewer-fullscreen-btn" title="Toggle Fullscreen" style="font-size: 0.8rem; padding: 4px 10px;">⛶ Fullscreen</button>
+        <button class="modal-close" onclick="document.getElementById('file-viewer-modal').classList.add('hidden')">✕</button>
+      </div>
     </div>
     <div class="modal-body" id="file-viewer-body" style="flex: 1; min-height: 350px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f8fafc; overflow: auto; padding: 16px;">
       <!-- preview inserted via JS -->
