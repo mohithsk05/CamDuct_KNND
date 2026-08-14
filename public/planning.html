@@ -425,16 +425,19 @@
 
 <!-- ─── File Viewer Modal ──────────────────────────────────────────────────── -->
 <div class="modal-backdrop hidden" id="file-viewer-modal">
-  <div class="modal" style="max-width: 80vh; max-height: 90vh; display: flex; flex-direction: column;">
-    <div class="modal-header" style="flex-shrink: 0;">
-      <h3 id="file-viewer-title" style="word-break: break-all;">📄 File Viewer</h3>
+  <div class="modal" style="width: 92vw; max-width: 960px; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 12px;">
+    <div class="modal-header" style="flex-shrink: 0; padding: 14px 20px; border-bottom: 1px solid var(--border); background: #ffffff;">
+      <h3 id="file-viewer-title" style="word-break: break-all; margin: 0; font-size: 1.1rem; color: var(--text-primary);">📄 File Viewer</h3>
       <button class="modal-close" onclick="document.getElementById('file-viewer-modal').classList.add('hidden')">✕</button>
     </div>
-    <div class="modal-body" id="file-viewer-body" style="flex: 1; min-height: 300px; display: flex; justify-content: center; align-items: center; background: #f1f5f9; overflow: hidden; padding: 0;">
+    <div class="modal-body" id="file-viewer-body" style="flex: 1; min-height: 350px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f8fafc; overflow: auto; padding: 16px;">
       <!-- preview inserted via JS -->
     </div>
-    <div class="modal-footer" style="flex-shrink: 0; justify-content: center;">
-      <button class="btn btn-primary" id="file-viewer-download-btn" style="padding: 8px 24px; font-size: 1rem;">⬇ Download File</button>
+    <div class="modal-footer" style="flex-shrink: 0; justify-content: space-between; align-items: center; padding: 12px 20px; border-top: 1px solid var(--border); background: #ffffff;">
+      <span id="file-viewer-info" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Ready to view</span>
+      <button class="btn btn-primary" id="file-viewer-download-btn" style="padding: 8px 24px; font-size: 0.95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+        <span>⬇ Download File</span>
+      </button>
     </div>
   </div>
 </div>
@@ -523,6 +526,7 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script src="/js/auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="/js/planning.js"></script>
 </body>
 </html>

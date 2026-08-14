@@ -215,21 +215,24 @@
       "drawing_name": "drawing.png",
       "status": "approved",
       "revise_remark": null,
-      "billing_items": "[{\"product\":\"Box Duct with TDF\",\"qty\":15,\"unit\":\"sqmt\",\"rate\":null,\"material\":\"275gsm 22G\"}]",
+      "billing_items": null,
       "insulation_items": null,
       "submitted_by": 5,
       "reviewed_by": 2,
       "created_at": "2026-08-12T07:09:45.268Z",
-      "updated_at": "2026-08-13T07:47:32.095Z",
+      "updated_at": "2026-08-14T15:37:25.371Z",
       "zone": "TN (Tamil Nadu)",
       "is_revised": 1,
       "area_list_path": "/uploads/1786607251929_Area_sheet.xlsx",
       "area_list_name": "Area_sheet.xlsx",
       "numbering_drawing_path": "/uploads/1786607252012_OTF.xlsx",
       "numbering_drawing_name": "OTF.xlsx",
-      "billing_qty": 15,
-      "billing_unit": "sqmt",
-      "billing_rate": null
+      "billing_qty": null,
+      "billing_unit": null,
+      "billing_rate": null,
+      "insulation_qty": null,
+      "insulation_unit": null,
+      "insulation_rate": null
     },
     {
       "id": 4,
@@ -359,397 +362,44 @@
   ],
   "notifications": [
     {
-      "id": 115,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-13T04:28:25.516Z"
-    },
-    {
-      "id": 116,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-13T04:29:08.759Z"
-    },
-    {
-      "id": 117,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-13T04:30:03.677Z"
-    },
-    {
-      "id": 118,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-13T04:30:37.236Z"
-    },
-    {
-      "id": 119,
+      "id": 153,
       "role": "admin",
       "branch": null,
       "type": "planning",
-      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-001 (MAALUR)",
-      "project_id": 1,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:31:45.199Z"
-    },
-    {
-      "id": 120,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-001 (MAALUR)",
-      "project_id": 1,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:31:45.202Z"
-    },
-    {
-      "id": 121,
-      "role": "planning",
-      "branch": "maalur",
-      "type": "review",
-      "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-001",
-      "project_id": 1,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:32:19.509Z"
-    },
-    {
-      "id": 122,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-001",
-      "project_id": 1,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:32:19.514Z"
-    },
-    {
-      "id": 123,
-      "sender_id": 0,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "maalur",
-      "branch": "🔑 You have been granted FULL ADMIN AUTHORITY by Admin. All admin powers are now active on your account. Use the Revert button to return authority to Admin.",
-      "type": "custom",
-      "is_read": 1,
-      "created_at": "2026-08-13T04:39:37.128Z"
-    },
-    {
-      "id": 124,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-004 by Planning – Maalur (MAALUR)",
-      "project_id": 4,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:40:49.780Z"
-    },
-    {
-      "id": 125,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-004 by Planning – Maalur (MAALUR)",
-      "project_id": 4,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:40:49.792Z"
-    },
-    {
-      "id": 126,
-      "role": "planning",
-      "branch": "maalur",
-      "type": "review",
-      "message": "🔄 Job #CD-KNND-26-004 requires REVISION. Remark: make changes based on the negotiation made",
-      "project_id": 4,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:42:03.474Z"
-    },
-    {
-      "id": 127,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "🔄 Job #CD-KNND-26-004 requires REVISION. Remark: make changes based on the negotiation made",
-      "project_id": 4,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:42:03.494Z"
-    },
-    {
-      "id": 128,
-      "role": "planning",
-      "branch": "maalur",
-      "type": "review",
-      "message": "❌ Job #CD-KNND-26-004 has been REJECTED.",
-      "project_id": 4,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:43:40.427Z"
-    },
-    {
-      "id": 129,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "❌ Job #CD-KNND-26-004 has been REJECTED.",
-      "project_id": 4,
-      "is_read": 1,
-      "created_at": "2026-08-13T04:43:40.434Z"
-    },
-    {
-      "id": 130,
-      "sender_id": 0,
-      "sender_name": "System",
-      "target_user_id": "🔄 Admin authority has been reverted by Manager – Maalur. Full admin power restored to Admin / Owner.",
-      "type": "custom",
-      "is_read": 0,
-      "created_at": "2026-08-13T04:44:20.203Z"
-    },
-    {
-      "id": 131,
-      "sender_id": 2,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 3,
-      "target_user_name": "Manager – Maalur",
-      "role": "manager",
-      "branch": "maalur",
-      "type": "custom",
-      "message": "hello",
-      "validity": "1day",
-      "expires_at": "2026-08-14T04:51:07.750Z",
-      "is_read": 1,
-      "created_at": "2026-08-13T04:51:07.750Z"
-    },
-    {
-      "id": 132,
-      "sender_id": 2,
-      "sender_name": "Admin / Owner",
-      "target_user_id": 5,
-      "target_user_name": "Planning – Maalur",
-      "role": "planning",
-      "branch": "maalur",
-      "type": "custom",
-      "message": "hello",
-      "validity": "1day",
-      "expires_at": "2026-08-14T04:51:07.750Z",
-      "is_read": 1,
-      "created_at": "2026-08-13T04:51:07.755Z"
-    },
-    {
-      "id": 133,
-      "role": "planning",
-      "branch": "maalur",
-      "type": "review",
-      "message": "🔄 Job #CD-KNND-26-003 requires REVISION. Remark: revise",
+      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-003 (MAALUR)",
       "project_id": 3,
       "is_read": 1,
-      "created_at": "2026-08-13T05:49:14.061Z"
+      "created_at": "2026-08-14T15:36:54.958Z"
     },
     {
-      "id": 134,
+      "id": 154,
       "role": "manager",
       "branch": "maalur",
       "type": "planning",
-      "message": "🔄 Job #CD-KNND-26-003 requires REVISION. Remark: revise",
+      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-003 (MAALUR)",
       "project_id": 3,
-      "is_read": 1,
-      "created_at": "2026-08-13T05:49:14.066Z"
-    },
-    {
-      "id": 135,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New project submitted: Job #HCD-KNND-26-001 by Planning – Haryana (HARYANA)",
-      "project_id": 5,
-      "is_read": 1,
-      "created_at": "2026-08-13T07:39:54.738Z"
-    },
-    {
-      "id": 136,
-      "role": "manager",
-      "branch": "haryana",
-      "type": "planning",
-      "message": "New project submitted: Job #HCD-KNND-26-001 by Planning – Haryana (HARYANA)",
-      "project_id": 5,
       "is_read": 0,
-      "created_at": "2026-08-13T07:39:54.742Z"
+      "created_at": "2026-08-14T15:36:54.962Z"
     },
     {
-      "id": 137,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "🔄 Revised project resubmitted for approval: Job #CD-KNND-26-003 (REVISED) by Planning – Maalur (MAALUR)",
-      "project_id": "3",
-      "is_read": 1,
-      "created_at": "2026-08-13T07:45:52.038Z"
-    },
-    {
-      "id": 138,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "🔄 Revised project resubmitted for approval: Job #CD-KNND-26-003 (REVISED) by Planning – Maalur (MAALUR)",
-      "project_id": "3",
-      "is_read": 0,
-      "created_at": "2026-08-13T07:45:52.042Z"
-    },
-    {
-      "id": 139,
+      "id": 155,
       "role": "planning",
       "branch": "maalur",
       "type": "review",
-      "message": "✅ Job #CD-KNND-26-003 has been APPROVED.",
-      "project_id": 3,
-      "is_read": 1,
-      "created_at": "2026-08-13T07:46:25.084Z"
-    },
-    {
-      "id": 140,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "✅ Job #CD-KNND-26-003 has been APPROVED.",
+      "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-003",
       "project_id": 3,
       "is_read": 0,
-      "created_at": "2026-08-13T07:46:25.088Z"
+      "created_at": "2026-08-14T15:37:25.379Z"
     },
     {
-      "id": 141,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-003 (MAALUR)",
-      "project_id": "3",
-      "is_read": 1,
-      "created_at": "2026-08-13T07:47:32.100Z"
-    },
-    {
-      "id": 142,
+      "id": 156,
       "role": "manager",
       "branch": "maalur",
       "type": "planning",
-      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-003 (MAALUR)",
-      "project_id": "3",
+      "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-003",
+      "project_id": 3,
       "is_read": 0,
-      "created_at": "2026-08-13T07:47:32.106Z"
-    },
-    {
-      "id": 143,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
-      "project_id": 6,
-      "is_read": 1,
-      "created_at": "2026-08-13T07:48:42.377Z"
-    },
-    {
-      "id": 144,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
-      "project_id": 6,
-      "is_read": 0,
-      "created_at": "2026-08-13T07:48:42.382Z"
-    },
-    {
-      "id": 145,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-003 by Planning – Maalur (MAALUR)",
-      "project_id": 7,
-      "is_read": 1,
-      "created_at": "2026-08-13T07:49:50.762Z"
-    },
-    {
-      "id": 146,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-003 by Planning – Maalur (MAALUR)",
-      "project_id": 7,
-      "is_read": 0,
-      "created_at": "2026-08-13T07:49:50.766Z"
-    },
-    {
-      "id": 147,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
-      "project_id": 8,
-      "is_read": 1,
-      "created_at": "2026-08-13T07:55:09.732Z"
-    },
-    {
-      "id": 148,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
-      "project_id": 8,
-      "is_read": 0,
-      "created_at": "2026-08-13T07:55:09.756Z"
-    },
-    {
-      "id": 149,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
-      "project_id": 9,
-      "is_read": 1,
-      "created_at": "2026-08-13T08:05:13.090Z"
-    },
-    {
-      "id": 150,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "New project submitted: Job #CD-KNND-26-001 by Planning – Maalur (MAALUR)",
-      "project_id": 9,
-      "is_read": 0,
-      "created_at": "2026-08-13T08:05:13.126Z"
-    },
-    {
-      "id": 151,
-      "role": "admin",
-      "branch": null,
-      "type": "planning",
-      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-003 (MAALUR)",
-      "project_id": "7",
-      "is_read": 1,
-      "created_at": "2026-08-13T12:10:51.487Z"
-    },
-    {
-      "id": 152,
-      "role": "manager",
-      "branch": "maalur",
-      "type": "planning",
-      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-003 (MAALUR)",
-      "project_id": "7",
-      "is_read": 0,
-      "created_at": "2026-08-13T12:10:51.499Z"
+      "created_at": "2026-08-14T15:37:25.389Z"
     }
   ],
   "power_grants": [
@@ -773,7 +423,7 @@
   "autoInc": {
     "users": 17,
     "projects": 10,
-    "notifications": 153,
+    "notifications": 157,
     "power_grants": 26
   },
   "admin_authority": null

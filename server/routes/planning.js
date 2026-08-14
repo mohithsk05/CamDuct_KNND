@@ -540,9 +540,12 @@ const handleProjectRevision = (req, res) => {
 router.patch('/projects/:id/revise', auth, upload.single('drawing'), handleProjectRevision);
 router.post('/projects/:id/revise', auth, upload.single('drawing'), handleProjectRevision);
 
-// GET /api/planning/drawing/:filename — Serve uploaded drawing file
-router.get('/drawing/:filename', auth, (req, res) => {
-  const filePath = path.join(uploadsDir, req.params.filename);
+// GET /api/planning/drawing/:filename — Serve uploaded drawing file (supports subpaths/prefixes)
+router.get('/drawing/:filename(*)', auth, (req, res) => {
+  const rawParam = req.params.filename || req.params[0] || '';
+  const cleanFilename = path.basename(rawParam);
+  if (!cleanFilename) return res.status(400).json({ error: 'Invalid filename' });
+  const filePath = path.join(uploadsDir, cleanFilename);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
   res.sendFile(filePath);
 });

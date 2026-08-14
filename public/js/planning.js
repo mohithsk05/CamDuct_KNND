@@ -1386,6 +1386,7 @@ function renderProjectCardGroup(group, serialNo) {
                    ${buildItemsSummary(billingItems, '💼', 'billing')}
                    ${areaListPill}
                    ${numberingPill}
+                   ${poFilePill}
                  </div>
                </div>
              </details>`
@@ -1486,6 +1487,166 @@ function renderProjectCardGroup(group, serialNo) {
   `;
 }
 
+// ─── File Viewer Modal Helper ───────────────────────────────────────────────
+function triggerDownload(url, filename) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function openFileViewerModal(rawFilePath, displayName) {
+  if (!rawFilePath) {
+    showToast('File path missing', 'error');
+    return;
+  }
+  const cleanFilename = String(rawFilePath || '').split('/').pop().split('\\').pop();
+  if (!cleanFilename) {
+    showToast('Invalid file name', 'error');
+    return;
+  }
+  const safeDisplayName = displayName || cleanFilename;
+
+  showToast('Loading file...', 'info');
+
+  apiFetch(`/planning/drawing/${encodeURIComponent(cleanFilename)}`).then(r => {
+    if (!r || !r.ok) {
+      showToast('File not found or access denied', 'error');
+      return null;
+    }
+    return r.blob();
+  }).then(async (blob) => {
+    if (!blob) return;
+    const blobUrl = URL.createObjectURL(blob);
+    const lowerName = safeDisplayName.toLowerCase();
+
+    const modal = document.getElementById('file-viewer-modal');
+    if (!modal) {
+      triggerDownload(blobUrl, safeDisplayName);
+      return;
+    }
+
+    const title = document.getElementById('file-viewer-title');
+    const body = document.getElementById('file-viewer-body');
+    const info = document.getElementById('file-viewer-info');
+    const dlBtn = document.getElementById('file-viewer-download-btn');
+
+    const fileExt = safeDisplayName.includes('.') ? safeDisplayName.split('.').pop().toUpperCase() : 'FILE';
+    const formatBadge = `<span style="background:#e0f2fe; color:#0369a1; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:4px; border:1px solid #bae6fd; margin-left:8px; text-transform:uppercase;">${escapeHtml(fileExt)}</span>`;
+
+    if (title) title.innerHTML = `📄 ${escapeHtml(safeDisplayName)} ${formatBadge}`;
+    if (info) info.textContent = `Size: ${Math.round(blob.size / 1024)} KB | Format: ${fileExt}`;
+
+    if (body) body.innerHTML = '';
+
+    if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.webp') || lowerName.endsWith('.gif') || lowerName.endsWith('.svg')) {
+      body.innerHTML = `
+        <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#0f172a; padding:16px; border-radius:8px; overflow:hidden;">
+          <img src="${blobUrl}" alt="${escapeHtml(safeDisplayName)}" style="max-width:100%; max-height:65vh; object-fit:contain; border-radius:6px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+        </div>
+      `;
+    } else if (lowerName.endsWith('.pdf')) {
+      body.innerHTML = `<iframe src="${blobUrl}" style="width:100%; height:65vh; border:none; border-radius:8px; background:#fff;"></iframe>`;
+    } else if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls') || lowerName.endsWith('.csv')) {
+      let renderedTable = false;
+      if (window.XLSX) {
+        try {
+          const buffer = await blob.arrayBuffer();
+          const workbook = XLSX.read(buffer, { type: 'array' });
+          if (workbook && workbook.SheetNames && workbook.SheetNames.length > 0) {
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            if (jsonRows && jsonRows.length > 0) {
+              const maxCols = Math.max(...jsonRows.map(r => Array.isArray(r) ? r.length : 0));
+              let tableHtml = `
+                <div style="width:100%; max-height:60vh; overflow:auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                  <div style="padding:10px 14px; background:#f8fafc; border-bottom:1px solid #e2e8f0; font-size:0.82rem; font-weight:700; color:#334155; display:flex; justify-content:space-between; align-items:center;">
+                    <span>📊 Sheet: ${escapeHtml(firstSheetName)}</span>
+                    <span style="background:#eff6ff; color:#1d4ed8; padding:2px 8px; border-radius:4px; border:1px solid #bfdbfe;">${jsonRows.length} Rows × ${maxCols} Columns</span>
+                  </div>
+                  <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+              `;
+
+              jsonRows.forEach((row, rIdx) => {
+                const isHeader = (rIdx === 0);
+                tableHtml += `<tr style="${isHeader ? 'background:#f1f5f9; font-weight:700; color:#0f172a;' : 'border-bottom:1px solid #f1f5f9;'}">`;
+                for (let colIdx = 0; colIdx < maxCols; colIdx++) {
+                  const val = (row && row[colIdx] !== undefined) ? String(row[colIdx]) : '';
+                  const cellTag = isHeader ? 'th' : 'td';
+                  tableHtml += `<${cellTag} style="padding:8px 12px; border-right:1px solid #f1f5f9; white-space:nowrap;">${escapeHtml(val)}</${cellTag}>`;
+                }
+                tableHtml += `</tr>`;
+              });
+
+              tableHtml += `</table></div>`;
+              body.innerHTML = tableHtml;
+              renderedTable = true;
+            }
+          }
+        } catch(err) {
+          console.warn('XLSX rendering fallback:', err);
+        }
+      }
+
+      if (!renderedTable) {
+        body.innerHTML = `
+          <div style="text-align:center; padding:36px 24px; background:#ffffff; border:1px dashed #bfdbfe; border-radius:12px; width:100%; max-width:480px;">
+            <div style="font-size:3.5rem; margin-bottom:12px; line-height:1;">📊</div>
+            <h4 style="font-size:1.1rem; margin:0 0 6px 0; color:#0f172a; font-weight:700;">${escapeHtml(safeDisplayName)}</h4>
+            <p style="font-size:0.88rem; color:#64748b; margin:0 0 18px 0;">Excel Spreadsheet File</p>
+            <button class="btn btn-primary direct-modal-dl-btn" style="padding:9px 22px; font-size:0.92rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+              <span>⬇ Download &amp; View Excel</span>
+            </button>
+          </div>
+        `;
+        const directBtn = body.querySelector('.direct-modal-dl-btn');
+        if (directBtn) {
+          directBtn.onclick = () => triggerDownload(blobUrl, safeDisplayName);
+        }
+      }
+    } else {
+      body.innerHTML = `
+        <div style="text-align:center; padding:36px 24px; background:#ffffff; border:1px dashed #cbd5e1; border-radius:12px; width:100%; max-width:480px;">
+          <div style="font-size:3.5rem; margin-bottom:12px; line-height:1;">📦</div>
+          <h4 style="font-size:1.1rem; margin:0 0 6px 0; color:#0f172a; font-weight:700;">${escapeHtml(safeDisplayName)}</h4>
+          <p style="font-size:0.88rem; color:#64748b; margin:0 0 18px 0;">Binary File Document</p>
+          <button class="btn btn-primary direct-modal-dl-btn" style="padding:9px 22px; font-size:0.92rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+            <span>⬇ Download File</span>
+          </button>
+        </div>
+      `;
+      const directBtn = body.querySelector('.direct-modal-dl-btn');
+      if (directBtn) {
+        directBtn.onclick = () => triggerDownload(blobUrl, safeDisplayName);
+      }
+    }
+
+    if (dlBtn) {
+      dlBtn.onclick = () => triggerDownload(blobUrl, safeDisplayName);
+    }
+
+    modal.classList.remove('hidden');
+  }).catch(err => {
+    console.error('File viewer error:', err);
+    showToast('Error opening file preview', 'error');
+  });
+}
+
+// Global click event delegation for drawing pills
+document.addEventListener('click', (e) => {
+  const pill = e.target.closest('.drawing-pill');
+  if (pill) {
+    e.stopPropagation();
+    const rawFile = pill.dataset.file;
+    const name = pill.dataset.name || rawFile;
+    if (rawFile) openFileViewerModal(rawFile, name);
+  }
+});
+
 // ─── Attach Project Card Events ─────────────────────────────────────────────
 function attachProjectCardEvents() {
   // Toggle collapse logic
@@ -1524,56 +1685,7 @@ function attachProjectCardEvents() {
   document.querySelectorAll('.drawing-pill').forEach(pill => {
     pill.addEventListener('click', (e) => {
       e.stopPropagation();
-      const filename = pill.dataset.file;
-      const displayName = pill.dataset.name || filename;
-      if (!filename) return;
-
-      apiFetch(`/planning/drawing/${filename}`).then(r => {
-        if (!r || !r.ok) { showToast('File not found', 'error'); return; }
-        return r.blob();
-      }).then(blob => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-
-        const modal = document.getElementById('file-viewer-modal');
-        if (modal) {
-          const title = document.getElementById('file-viewer-title');
-          const body = document.getElementById('file-viewer-body');
-          const dlBtn = document.getElementById('file-viewer-download-btn');
-
-          title.textContent = '📄 ' + displayName;
-          body.innerHTML = ''; // clear
-
-          const lowerName = filename.toLowerCase();
-          if (lowerName.endsWith('.pdf')) {
-            body.innerHTML = `<iframe src="${url}" style="width: 100%; height: 60vh; border: none;"></iframe>`;
-          } else if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.webp')) {
-            body.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 60vh; object-fit: contain;">`;
-          } else {
-            body.innerHTML = `<div style="text-align:center; padding:40px;">
-              <div style="font-size:3rem; margin-bottom:10px;">📦</div>
-              <p style="font-size:1.1rem; color:var(--text-primary); font-weight:600; margin:0;">Preview not available for this file type</p>
-              <p style="font-size:0.9rem; color:var(--text-muted); margin-top:5px;">Please download the file to view its contents.</p>
-            </div>`;
-          }
-
-          dlBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = displayName;
-            link.click();
-          };
-
-          modal.classList.remove('hidden');
-        } else {
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = displayName;
-          link.target = '_blank';
-          link.click();
-          URL.revokeObjectURL(url);
-        }
-      });
+      openFileViewerModal(pill.dataset.file, pill.dataset.name);
     });
   });
 
@@ -2000,6 +2112,14 @@ function openDetailModal(p) {
   const statusColors = { pending: 'var(--warning)', approved: 'var(--success)', rejected: 'var(--danger)', revised: 'var(--revise)' };
   const statusColor = statusColors[p.status] || 'var(--text-second)';
 
+  const areaListPill = p.area_list_name
+    ? `<div style="margin-top: 6px;"><span class="drawing-pill" data-file="${p.area_list_path}" data-name="${escapeHtml(p.area_list_name)}" style="font-size:0.8rem; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:3px 8px; border-radius:4px; cursor:pointer;">📄 Area List File: ${escapeHtml(p.area_list_name)}</span></div>` : '';
+  const numberingPill = p.numbering_drawing_name
+    ? `<div style="margin-top: 6px;"><span class="drawing-pill" data-file="${p.numbering_drawing_path}" data-name="${escapeHtml(p.numbering_drawing_name)}" style="font-size:0.8rem; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:3px 8px; border-radius:4px; cursor:pointer;">📄 Numbering Drawing File: ${escapeHtml(p.numbering_drawing_name)}</span></div>` : '';
+  const poFilePill = (p.conversion_status === 'converted' && p.po_file_path)
+    ? `<div style="margin-top: 6px;"><span class="drawing-pill" data-file="${p.po_file_path}" data-name="${escapeHtml(p.po_file_name)}" style="font-size:0.8rem; background:#ecfdf5; border:1px solid #6ee7b7; color:#047857; padding:3px 8px; border-radius:4px; cursor:pointer;">📄 PO Document: ${escapeHtml(p.po_file_name || 'View PO')}</span></div>`
+    : `<div style="margin-top: 6px; font-size:0.8rem; color:#b45309; font-weight:600;">⏳ Conversion Status: Not Converted</div>`;
+
   body.innerHTML = `
     <div class="detail-section">
       <div class="detail-section-title">Project Information</div>
@@ -2021,11 +2141,16 @@ function openDetailModal(p) {
       <div class="detail-section-title">Billing Quantity</div>
       ${(() => {
         const bi = safeParseItems(p.billing_items, p.billing_qty, p.billing_unit, p.billing_rate, 'Billing Item');
-        if (!bi.length) return '<div style="font-size:0.82rem; color:var(--text-muted); padding:8px 0;">No billing quantities entered yet.</div>';
+        if (!bi.length) return `<div style="font-size:0.82rem; color:var(--text-muted); padding:8px 0;">No billing quantities entered yet.</div>${areaListPill}${numberingPill}${poFilePill}`;
         return `<table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
           <tr style="background:var(--bg);"><th style="text-align:left; padding:5px 8px; border:1px solid var(--border);">Product</th><th style="padding:5px 8px; border:1px solid var(--border);">Qty</th><th style="padding:5px 8px; border:1px solid var(--border);">Unit</th></tr>
           ${bi.map(it => `<tr><td style="padding:5px 8px; border:1px solid var(--border);">${escapeHtml(it.product)}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.qty ?? '—'}</td><td style="padding:5px 8px; border:1px solid var(--border); text-align:center;">${it.unit || '—'}</td></tr>`).join('')}
-        </table>`;
+        </table>
+        <div style="margin-top:8px;">
+          ${areaListPill}
+          ${numberingPill}
+          ${poFilePill}
+        </div>`;
       })()}
     </div>
     <div class="detail-section">
