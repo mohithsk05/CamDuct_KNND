@@ -1,14 +1,14 @@
 /* Purchase Department Page Styles */
 
 .purchase-page {
-  padding: 28px;
+  padding: 24px;
   width: 100%;
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
 .purchase-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .purchase-header-top {
@@ -31,15 +31,15 @@
 
 /* ─── Tabs Bar ───────────────────────────────────────────────────────────── */
 .purchase-tabs-container {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 12px;
+  padding: 12px 16px;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .purchase-main-tabs {
@@ -55,9 +55,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 9px 16px;
   border-radius: var(--radius);
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 600;
   color: var(--text-second);
   background: transparent;
@@ -79,20 +79,6 @@
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.purchase-tab-badge {
-  font-size: 0.7rem;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
-  color: inherit;
-  font-weight: 700;
-}
-
-.purchase-tab-btn.active .purchase-tab-badge {
-  background: rgba(255, 255, 255, 0.25);
-  color: var(--white);
-}
-
 /* ─── Subtabs Bar (For Inventory) ────────────────────────────────────────── */
 .purchase-subtabs-bar {
   display: flex;
@@ -101,6 +87,7 @@
   padding-top: 10px;
   border-top: 1px dashed var(--border);
   animation: fadeIn 0.2s ease-in-out;
+  overflow-x: auto;
 }
 
 .purchase-subtab-btn {
@@ -140,7 +127,7 @@
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 32px;
+  padding: 24px;
   box-shadow: var(--shadow-sm);
   margin-bottom: 24px;
 }
@@ -150,8 +137,10 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
-  padding-bottom: 16px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .purchase-card-title {
@@ -161,15 +150,15 @@
 }
 
 .purchase-card-icon {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius);
   background: var(--accent-light);
   color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
 }
 
 .purchase-card-title h3 {
@@ -183,6 +172,110 @@
   font-size: 0.8rem;
   color: var(--text-muted);
   margin: 2px 0 0 0;
+}
+
+/* ─── Data Tables ────────────────────────────────────────────────────────── */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  scrollbar-width: thin;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.inventory-table th {
+  padding: 10px 12px;
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  background: #f8fafc;
+  color: var(--text-primary);
+}
+
+.inventory-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+.inventory-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.inventory-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ─── Abstract View Grid ─────────────────────────────────────────────────── */
+.abstract-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 24px;
+}
+
+.abstract-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.abstract-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.abstract-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.abstract-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.abstract-table th {
+  background: var(--bg);
+  padding: 8px 12px;
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-second);
+}
+
+.abstract-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+.abstract-table tr.grand-total-row {
+  background: #eff6ff;
+  font-weight: 700;
+}
+
+.abstract-table tr.grand-total-row td {
+  border-top: 2px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.9rem;
 }
 
 .purchase-placeholder-box {

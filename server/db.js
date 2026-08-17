@@ -10,8 +10,10 @@ let data = {
   projects: [],
   notifications: [],
   power_grants: [],
+  purchase_igr: [],
+  purchase_bpr: [],
   admin_authority: null,
-  autoInc: { users: 1, projects: 1, notifications: 1, power_grants: 1 }
+  autoInc: { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_igr: 1, purchase_bpr: 1 }
 };
 
 // Load data if exists
@@ -19,7 +21,11 @@ if (fs.existsSync(DATA_FILE)) {
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf-8');
     data = JSON.parse(raw);
-    if (!data.autoInc) data.autoInc = { users: 1, projects: 1, notifications: 1, power_grants: 1 };
+    if (!data.purchase_igr) data.purchase_igr = [];
+    if (!data.purchase_bpr) data.purchase_bpr = [];
+    if (!data.autoInc) data.autoInc = { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_igr: 1, purchase_bpr: 1 };
+    if (!data.autoInc.purchase_igr) data.autoInc.purchase_igr = 1;
+    if (!data.autoInc.purchase_bpr) data.autoInc.purchase_bpr = 1;
     // Always clear admin_authority on server start — must be granted fresh each session
     data.admin_authority = null;
     saveData();
