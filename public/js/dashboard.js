@@ -376,6 +376,9 @@ function openDeptPanel(dept, role, user) {
     case 'planning':
       renderPlanningPanel(contentEl, role, user);
       break;
+    case 'purchase':
+      renderPurchasePanel(contentEl, role, user);
+      break;
     case 'users':
       renderUsersPanel(contentEl, role, user);
       break;
@@ -392,6 +395,13 @@ function renderPlanningPanel(container, role, user) {
   // STRICT BRANCH ISOLATION: always use currentBranch (admin-selected branch), never user.branch
   const br = (currentBranch || (user && user.branch) || 'maalur').toLowerCase();
   window.location.href = `/planning.html?branch=${br}`;
+}
+
+// ─── Purchase Panel (inside dashboard) ─────────────────────────────────────────────
+function renderPurchasePanel(container, role, user) {
+  // STRICT BRANCH ISOLATION: always use currentBranch (admin-selected branch), never user.branch
+  const br = (currentBranch || (user && user.branch) || 'maalur').toLowerCase();
+  window.location.href = `/purchase.html?branch=${br}`;
 }
 
 // ─── Users Panel ──────────────────────────────────────────────────

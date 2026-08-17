@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamDuct KNND — Purchase Department</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/purchase.css">
+</head>
+<body>
+
+<!-- ─── Topbar ─────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-logo">
+    <div class="topbar-logo-icon">🛒</div>
+    <div>
+      <div class="topbar-title">CamDuct KNND</div>
+      <div class="topbar-subtitle">Purchase Department</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div style="position:relative;">
+      <button class="notif-btn" id="notif-btn" title="Alerts &amp; Notifications">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        <span class="notif-badge hidden" id="notif-badge">0</span>
+      </button>
+      <div class="notif-panel hidden" id="notif-panel">
+        <div class="notif-panel-header">
+          <h4 style="font-size:0.82rem;">🔔 Alerts &amp; Notifications</h4>
+          <button class="mark-all-read-box-btn" id="mark-all-read" type="button">Mark all read</button>
+        </div>
+        <div class="notif-list" id="notif-list">
+          <div class="empty-state" style="padding:24px 16px;">
+            <div class="empty-state-icon" style="font-size:1.5rem;">🔔</div>
+            <p>No alerts</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="user-chip">
+      <div class="user-avatar" id="user-avatar">P</div>
+      <span class="user-chip-name" id="user-name">Purchase</span>
+    </div>
+    <button class="btn btn-outline btn-sm" id="back-btn">Back</button>
+    <button class="btn btn-outline btn-sm" id="refresh-btn" title="Refresh Page">
+      <span class="refresh-icon" style="display:inline-block; transition:transform 0.5s ease-in-out;">🔄</span> Refresh
+    </button>
+    <button class="btn btn-outline btn-sm" id="logout-btn">Logout</button>
+  </div>
+</header>
+
+<!-- ─── Main Content ────────────────────────────────────────────────────── -->
+<main class="purchase-page">
+
+  <div class="purchase-header">
+    <div class="purchase-header-top">
+      <div>
+        <div class="dept-grid-branch-pill" id="branch-pill" style="margin-bottom:8px;">
+          <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="5"/></svg>
+          <span id="branch-pill-text">—</span>
+        </div>
+        <h2>🛒 Purchase Department</h2>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">
+          Manage Purchase Orders, Work Orders, Inventory, Low Stock Alerts, and Attendance
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Purchase Navigation Tabs ──────────────────────────────────────── -->
+  <div class="purchase-tabs-container">
+    <div class="purchase-main-tabs">
+      <button class="purchase-tab-btn active" data-tab="po" id="tab-btn-po">
+        <span>📑 PO</span>
+      </button>
+      <button class="purchase-tab-btn" data-tab="wo" id="tab-btn-wo">
+        <span>🛠️ WO</span>
+      </button>
+      <button class="purchase-tab-btn" data-tab="inventory" id="tab-btn-inventory">
+        <span>📦 Inventory</span>
+      </button>
+      <button class="purchase-tab-btn" data-tab="low_stock" id="tab-btn-low_stock">
+        <span>⚠️ Low Stock</span>
+      </button>
+      <button class="purchase-tab-btn" data-tab="attendence" id="tab-btn-attendence">
+        <span>🕒 Attendence</span>
+      </button>
+    </div>
+
+    <!-- Inventory Subtabs (Only visible when Inventory main tab is active) -->
+    <div class="purchase-subtabs-bar hidden" id="inventory-subtabs-bar">
+      <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-right:4px;">
+        Inventory Subtabs:
+      </span>
+      <button class="purchase-subtab-btn active" data-subtab="igr" id="subtab-btn-igr">
+        <span>📥 IGR</span>
+      </button>
+      <button class="purchase-subtab-btn" data-subtab="bpr" id="subtab-btn-bpr">
+        <span>🔄 BPR</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Tab Content Panels ────────────────────────────────────────────── -->
+
+  <!-- 1. PO Tab Content -->
+  <div class="purchase-content-panel" id="panel-po">
+    <div class="purchase-card">
+      <div class="purchase-card-header">
+        <div class="purchase-card-title">
+          <div class="purchase-card-icon">📑</div>
+          <div>
+            <h3>PO (Purchase Order) Workspace</h3>
+            <p>Purchase Order management and tracking</p>
+          </div>
+        </div>
+        <span class="purchase-tag-pill">PO Module</span>
+      </div>
+      <div class="purchase-placeholder-box">
+        <div class="purchase-placeholder-icon">📋</div>
+        <h4>PO Tab Initialized</h4>
+        <p>This tab is created and ready. Further functional workflows for Purchase Orders will be integrated in the next stage.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. WO Tab Content -->
+  <div class="purchase-content-panel hidden" id="panel-wo">
+    <div class="purchase-card">
+      <div class="purchase-card-header">
+        <div class="purchase-card-title">
+          <div class="purchase-card-icon">🛠️</div>
+          <div>
+            <h3>WO (Work Order) Workspace</h3>
+            <p>Work Order issuing and vendor assignments</p>
+          </div>
+        </div>
+        <span class="purchase-tag-pill">WO Module</span>
+      </div>
+      <div class="purchase-placeholder-box">
+        <div class="purchase-placeholder-icon">⚙️</div>
+        <h4>WO Tab Initialized</h4>
+        <p>This tab is created and ready. Further functional workflows for Work Orders will be integrated in the next stage.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Inventory Main Tab Content -->
+  <div class="purchase-content-panel hidden" id="panel-inventory">
+    
+    <!-- 3a. IGR Subtab Panel -->
+    <div class="inventory-subpanel" id="subpanel-igr">
+      <div class="purchase-card">
+        <div class="purchase-card-header">
+          <div class="purchase-card-title">
+            <div class="purchase-card-icon">📥</div>
+            <div>
+              <h3>IGR (Inward Goods Receipt) Workspace</h3>
+              <p>Inventory — Goods receiving, verification, and entry</p>
+            </div>
+          </div>
+          <span class="purchase-tag-pill">Inventory / IGR</span>
+        </div>
+        <div class="purchase-placeholder-box">
+          <div class="purchase-placeholder-icon">📦</div>
+          <h4>IGR Subtab Initialized</h4>
+          <p>This subtab under Inventory is created and ready. Inward Goods Receipt processes will be defined in the next stage.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3b. BPR Subtab Panel -->
+    <div class="inventory-subpanel hidden" id="subpanel-bpr">
+      <div class="purchase-card">
+        <div class="purchase-card-header">
+          <div class="purchase-card-title">
+            <div class="purchase-card-icon">🔄</div>
+            <div>
+              <h3>BPR Workspace</h3>
+              <p>Inventory — Bill / Purchase Returns & Requisitions</p>
+            </div>
+          </div>
+          <span class="purchase-tag-pill">Inventory / BPR</span>
+        </div>
+        <div class="purchase-placeholder-box">
+          <div class="purchase-placeholder-icon">📑</div>
+          <h4>BPR Subtab Initialized</h4>
+          <p>This subtab under Inventory is created and ready. BPR processes will be defined in the next stage.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 4. Low Stock Tab Content -->
+  <div class="purchase-content-panel hidden" id="panel-low_stock">
+    <div class="purchase-card">
+      <div class="purchase-card-header">
+        <div class="purchase-card-title">
+          <div class="purchase-card-icon">⚠️</div>
+          <div>
+            <h3>Low Stock Alerts Workspace</h3>
+            <p>Threshold alerts, reorder levels, and critical stock monitoring</p>
+          </div>
+        </div>
+        <span class="purchase-tag-pill">Low Stock Module</span>
+      </div>
+      <div class="purchase-placeholder-box">
+        <div class="purchase-placeholder-icon">📉</div>
+        <h4>Low Stock Tab Initialized</h4>
+        <p>This tab is created and ready. Low Stock alert limits and reorder functions will be integrated in the next stage.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Attendence Tab Content -->
+  <div class="purchase-content-panel hidden" id="panel-attendence">
+    <div class="purchase-card">
+      <div class="purchase-card-header">
+        <div class="purchase-card-title">
+          <div class="purchase-card-icon">🕒</div>
+          <div>
+            <h3>Attendence Workspace</h3>
+            <p>Purchase department staff attendance and check-in records</p>
+          </div>
+        </div>
+        <span class="purchase-tag-pill">Attendence Module</span>
+      </div>
+      <div class="purchase-placeholder-box">
+        <div class="purchase-placeholder-icon">👤</div>
+        <h4>Attendence Tab Initialized</h4>
+        <p>This tab is created and ready. Attendance logging and tracking features will be integrated in the next stage.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/purchase.js"></script>
+</body>
+</html>

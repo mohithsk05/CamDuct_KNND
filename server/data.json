@@ -358,48 +358,144 @@
       "reviewed_by": null,
       "created_at": "2026-08-13T08:05:13.077Z",
       "updated_at": "2026-08-13T08:05:13.077Z"
+    },
+    {
+      "id": 10,
+      "job_no": "CD-KNND-26-005",
+      "branch": "maalur",
+      "customer_name": "KNND",
+      "customer_type": "knnd",
+      "project_name": "BNMIT",
+      "place": "Bangalore",
+      "zone": "KA (Karnataka)",
+      "location": "first floort",
+      "po_quantity": 0,
+      "po_items": "[]",
+      "drawing_path": "1786947141993_drawing.png",
+      "drawing_name": "drawing.png",
+      "status": "approved",
+      "revise_remark": null,
+      "billing_items": "[{\"product\":\"Box Duct with Angle Flange\",\"qty\":10,\"unit\":\"sqft\",\"rate\":null,\"material\":\"120gsm 20G\"}]",
+      "insulation_items": null,
+      "submitted_by": 5,
+      "reviewed_by": null,
+      "created_at": "2026-08-17T06:12:22.012Z",
+      "updated_at": "2026-08-17T06:14:12.330Z",
+      "area_list_path": "/uploads/1786947252103_Area_sheet.xlsx",
+      "area_list_name": "Area_sheet.xlsx",
+      "numbering_drawing_path": "/uploads/1786947252104_OTF.xlsx",
+      "numbering_drawing_name": "OTF.xlsx",
+      "conversion_status": "converted",
+      "billing_qty": 10,
+      "billing_unit": "sqft",
+      "billing_rate": null,
+      "insulation_qty": null,
+      "insulation_unit": null,
+      "insulation_rate": null,
+      "po_file_path": "/uploads/1786947252243_Area_sheet.xlsx",
+      "po_file_name": "Area_sheet.xlsx"
     }
   ],
   "notifications": [
     {
-      "id": 153,
+      "id": 157,
       "role": "admin",
       "branch": null,
       "type": "planning",
-      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-003 (MAALUR)",
-      "project_id": 3,
+      "message": "New project submitted: Job #CD-KNND-26-005 by Planning – Maalur (MAALUR)",
+      "project_id": 10,
       "is_read": 1,
-      "created_at": "2026-08-14T15:36:54.958Z"
+      "created_at": "2026-08-17T06:12:22.016Z"
     },
     {
-      "id": 154,
+      "id": 158,
       "role": "manager",
       "branch": "maalur",
       "type": "planning",
-      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-003 (MAALUR)",
-      "project_id": 3,
+      "message": "New project submitted: Job #CD-KNND-26-005 by Planning – Maalur (MAALUR)",
+      "project_id": 10,
       "is_read": 1,
-      "created_at": "2026-08-14T15:36:54.962Z"
+      "created_at": "2026-08-17T06:12:22.023Z"
     },
     {
-      "id": 155,
+      "id": 159,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-005 (MAALUR)",
+      "project_id": "10",
+      "is_read": 1,
+      "created_at": "2026-08-17T06:12:59.884Z"
+    },
+    {
+      "id": 160,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-005 (MAALUR)",
+      "project_id": "10",
+      "is_read": 1,
+      "created_at": "2026-08-17T06:12:59.887Z"
+    },
+    {
+      "id": 161,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-005 (MAALUR)",
+      "project_id": 10,
+      "is_read": 1,
+      "created_at": "2026-08-17T06:13:06.315Z"
+    },
+    {
+      "id": 162,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "⚠️ Edit Request: Planning requested permission to edit billing for Job #CD-KNND-26-005 (MAALUR)",
+      "project_id": 10,
+      "is_read": 1,
+      "created_at": "2026-08-17T06:13:06.318Z"
+    },
+    {
+      "id": 163,
       "role": "planning",
       "branch": "maalur",
       "type": "review",
-      "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-003",
-      "project_id": 3,
+      "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-005",
+      "project_id": 10,
       "is_read": 1,
-      "created_at": "2026-08-14T15:37:25.379Z"
+      "created_at": "2026-08-17T06:13:24.942Z"
     },
     {
-      "id": 156,
+      "id": 164,
       "role": "manager",
       "branch": "maalur",
       "type": "planning",
-      "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-003",
-      "project_id": 3,
+      "message": "🔓 Admin unlocked quantity edit for Job #CD-KNND-26-005",
+      "project_id": 10,
       "is_read": 1,
-      "created_at": "2026-08-14T15:37:25.389Z"
+      "created_at": "2026-08-17T06:13:24.948Z"
+    },
+    {
+      "id": 165,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-005 (MAALUR)",
+      "project_id": "10",
+      "is_read": 1,
+      "created_at": "2026-08-17T06:14:12.348Z"
+    },
+    {
+      "id": 166,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "Quantities updated: Billing/Insulation details saved for Job #CD-KNND-26-005 (MAALUR)",
+      "project_id": "10",
+      "is_read": 1,
+      "created_at": "2026-08-17T06:14:12.353Z"
     }
   ],
   "power_grants": [
@@ -422,9 +518,9 @@
   ],
   "autoInc": {
     "users": 17,
-    "projects": 10,
-    "notifications": 157,
-    "power_grants": 26
+    "projects": 11,
+    "notifications": 167,
+    "power_grants": 27
   },
   "admin_authority": null
 }
