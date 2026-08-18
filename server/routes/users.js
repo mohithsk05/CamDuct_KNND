@@ -195,19 +195,76 @@ router.post('/send-notification', auth, (req, res) => {
   res.json({ success: true, count: insertedCount });
 });
 
+function matchesDept(n, targetDept) {
+  if (!n || !targetDept) return true;
+  const deptLower = targetDept.toLowerCase();
+
+  // Explicit dept property on notification
+  if (n.dept && n.dept.toLowerCase() === deptLower) return true;
+
+  // Planning Department
+  if (deptLower === 'planning') {
+    if (n.role === 'planning') return true;
+    if (n.type === 'review' || n.type === 'planning') return true;
+    if (n.entry_type === 'planning' || n.project_id) return true;
+    if (n.message && (n.message.includes('Job #') || n.message.includes('APPROVED') || n.message.includes('REJECTED') || n.message.includes('REVISION'))) return true;
+    return false;
+  }
+
+  // Purchase Department
+  if (deptLower === 'purchase') {
+    if (n.role === 'purchase') return true;
+    if (n.type === 'purchase_edit_request' || n.type === 'purchase_edit_unlocked' || n.type === 'purchase') return true;
+    if (['igr', 'bpr', 'purchase'].includes(n.entry_type)) return true;
+    if (n.message && (n.message.includes('Purchase Dept') || n.message.includes('IGR Entry') || n.message.includes('BPR Entry') || n.message.includes('Edit Access Request') || n.message.includes('Edit Access Granted'))) return true;
+    return false;
+  }
+
+  // Other Departments (Consumption, Accounts, Dispatch, Security)
+  if (n.role === deptLower || n.type === deptLower || n.entry_type === deptLower) return true;
+
+  // Custom / broadcast notifications sent directly to user
+  if (n.type === 'custom' || n.type === 'system') {
+    if (n.dept) return n.dept.toLowerCase() === deptLower;
+    return true;
+  }
+
+  return false;
+}
+
 // GET /api/users/notifications — Get notifications for current user (received or sent)
 router.get('/notifications', auth, (req, res) => {
   const tab = req.query.tab || 'received';
+  const queryBranch = req.query.branch;
+  const queryDept = req.query.dept;
+
   if (tab === 'sent') {
-    const sentNotifs = db.prepare('SELECT * FROM notifications WHERE sender_id = ?').all(req.user.id);
+    let sentNotifs = db.prepare('SELECT * FROM notifications WHERE sender_id = ?').all(req.user.id);
+    if (queryBranch) {
+      sentNotifs = sentNotifs.filter(n => !n.branch || n.branch.toLowerCase() === queryBranch.toLowerCase());
+    }
+    if (queryDept) {
+      sentNotifs = sentNotifs.filter(n => matchesDept(n, queryDept));
+    }
     return res.json(sentNotifs);
   }
-  const notifs = db.prepare(`
+
+  const userBranch = queryBranch || req.user.branch;
+  let notifs = db.prepare(`
     SELECT * FROM notifications
-  `).all(req.user.id, req.user.role, req.user.branch);
+  `).all(req.user.id, req.user.role, userBranch);
 
   // In received tab, exclude notifications sent by current user unless self-targeted
-  const receivedNotifs = notifs.filter(n => String(n.sender_id) !== String(req.user.id) || String(n.target_user_id) === String(req.user.id));
+  let receivedNotifs = notifs.filter(n => String(n.sender_id) !== String(req.user.id) || String(n.target_user_id) === String(req.user.id));
+
+  if (queryBranch) {
+    receivedNotifs = receivedNotifs.filter(n => !n.branch || n.branch.toLowerCase() === queryBranch.toLowerCase());
+  }
+
+  if (queryDept) {
+    receivedNotifs = receivedNotifs.filter(n => matchesDept(n, queryDept));
+  }
+
   res.json(receivedNotifs);
 });
 

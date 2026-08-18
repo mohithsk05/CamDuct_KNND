@@ -394,9 +394,88 @@
       "insulation_rate": null,
       "po_file_path": "/uploads/1786947252243_Area_sheet.xlsx",
       "po_file_name": "Area_sheet.xlsx"
+    },
+    {
+      "id": 11,
+      "job_no": "CD-KNND-26-006",
+      "branch": "maalur",
+      "customer_name": "JP Morgan",
+      "customer_type": "others",
+      "project_name": "EuroFins",
+      "place": "Bangalore",
+      "zone": "WB (West Bengal)",
+      "location": "Utility",
+      "po_quantity": 1,
+      "po_items": "[{\"product\":\"Box Duct with TDF\",\"qty\":10,\"unit\":\"pcs\",\"rate\":null}]",
+      "drawing_path": "1787043994710_drawing.png",
+      "drawing_name": "drawing.png",
+      "status": "rejected",
+      "revise_remark": null,
+      "billing_items": null,
+      "insulation_items": null,
+      "submitted_by": 5,
+      "reviewed_by": 2,
+      "created_at": "2026-08-18T09:06:34.733Z",
+      "updated_at": "2026-08-18T09:13:45.459Z"
     }
   ],
-  "notifications": [],
+  "notifications": [
+    {
+      "id": 167,
+      "role": "admin",
+      "branch": null,
+      "type": "planning",
+      "message": "New project submitted: Job #CD-KNND-26-006 by Planning – Maalur (MAALUR)",
+      "project_id": 11,
+      "is_read": 1,
+      "created_at": "2026-08-18T09:06:34.738Z"
+    },
+    {
+      "id": 168,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "New project submitted: Job #CD-KNND-26-006 by Planning – Maalur (MAALUR)",
+      "project_id": 11,
+      "is_read": 0,
+      "created_at": "2026-08-18T09:06:34.744Z"
+    },
+    {
+      "id": 169,
+      "sender_id": 2,
+      "sender_name": "Admin / Owner",
+      "target_user_id": 6,
+      "target_user_name": "Purchase – Maalur",
+      "role": "purchase",
+      "branch": "maalur",
+      "type": "custom",
+      "message": "hello",
+      "validity": "1day",
+      "expires_at": "2026-08-19T09:13:02.882Z",
+      "is_read": 1,
+      "created_at": "2026-08-18T09:13:02.882Z"
+    },
+    {
+      "id": 170,
+      "role": "planning",
+      "branch": "maalur",
+      "type": "review",
+      "message": "❌ Job #CD-KNND-26-006 has been REJECTED.",
+      "project_id": 11,
+      "is_read": 1,
+      "created_at": "2026-08-18T09:13:45.465Z"
+    },
+    {
+      "id": 171,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "planning",
+      "message": "❌ Job #CD-KNND-26-006 has been REJECTED.",
+      "project_id": 11,
+      "is_read": 0,
+      "created_at": "2026-08-18T09:13:45.474Z"
+    }
+  ],
   "power_grants": [
     {
       "id": 1,
@@ -417,10 +496,10 @@
   ],
   "autoInc": {
     "users": 17,
-    "projects": 11,
-    "notifications": 167,
+    "projects": 12,
+    "notifications": 172,
     "power_grants": 27,
-    "purchase_igr": 2,
+    "purchase_igr": 3,
     "purchase_bpr": 1
   },
   "purchase_igr": [
@@ -432,20 +511,21 @@
       "invoice_no_date": "HRP/00160/23-24",
       "supplier_name": "HR Precisions",
       "description": "GI Corners - 13500 nos",
-      "material_value": 97875,
+      "material_value": 97876,
       "transport": 0,
       "labour_charges": 0,
-      "taxable_value": 97875,
+      "taxable_value": 97876,
       "taxable_rate": 0.18,
-      "igst": 0,
-      "cgst": 8808.75,
-      "sgst": 8808.75,
-      "invoice_value": 115492.5,
+      "igst": 17617.68,
+      "cgst": 0,
+      "sgst": 0,
+      "invoice_value": 115493.68,
       "branch": "maalur",
       "created_at": "2026-08-17T11:04:42.161Z",
       "created_by": 6,
       "is_unlocked": false,
-      "edit_requested": false
+      "edit_requested": false,
+      "updated_at": "2026-08-18T09:12:36.620Z"
     }
   ],
   "purchase_bpr": [],

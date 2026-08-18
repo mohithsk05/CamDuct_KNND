@@ -1,4 +1,4 @@
-﻿/**
+/**
  * auth.js — Shared authentication utilities for all pages
  */
 const API = '/api';
@@ -320,12 +320,41 @@ function ensureNotifTabsInPanel() {
   });
 }
 
+/** Helper to resolve current active branch & department context for notifications */
+function getActiveNotifContext() {
+  const me = getUser();
+  const urlParams = new URLSearchParams(window.location.search);
+  const branchFromUrl = urlParams.get('branch');
+  const storedBranch = sessionStorage.getItem('active_branch');
+  const branch = (window.currentBranch || branchFromUrl || storedBranch || (me && me.branch) || '').toLowerCase();
+
+  let dept = '';
+  const path = window.location.pathname.toLowerCase();
+
+  if (path.includes('planning')) {
+    dept = 'planning';
+  } else if (path.includes('purchase')) {
+    dept = 'purchase';
+  } else if (window.activePanelDept) {
+    dept = window.activePanelDept;
+  } else if (me && me.role && !['admin', 'manager'].includes(me.role)) {
+    dept = me.role.toLowerCase();
+  }
+
+  return { branch, dept };
+}
+
 /** Update notification badge icon unconditionally */
 async function updateNotifBadge() {
   const badgeEl = document.getElementById('notif-badge');
   if (!badgeEl) return;
   try {
-    const res = await apiFetch('/users/notifications?tab=received');
+    const ctx = getActiveNotifContext();
+    const queryParams = ['tab=received'];
+    if (ctx.branch) queryParams.push(`branch=${encodeURIComponent(ctx.branch)}`);
+    if (ctx.dept) queryParams.push(`dept=${encodeURIComponent(ctx.dept)}`);
+
+    const res = await apiFetch(`/users/notifications?${queryParams.join('&')}`);
     if (!res || !res.ok) return;
     const receivedNotifs = await res.json();
     const unread = Array.isArray(receivedNotifs) ? receivedNotifs.filter(isNotifUnread) : [];
@@ -349,7 +378,12 @@ async function loadNotifications() {
   try {
     updateNotifBadge();
 
-    const res = await apiFetch(`/users/notifications?tab=${currentNotifTab}`);
+    const ctx = getActiveNotifContext();
+    const queryParams = [`tab=${currentNotifTab}`];
+    if (ctx.branch) queryParams.push(`branch=${encodeURIComponent(ctx.branch)}`);
+    if (ctx.dept) queryParams.push(`dept=${encodeURIComponent(ctx.dept)}`);
+
+    const res = await apiFetch(`/users/notifications?${queryParams.join('&')}`);
     if (!res || !res.ok) return;
     const notifs = await res.json();
 

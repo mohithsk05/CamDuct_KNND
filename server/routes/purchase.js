@@ -136,6 +136,49 @@ router.post('/igr', auth, (req, res) => {
     };
 
     db.data.purchase_igr.push(newEntry);
+
+    // Department-specific notifications for Admin and Manager
+    const now = new Date().toISOString();
+    const notifMsg = `🛒 New IGR Entry Added: Purchase Dept (${capitalize(targetBranch)}) added IGR Entry #${newEntry.igr_no || newEntry.id} (Supplier: ${newEntry.supplier_name || 'N/A'}, Value: ₹${newEntry.invoice_value.toLocaleString('en-IN')})`;
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      dept: 'purchase',
+      branch: targetBranch,
+      type: 'purchase',
+      entry_type: 'igr',
+      entry_id: newEntry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: targetBranch,
+      type: 'purchase',
+      entry_type: 'igr',
+      entry_id: newEntry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
 
     res.status(201).json(newEntry);
@@ -196,6 +239,48 @@ router.put('/igr/:id', auth, (req, res) => {
 
     entry.updated_at = new Date().toISOString();
 
+    // Department-specific update notifications for Admin and Manager
+    const now = new Date().toISOString();
+    const updateNotifMsg = `🛒 IGR Entry Updated: Purchase Dept (${capitalize(entry.branch || 'maalur')}) updated IGR Entry #${entry.igr_no || entry.id} (Supplier: ${entry.supplier_name || 'N/A'}, Value: ₹${entry.invoice_value.toLocaleString('en-IN')})`;
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      dept: 'purchase',
+      branch: entry.branch || 'maalur',
+      type: 'purchase',
+      entry_type: 'igr',
+      entry_id: entry.id,
+      message: updateNotifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: entry.branch || 'maalur',
+      type: 'purchase',
+      entry_type: 'igr',
+      entry_id: entry.id,
+      message: updateNotifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
     res.json(entry);
   } catch (err) {
@@ -232,6 +317,26 @@ router.post('/igr/:id/request-edit', auth, (req, res) => {
       target_user_id: null,
       target_user_name: 'Admin',
       role: 'admin',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_request',
+      entry_type: 'igr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
       branch: entry.branch || null,
       type: 'purchase_edit_request',
       entry_type: 'igr',
@@ -282,6 +387,7 @@ router.post('/igr/:id/unlock-edit', auth, (req, res) => {
       target_user_id: null,
       target_user_name: 'Purchase Department',
       role: 'purchase',
+      dept: 'purchase',
       branch: entry.branch || null,
       type: 'purchase_edit_unlocked',
       entry_type: 'igr',
@@ -441,6 +547,49 @@ router.post('/bpr', auth, (req, res) => {
     };
 
     db.data.purchase_bpr.push(newEntry);
+
+    // Department-specific notifications for Admin and Manager
+    const now = new Date().toISOString();
+    const notifMsg = `🔄 New BPR Entry Added: Purchase Dept (${capitalize(targetBranch)}) added BPR Entry #${newEntry.bpr_no || newEntry.id} (Contractor: ${newEntry.contractor_name || 'N/A'}, Value: ₹${newEntry.invoice_value.toLocaleString('en-IN')})`;
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      dept: 'purchase',
+      branch: targetBranch,
+      type: 'purchase',
+      entry_type: 'bpr',
+      entry_id: newEntry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: targetBranch,
+      type: 'purchase',
+      entry_type: 'bpr',
+      entry_id: newEntry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
 
     res.status(201).json(newEntry);
@@ -503,6 +652,48 @@ router.put('/bpr/:id', auth, (req, res) => {
 
     entry.updated_at = new Date().toISOString();
 
+    // Department-specific update notifications for Admin and Manager
+    const now = new Date().toISOString();
+    const updateNotifMsg = `🔄 BPR Entry Updated: Purchase Dept (${capitalize(entry.branch || 'maalur')}) updated BPR Entry #${entry.bpr_no || entry.id} (Contractor: ${entry.contractor_name || 'N/A'}, Value: ₹${entry.invoice_value.toLocaleString('en-IN')})`;
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      dept: 'purchase',
+      branch: entry.branch || 'maalur',
+      type: 'purchase',
+      entry_type: 'bpr',
+      entry_id: entry.id,
+      message: updateNotifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: entry.branch || 'maalur',
+      type: 'purchase',
+      entry_type: 'bpr',
+      entry_id: entry.id,
+      message: updateNotifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
     res.json(entry);
   } catch (err) {
@@ -539,6 +730,26 @@ router.post('/bpr/:id/request-edit', auth, (req, res) => {
       target_user_id: null,
       target_user_name: 'Admin',
       role: 'admin',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_request',
+      entry_type: 'bpr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
       branch: entry.branch || null,
       type: 'purchase_edit_request',
       entry_type: 'bpr',
@@ -589,6 +800,7 @@ router.post('/bpr/:id/unlock-edit', auth, (req, res) => {
       target_user_id: null,
       target_user_name: 'Purchase Department',
       role: 'purchase',
+      dept: 'purchase',
       branch: entry.branch || null,
       type: 'purchase_edit_unlocked',
       entry_type: 'bpr',
