@@ -19,24 +19,52 @@ function getMonthNameFromDate(dateStr) {
   return MONTH_NAMES[d.getMonth()];
 }
 
+const EDIT_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function isEntryEditable(entry, user) {
+  if (!entry || !user) return false;
+  if (user.role !== 'purchase') return false;
+  if (entry.is_unlocked) return true;
+
+  const createdTime = new Date(entry.created_at || entry.date).getTime();
+  if (isNaN(createdTime)) return true;
+  const ageMs = Date.now() - createdTime;
+  return ageMs <= EDIT_WINDOW_MS;
+}
+
 function ensureDbCollections() {
   if (!db.data) db.data = {};
   if (!db.data.purchase_igr) db.data.purchase_igr = [];
   if (!db.data.purchase_bpr) db.data.purchase_bpr = [];
+  if (!db.data.notifications) db.data.notifications = [];
   if (!db.data.autoInc) db.data.autoInc = {};
   if (!db.data.autoInc.purchase_igr) db.data.autoInc.purchase_igr = 1;
   if (!db.data.autoInc.purchase_bpr) db.data.autoInc.purchase_bpr = 1;
+  if (!db.data.autoInc.notifications) db.data.autoInc.notifications = 1;
 }
 
 // ─── IGR ROUTES ─────────────────────────────────────────────────────────────
 
-// GET /api/purchase/igr?branch=...
+// GET /api/purchase/igr?branch=...&month=...
 router.get('/igr', auth, (req, res) => {
   try {
     ensureDbCollections();
     const branchArg = (req.query.branch || (req.user && req.user.branch) || 'maalur').toLowerCase();
-    const list = db.data.purchase_igr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
+    const monthArg = req.query.month;
+    let list = db.data.purchase_igr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
     
+    if (monthArg && monthArg.toLowerCase() !== 'all') {
+      list = list.filter(item => {
+        const m = item.month || getMonthNameFromDate(item.date);
+        return (m || '').toLowerCase() === monthArg.toLowerCase();
+      });
+    }
+
     list.sort((a, b) => new Date(a.date || a.created_at) - new Date(b.date || b.created_at));
     
     const formatted = list.map((item, idx) => ({
@@ -102,7 +130,9 @@ router.post('/igr', auth, (req, res) => {
       invoice_value: parseFloat(invoice_value) || 0,
       branch: targetBranch,
       created_at: new Date().toISOString(),
-      created_by: req.user ? req.user.id : null
+      created_by: req.user ? req.user.id : null,
+      is_unlocked: false,
+      edit_requested: false
     };
 
     db.data.purchase_igr.push(newEntry);
@@ -115,12 +145,194 @@ router.post('/igr', auth, (req, res) => {
   }
 });
 
+// PUT /api/purchase/igr/:id — Edit IGR entry
+router.put('/igr/:id', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const id = req.params.id;
+    const entry = db.data.purchase_igr.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'IGR entry not found' });
+    }
+
+    if (!isEntryEditable(entry, req.user)) {
+      return res.status(403).json({ error: 'Entry is locked (48-hour edit window has expired). Please request edit access from Admin.' });
+    }
+
+    const {
+      date,
+      igr_no,
+      invoice_no_date,
+      supplier_name,
+      description,
+      material_value,
+      transport,
+      labour_charges,
+      taxable_value,
+      taxable_rate,
+      igst,
+      cgst,
+      sgst,
+      invoice_value
+    } = req.body;
+
+    if (date) {
+      entry.date = date;
+      entry.month = getMonthNameFromDate(date);
+    }
+    if (igr_no !== undefined) entry.igr_no = String(igr_no).trim();
+    if (invoice_no_date !== undefined) entry.invoice_no_date = String(invoice_no_date).trim();
+    if (supplier_name !== undefined) entry.supplier_name = String(supplier_name).trim();
+    if (description !== undefined) entry.description = String(description).trim();
+    if (material_value !== undefined) entry.material_value = parseFloat(material_value) || 0;
+    if (transport !== undefined) entry.transport = parseFloat(transport) || 0;
+    if (labour_charges !== undefined) entry.labour_charges = parseFloat(labour_charges) || 0;
+    if (taxable_value !== undefined) entry.taxable_value = parseFloat(taxable_value) || 0;
+    if (taxable_rate !== undefined) entry.taxable_rate = parseFloat(taxable_rate) || 0;
+    if (igst !== undefined) entry.igst = parseFloat(igst) || 0;
+    if (cgst !== undefined) entry.cgst = parseFloat(cgst) || 0;
+    if (sgst !== undefined) entry.sgst = parseFloat(sgst) || 0;
+    if (invoice_value !== undefined) entry.invoice_value = parseFloat(invoice_value) || 0;
+
+    entry.updated_at = new Date().toISOString();
+
+    db.saveData();
+    res.json(entry);
+  } catch (err) {
+    console.error('Error updating IGR:', err);
+    res.status(500).json({ error: 'Failed to update IGR entry: ' + err.message });
+  }
+});
+
+// POST /api/purchase/igr/:id/request-edit — Purchase Dept requests Admin edit access after 48h
+router.post('/igr/:id/request-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    if (!req.user || req.user.role !== 'purchase') {
+      return res.status(403).json({ error: 'Only Purchase Department users can request edit access' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_igr.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'IGR entry not found' });
+    }
+
+    entry.edit_requested = true;
+    entry.edit_requested_at = new Date().toISOString();
+
+    const notifId = db.data.autoInc.notifications++;
+    const now = new Date().toISOString();
+    const notifMsg = `🛒 Edit Access Request: Purchase Dept (${capitalize(entry.branch || 'maalur')}) requested edit access for IGR Entry #${entry.igr_no || entry.id} (Supplier: ${entry.supplier_name || 'N/A'})`;
+
+    db.data.notifications.push({
+      id: notifId,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      branch: entry.branch || null,
+      type: 'purchase_edit_request',
+      entry_type: 'igr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.saveData();
+    res.json({ success: true, message: 'Edit access request sent to Admin in real time', entry });
+  } catch (err) {
+    console.error('Error requesting IGR edit access:', err);
+    res.status(500).json({ error: 'Failed to request edit access: ' + err.message });
+  }
+});
+
+// POST /api/purchase/igr/:id/unlock-edit — Admin grants edit access
+router.post('/igr/:id/unlock-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.hasAdminPower);
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only Admin users can grant edit access' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_igr.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'IGR entry not found' });
+    }
+
+    entry.is_unlocked = true;
+    entry.edit_requested = false;
+    entry.unlocked_by = req.user.full_name;
+    entry.unlocked_at = new Date().toISOString();
+
+    const notifId = db.data.autoInc.notifications++;
+    const now = new Date().toISOString();
+    const notifMsg = `🔓 Edit Access Granted: Admin approved edit access for IGR Entry #${entry.igr_no || entry.id} (Supplier: ${entry.supplier_name || 'N/A'}). You can now edit this entry.`;
+
+    db.data.notifications.push({
+      id: notifId,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Purchase Department',
+      role: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_unlocked',
+      entry_type: 'igr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '3day',
+      expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.saveData();
+    res.json({ success: true, message: 'Edit access granted successfully', entry });
+  } catch (err) {
+    console.error('Error unlocking IGR edit access:', err);
+    res.status(500).json({ error: 'Failed to unlock edit access: ' + err.message });
+  }
+});
+
+// POST /api/purchase/igr/:id/lock-edit — Admin locks entry edit access
+router.post('/igr/:id/lock-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.hasAdminPower);
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only Admin users can lock edit access' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_igr.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'IGR entry not found' });
+    }
+
+    entry.is_unlocked = false;
+    entry.edit_requested = false;
+    db.saveData();
+
+    res.json({ success: true, message: 'Entry locked successfully', entry });
+  } catch (err) {
+    console.error('Error locking IGR entry:', err);
+    res.status(500).json({ error: 'Failed to lock entry: ' + err.message });
+  }
+});
+
 // DELETE /api/purchase/igr/:id
 router.delete('/igr/:id', auth, (req, res) => {
   try {
     ensureDbCollections();
-    if (!req.user || req.user.role !== 'purchase') {
-      return res.status(403).json({ error: 'Only Purchase Department users can delete IGR entries' });
+    if (!req.user || req.user.role !== 'purchase' && req.user.role !== 'admin' && !req.user.hasAdminPower) {
+      return res.status(403).json({ error: 'Only Purchase Department users or Admin can delete IGR entries' });
     }
 
     const id = req.params.id;
@@ -141,13 +353,21 @@ router.delete('/igr/:id', auth, (req, res) => {
 
 // ─── BPR ROUTES ─────────────────────────────────────────────────────────────
 
-// GET /api/purchase/bpr?branch=...
+// GET /api/purchase/bpr?branch=...&month=...
 router.get('/bpr', auth, (req, res) => {
   try {
     ensureDbCollections();
     const branchArg = (req.query.branch || (req.user && req.user.branch) || 'maalur').toLowerCase();
-    const list = db.data.purchase_bpr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
+    const monthArg = req.query.month;
+    let list = db.data.purchase_bpr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
     
+    if (monthArg && monthArg.toLowerCase() !== 'all') {
+      list = list.filter(item => {
+        const m = item.month || getMonthNameFromDate(item.date);
+        return (m || '').toLowerCase() === monthArg.toLowerCase();
+      });
+    }
+
     list.sort((a, b) => new Date(a.date || a.created_at) - new Date(b.date || b.created_at));
     
     const formatted = list.map((item, idx) => ({
@@ -215,7 +435,9 @@ router.post('/bpr', auth, (req, res) => {
       remarks: remarks ? String(remarks).trim() : '',
       branch: targetBranch,
       created_at: new Date().toISOString(),
-      created_by: req.user ? req.user.id : null
+      created_by: req.user ? req.user.id : null,
+      is_unlocked: false,
+      edit_requested: false
     };
 
     db.data.purchase_bpr.push(newEntry);
@@ -225,6 +447,190 @@ router.post('/bpr', auth, (req, res) => {
   } catch (err) {
     console.error('Error creating BPR:', err);
     res.status(500).json({ error: 'Failed to save BPR entry: ' + err.message });
+  }
+});
+
+// PUT /api/purchase/bpr/:id — Edit BPR entry
+router.put('/bpr/:id', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const id = req.params.id;
+    const entry = db.data.purchase_bpr.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'BPR entry not found' });
+    }
+
+    if (!isEntryEditable(entry, req.user)) {
+      return res.status(403).json({ error: 'Entry is locked (48-hour edit window has expired). Please request edit access from Admin.' });
+    }
+
+    const {
+      date,
+      bpr_no,
+      contractor_name,
+      job_work,
+      supplier,
+      invoice_no_date,
+      particulars,
+      description,
+      taxable_value,
+      taxable_rate,
+      igst,
+      cgst,
+      sgst,
+      invoice_value,
+      remarks
+    } = req.body;
+
+    if (date) {
+      entry.date = date;
+      entry.month = getMonthNameFromDate(date);
+    }
+    if (bpr_no !== undefined) entry.bpr_no = String(bpr_no).trim();
+    if (contractor_name !== undefined) entry.contractor_name = String(contractor_name).trim();
+    if (job_work !== undefined) entry.job_work = String(job_work).trim();
+    if (supplier !== undefined) entry.supplier = String(supplier).trim();
+    if (invoice_no_date !== undefined) entry.invoice_no_date = String(invoice_no_date).trim();
+    if (particulars !== undefined) entry.particulars = String(particulars).trim();
+    if (description !== undefined) entry.description = String(description).trim();
+    if (taxable_value !== undefined) entry.taxable_value = parseFloat(taxable_value) || 0;
+    if (taxable_rate !== undefined) entry.taxable_rate = parseFloat(taxable_rate) || 0;
+    if (igst !== undefined) entry.igst = parseFloat(igst) || 0;
+    if (cgst !== undefined) entry.cgst = parseFloat(cgst) || 0;
+    if (sgst !== undefined) entry.sgst = parseFloat(sgst) || 0;
+    if (invoice_value !== undefined) entry.invoice_value = parseFloat(invoice_value) || 0;
+    if (remarks !== undefined) entry.remarks = String(remarks).trim();
+
+    entry.updated_at = new Date().toISOString();
+
+    db.saveData();
+    res.json(entry);
+  } catch (err) {
+    console.error('Error updating BPR:', err);
+    res.status(500).json({ error: 'Failed to update BPR entry: ' + err.message });
+  }
+});
+
+// POST /api/purchase/bpr/:id/request-edit — Purchase Dept requests Admin edit access after 48h
+router.post('/bpr/:id/request-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    if (!req.user || req.user.role !== 'purchase') {
+      return res.status(403).json({ error: 'Only Purchase Department users can request edit access' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_bpr.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'BPR entry not found' });
+    }
+
+    entry.edit_requested = true;
+    entry.edit_requested_at = new Date().toISOString();
+
+    const notifId = db.data.autoInc.notifications++;
+    const now = new Date().toISOString();
+    const notifMsg = `🛒 Edit Access Request: Purchase Dept (${capitalize(entry.branch || 'maalur')}) requested edit access for BPR Entry #${entry.bpr_no || entry.id} (Contractor: ${entry.contractor_name || 'N/A'})`;
+
+    db.data.notifications.push({
+      id: notifId,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      branch: entry.branch || null,
+      type: 'purchase_edit_request',
+      entry_type: 'bpr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.saveData();
+    res.json({ success: true, message: 'Edit access request sent to Admin in real time', entry });
+  } catch (err) {
+    console.error('Error requesting BPR edit access:', err);
+    res.status(500).json({ error: 'Failed to request edit access: ' + err.message });
+  }
+});
+
+// POST /api/purchase/bpr/:id/unlock-edit — Admin grants edit access
+router.post('/bpr/:id/unlock-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.hasAdminPower);
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only Admin users can grant edit access' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_bpr.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'BPR entry not found' });
+    }
+
+    entry.is_unlocked = true;
+    entry.edit_requested = false;
+    entry.unlocked_by = req.user.full_name;
+    entry.unlocked_at = new Date().toISOString();
+
+    const notifId = db.data.autoInc.notifications++;
+    const now = new Date().toISOString();
+    const notifMsg = `🔓 Edit Access Granted: Admin approved edit access for BPR Entry #${entry.bpr_no || entry.id} (Contractor: ${entry.contractor_name || 'N/A'}). You can now edit this entry.`;
+
+    db.data.notifications.push({
+      id: notifId,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Purchase Department',
+      role: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_unlocked',
+      entry_type: 'bpr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '3day',
+      expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.saveData();
+    res.json({ success: true, message: 'Edit access granted successfully', entry });
+  } catch (err) {
+    console.error('Error unlocking BPR edit access:', err);
+    res.status(500).json({ error: 'Failed to unlock edit access: ' + err.message });
+  }
+});
+
+// POST /api/purchase/bpr/:id/lock-edit — Admin locks entry edit access
+router.post('/bpr/:id/lock-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.hasAdminPower);
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only Admin users can lock edit access' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_bpr.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'BPR entry not found' });
+    }
+
+    entry.is_unlocked = false;
+    entry.edit_requested = false;
+    db.saveData();
+
+    res.json({ success: true, message: 'Entry locked successfully', entry });
+  } catch (err) {
+    console.error('Error locking BPR entry:', err);
+    res.status(500).json({ error: 'Failed to lock entry: ' + err.message });
   }
 });
 
@@ -254,16 +660,17 @@ router.delete('/bpr/:id', auth, (req, res) => {
 
 // ─── ABSTRACT ROUTE ─────────────────────────────────────────────────────────
 
-// GET /api/purchase/abstract?branch=...
+// GET /api/purchase/abstract?branch=...&month=...
 router.get('/abstract', auth, (req, res) => {
   try {
     ensureDbCollections();
     const branchArg = (req.query.branch || (req.user && req.user.branch) || 'maalur').toLowerCase();
+    const monthArg = req.query.month;
     
     const igrList = db.data.purchase_igr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
     const bprList = db.data.purchase_bpr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
 
-    const calendarMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    let calendarMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     
     const igrTotalsByMonth = {};
     const bprTotalsByMonth = {};
@@ -296,6 +703,10 @@ router.get('/abstract', auth, (req, res) => {
       }
       bprGrandTotal += val;
     });
+
+    if (monthArg && monthArg.toLowerCase() !== 'all') {
+      calendarMonths = calendarMonths.filter(m => m.toLowerCase() === monthArg.toLowerCase());
+    }
 
     const igr_summary = calendarMonths.map(month => ({
       month,

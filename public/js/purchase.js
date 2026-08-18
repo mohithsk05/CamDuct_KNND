@@ -1,5 +1,6 @@
 /**
  * purchase.js — Purchase Department logic (Tab switching, IGR, BPR & Abstract modules)
+ * Includes 48-hour edit window control, locked entries handling, Admin unlock requests, and real-time sync.
  */
 
 let currentUser = null;
@@ -9,17 +10,86 @@ let activeSubTab = 'igr';
 
 let currentIGREntries = [];
 let currentBPREntries = [];
+let editingIGRId = null;
+let editingBPRId = null;
+
+const EDIT_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours in milliseconds
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+const tabMonthFilters = {
+  po: 'all',
+  wo: 'all',
+  igr: 'all',
+  bpr: 'all',
+  low_stock: 'all'
+};
+
+function getActiveTabKey() {
+  if (activeMainTab === 'inventory') {
+    return activeSubTab; // 'igr', 'bpr', 'abstract'
+  }
+  return activeMainTab; // 'po', 'wo', 'low_stock', 'attendence'
+}
+
+function updateMonthFilterVisibility() {
+  const container = document.getElementById('month-filter-container');
+  const select = document.getElementById('month-filter-select');
+  if (!container) return;
+
+  const currentKey = getActiveTabKey();
+
+  // Hide month filter on Attendance main tab OR on Abstract subtab
+  if (currentKey === 'attendence' || currentKey === 'abstract') {
+    container.classList.add('hidden');
+    container.style.display = 'none';
+  } else {
+    container.classList.remove('hidden');
+    container.style.display = 'flex';
+
+    if (select) {
+      select.value = tabMonthFilters[currentKey] || 'all';
+    }
+  }
+}
+
 function getRealTimeMonth(dateStr) {
   if (!dateStr) return MONTH_NAMES[new Date().getMonth()];
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return MONTH_NAMES[new Date().getMonth()];
   return MONTH_NAMES[d.getMonth()];
+}
+
+function getEntryMonthName(item) {
+  if (item.month && MONTH_NAMES.includes(item.month)) {
+    return item.month;
+  }
+  if (item.date) {
+    const d = new Date(item.date);
+    if (!isNaN(d.getTime())) {
+      return MONTH_NAMES[d.getMonth()];
+    }
+  }
+  if (item.created_at) {
+    const d = new Date(item.created_at);
+    if (!isNaN(d.getTime())) {
+      return MONTH_NAMES[d.getMonth()];
+    }
+  }
+  return MONTH_NAMES[new Date().getMonth()];
+}
+
+function filterEntriesBySelectedMonth(entries, selectedMonth) {
+  if (!selectedMonth || selectedMonth.toLowerCase() === 'all') {
+    return entries;
+  }
+  return entries.filter(item => {
+    const itemMonth = getEntryMonthName(item);
+    return itemMonth.toLowerCase() === selectedMonth.toLowerCase();
+  });
 }
 
 async function initPurchase() {
@@ -45,13 +115,23 @@ async function initPurchase() {
   setupPurchaseTabs();
   setupModalsAndCalculations();
 
+  updateMonthFilterVisibility();
+
   // Initial load
   await loadIGREntries();
   await loadBPREntries();
   await loadAbstractSummary();
+
+  // Real-time periodic auto-refresh every 5 seconds to sync lock/unlock states dynamically
+  setInterval(async () => {
+    if (document.visibilityState === 'visible') {
+      await loadIGREntries(true);
+      await loadBPREntries(true);
+    }
+  }, 5000);
 }
 
-/** Apply RBAC: "+ New Entry" buttons & editing only for Purchase department users */
+/** Apply RBAC: "+ New Entry" buttons & editing only for Purchase department users or Admins */
 function applyRolePermissions() {
   const isPurchaseUser = currentUser && currentUser.role === 'purchase';
   const openAddIGRBtn = document.getElementById('open-add-igr-btn');
@@ -102,6 +182,25 @@ function setupTopNavigation() {
       showToast('Abstract summary updated', 'info');
     });
   }
+
+  const monthSelect = document.getElementById('month-filter-select');
+  if (monthSelect) {
+    monthSelect.addEventListener('change', async () => {
+      const activeKey = getActiveTabKey();
+      tabMonthFilters[activeKey] = monthSelect.value;
+
+      if (activeKey === 'igr') {
+        await loadIGREntries();
+      } else if (activeKey === 'bpr') {
+        await loadBPREntries();
+      } else {
+        updateTabMonthNotices();
+      }
+
+      const monthLabel = monthSelect.value === 'all' ? 'All Months' : monthSelect.value;
+      showToast(`Filtered ${activeKey.toUpperCase()} tab by ${monthLabel}`, 'info');
+    });
+  }
 }
 
 function setupPurchaseTabs() {
@@ -133,6 +232,7 @@ function setupPurchaseTabs() {
         switchInventorySubTab(activeSubTab);
       } else {
         subtabsBar && subtabsBar.classList.add('hidden');
+        updateMonthFilterVisibility();
       }
     });
   });
@@ -167,6 +267,8 @@ function switchInventorySubTab(subtabKey) {
   if (targetSubpanel) {
     targetSubpanel.classList.remove('hidden');
   }
+
+  updateMonthFilterVisibility();
 
   if (subtabKey === 'abstract') {
     loadAbstractSummary();
@@ -252,18 +354,24 @@ function setupModalsAndCalculations() {
     el.addEventListener('input', calculateBPRTotalOnly);
   });
 
-  // Save IGR
+  // Save / Update IGR
   if (saveIGRBtn) {
     saveIGRBtn.addEventListener('click', submitIGREntry);
   }
 
-  // Save BPR
+  // Save / Update BPR
   if (saveBPRBtn) {
     saveBPRBtn.addEventListener('click', submitBPREntry);
   }
 }
 
 function resetIGRForm() {
+  editingIGRId = null;
+  const title = document.getElementById('igr-modal-title');
+  const saveBtn = document.getElementById('save-igr-btn');
+  if (title) title.textContent = 'New IGR Entry (Inward Goods Receipt)';
+  if (saveBtn) saveBtn.textContent = 'Save IGR Entry';
+
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('igr-date').value = today;
   document.getElementById('igr-month-preview').value = getRealTimeMonth(today);
@@ -326,6 +434,12 @@ function calculateIGRTotalOnly() {
 }
 
 function resetBPRForm() {
+  editingBPRId = null;
+  const title = document.getElementById('bpr-modal-title');
+  const saveBtn = document.getElementById('save-bpr-btn');
+  if (title) title.textContent = 'New BPR Entry';
+  if (saveBtn) saveBtn.textContent = 'Save BPR Entry';
+
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('bpr-date').value = today;
   document.getElementById('bpr-month-preview').value = getRealTimeMonth(today);
@@ -378,30 +492,190 @@ function calculateBPRTotalOnly() {
   document.getElementById('bpr-invoice-value').value = total > 0 ? total.toFixed(2) : '';
 }
 
+// ─── 48-HOUR EDIT STATUS & ACTIONS RENDERER ────────────────────────────────
+
+// ─── 48-HOUR EDIT STATUS & ACTIONS RENDERER ────────────────────────────────
+
+function renderIGRActionsHtml(item) {
+  const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+
+  if (!isPurchaseUser && !isAdminUser) return '';
+
+  const createdTime = new Date(item.created_at || item.date).getTime();
+  const now = Date.now();
+  const ageMs = now - createdTime;
+  const isWithin48h = !isNaN(createdTime) && ageMs <= EDIT_WINDOW_MS;
+  const hoursLeft = isWithin48h ? Math.ceil((EDIT_WINDOW_MS - ageMs) / (1000 * 60 * 60)) : 0;
+
+  // Admin View: NO Edit or Delete options. Admin ONLY sees status/time badge (e.g. 31h left), or Approve Edit button if edit is requested by Purchase.
+  if (isAdminUser) {
+    if (item.edit_requested) {
+      return `
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Edit Requested</span>
+          <button class="btn btn-warning btn-sm" onclick="approveUnlockEntry('igr', ${item.id})" style="padding:3px 10px; font-size:0.75rem; background:#f59e0b; color:#fff; border:none; border-radius:6px; white-space:nowrap; cursor:pointer;">Approve Edit</button>
+        </div>
+      `;
+    }
+    if (item.is_unlocked) {
+      return `
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>
+          <button class="btn btn-outline btn-sm" onclick="lockEntry('igr', ${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap; cursor:pointer;">Lock</button>
+        </div>
+      `;
+    }
+    return `
+      <div style="display:flex; align-items:center; justify-content:flex-start;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:${isWithin48h ? '#e0e7ff' : '#f3f4f6'}; color:${isWithin48h ? '#3730a3' : '#4b5563'}; font-size:0.75rem; font-weight:600; white-space:nowrap;">${isWithin48h ? `⏱️ ${hoursLeft}h left` : '🔒 Locked'}</span>
+      </div>
+    `;
+  }
+
+  // Purchase Department user: Neat inline layout with Edit/Delete options when within 48h or unlocked
+  if (item.is_unlocked) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>
+        <button class="btn btn-primary btn-sm" onclick="openEditIGRModal(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteIGREntry(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Delete</button>
+      </div>
+    `;
+  }
+
+  if (isWithin48h) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#e0e7ff; color:#3730a3; font-size:0.75rem; font-weight:600; white-space:nowrap;" title="Editable within 48h of creation">⏱️ ${hoursLeft}h left</span>
+        <button class="btn btn-primary btn-sm" onclick="openEditIGRModal(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteIGREntry(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Delete</button>
+      </div>
+    `;
+  }
+
+  if (item.edit_requested) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Requested (Pending Admin)</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+      <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#fee2e2; color:#991b1b; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔒 Locked</span>
+      <button class="btn btn-warning btn-sm" onclick="requestEditAccess('igr', ${item.id})" style="padding:3px 10px; font-size:0.75rem; background:#f59e0b; color:#fff; border:none; border-radius:6px; white-space:nowrap; cursor:pointer;">Request Edit</button>
+    </div>
+  `;
+}
+
+function renderBPRActionsHtml(item) {
+  const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+
+  if (!isPurchaseUser && !isAdminUser) return '';
+
+  const createdTime = new Date(item.created_at || item.date).getTime();
+  const now = Date.now();
+  const ageMs = now - createdTime;
+  const isWithin48h = !isNaN(createdTime) && ageMs <= EDIT_WINDOW_MS;
+  const hoursLeft = isWithin48h ? Math.ceil((EDIT_WINDOW_MS - ageMs) / (1000 * 60 * 60)) : 0;
+
+  // Admin View: NO Edit or Delete options. Admin ONLY sees status/time badge (e.g. 31h left), or Approve Edit button if edit is requested by Purchase.
+  if (isAdminUser) {
+    if (item.edit_requested) {
+      return `
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Edit Requested</span>
+          <button class="btn btn-warning btn-sm" onclick="approveUnlockEntry('bpr', ${item.id})" style="padding:3px 10px; font-size:0.75rem; background:#f59e0b; color:#fff; border:none; border-radius:6px; white-space:nowrap; cursor:pointer;">Approve Edit</button>
+        </div>
+      `;
+    }
+    if (item.is_unlocked) {
+      return `
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>
+          <button class="btn btn-outline btn-sm" onclick="lockEntry('bpr', ${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap; cursor:pointer;">Lock</button>
+        </div>
+      `;
+    }
+    return `
+      <div style="display:flex; align-items:center; justify-content:flex-start;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:${isWithin48h ? '#e0e7ff' : '#f3f4f6'}; color:${isWithin48h ? '#3730a3' : '#4b5563'}; font-size:0.75rem; font-weight:600; white-space:nowrap;">${isWithin48h ? `⏱️ ${hoursLeft}h left` : '🔒 Locked'}</span>
+      </div>
+    `;
+  }
+
+  // Purchase Department user: Neat inline layout with Edit/Delete options when within 48h or unlocked
+  if (item.is_unlocked) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>
+        <button class="btn btn-primary btn-sm" onclick="openEditBPRModal(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBPREntry(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Delete</button>
+      </div>
+    `;
+  }
+
+  if (isWithin48h) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#e0e7ff; color:#3730a3; font-size:0.75rem; font-weight:600; white-space:nowrap;" title="Editable within 48h of creation">⏱️ ${hoursLeft}h left</span>
+        <button class="btn btn-primary btn-sm" onclick="openEditBPRModal(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBPREntry(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Delete</button>
+      </div>
+    `;
+  }
+
+  if (item.edit_requested) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Requested (Pending Admin)</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+      <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#fee2e2; color:#991b1b; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔒 Locked</span>
+      <button class="btn btn-warning btn-sm" onclick="requestEditAccess('bpr', ${item.id})" style="padding:3px 10px; font-size:0.75rem; background:#f59e0b; color:#fff; border:none; border-radius:6px; white-space:nowrap; cursor:pointer;">Request Edit</button>
+    </div>
+  `;
+}
+
 // ─── IGR CRUD ─────────────────────────────────────────────────────────────
 
-async function loadIGREntries() {
+async function loadIGREntries(silent = false) {
   const tbody = document.getElementById('igr-table-body');
   if (!tbody) return;
 
   const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+  const showActions = isPurchaseUser || isAdminUser;
+
   const thAction = document.getElementById('th-igr-actions');
   if (thAction) {
-    if (isPurchaseUser) thAction.classList.remove('hidden');
+    if (showActions) thAction.classList.remove('hidden');
     else thAction.classList.add('hidden');
   }
 
+  const selectedMonth = tabMonthFilters['igr'] || 'all';
+
   try {
-    const res = await apiFetch(`/purchase/igr?branch=${currentBranch}`);
+    const res = await apiFetch(`/purchase/igr?branch=${currentBranch}&month=${selectedMonth}`);
     if (!res || !res.ok) throw new Error('Failed to load IGR entries');
     const data = await res.json();
-    currentIGREntries = data || [];
 
-    if (!data || data.length === 0) {
-      const colSpan = isPurchaseUser ? 17 : 16;
-      const msg = isPurchaseUser 
-        ? 'No IGR entries recorded yet. Click <strong>"New IGR Entry"</strong> to add an entry.'
-        : 'No IGR entries recorded yet by the Purchase Department.';
+    const filteredData = filterEntriesBySelectedMonth(data || [], selectedMonth);
+    currentIGREntries = filteredData;
+
+    if (!filteredData || filteredData.length === 0) {
+      const colSpan = showActions ? 17 : 16;
+      const monthText = selectedMonth === 'all' ? '' : ` for <strong>${escapeHtml(selectedMonth)}</strong>`;
+      const msg = isPurchaseUser
+        ? `No IGR entries recorded yet${monthText}. Click <strong>"New IGR Entry"</strong> to add an entry.`
+        : `No IGR entries recorded yet${monthText} by the Purchase Department.`;
       tbody.innerHTML = `
         <tr>
           <td colspan="${colSpan}" style="text-align:center; padding:36px 12px; color:var(--text-muted);">
@@ -413,10 +687,10 @@ async function loadIGREntries() {
       return;
     }
 
-    tbody.innerHTML = data.map(item => `
+    tbody.innerHTML = filteredData.map((item, idx) => `
       <tr>
-        <td style="font-weight:700; color:#991b1b; text-align:center;">${item.sl_no}</td>
-        <td style="font-weight:600; color:#991b1b;">${escapeHtml(item.month)}</td>
+        <td style="font-weight:700; color:#991b1b; text-align:center;">${idx + 1}</td>
+        <td style="font-weight:600; color:#991b1b;">${escapeHtml(item.month || getRealTimeMonth(item.date))}</td>
         <td>${formatDate(item.date)}</td>
         <td style="font-weight:600; color:var(--accent);">${escapeHtml(item.igr_no || '—')}</td>
         <td>${escapeHtml(item.invoice_no_date || '—')}</td>
@@ -431,19 +705,53 @@ async function loadIGREntries() {
         <td>₹${item.cgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
         <td>₹${item.sgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
         <td style="font-weight:700; color:var(--success);">₹${item.invoice_value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-        ${isPurchaseUser ? `<td>
-          <button class="btn btn-danger btn-sm" onclick="deleteIGREntry(${item.id})" style="padding:2px 8px; font-size:0.72rem;">Delete</button>
-        </td>` : ''}
+        ${showActions ? `<td>${renderIGRActionsHtml(item)}</td>` : ''}
       </tr>
     `).join('');
   } catch (err) {
-    showToast(`Error loading IGR: ${err.message}`, 'error');
+    if (!silent) showToast(`Error loading IGR: ${err.message}`, 'error');
   }
 }
 
+function openEditIGRModal(id) {
+  const item = currentIGREntries.find(x => String(x.id) === String(id));
+  if (!item) return;
+
+  editingIGRId = id;
+  const modal = document.getElementById('modal-add-igr');
+  const title = document.getElementById('igr-modal-title');
+  const saveBtn = document.getElementById('save-igr-btn');
+
+  if (title) title.textContent = `Edit IGR Entry (#${item.sl_no})`;
+  if (saveBtn) saveBtn.textContent = 'Update IGR Entry';
+
+  const slPreview = document.getElementById('igr-sl-no-preview');
+  if (slPreview) slPreview.value = `#${item.sl_no}`;
+
+  document.getElementById('igr-date').value = item.date ? item.date.split('T')[0] : '';
+  document.getElementById('igr-month-preview').value = item.month || getRealTimeMonth(item.date);
+  document.getElementById('igr-no').value = item.igr_no || '';
+  document.getElementById('igr-invoice-no-date').value = item.invoice_no_date || '';
+  document.getElementById('igr-supplier-name').value = item.supplier_name || '';
+  document.getElementById('igr-description').value = item.description || '';
+  document.getElementById('igr-material-value').value = item.material_value || '';
+  document.getElementById('igr-transport').value = item.transport || '';
+  document.getElementById('igr-labour-charges').value = item.labour_charges || '';
+  document.getElementById('igr-taxable-value').value = item.taxable_value || '';
+  document.getElementById('igr-igst').value = item.igst || '';
+  document.getElementById('igr-cgst').value = item.cgst || '';
+  document.getElementById('igr-sgst').value = item.sgst || '';
+  document.getElementById('igr-invoice-value').value = item.invoice_value || '';
+
+  modal && modal.classList.remove('hidden');
+}
+
 async function submitIGREntry() {
-  if (currentUser && currentUser.role !== 'purchase') {
-    showToast('Only Purchase Department users can create IGR entries', 'error');
+  const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+
+  if (!isPurchaseUser && !isAdminUser) {
+    showToast('Only Purchase Department users or Admin can save IGR entries', 'error');
     return;
   }
 
@@ -476,11 +784,15 @@ async function submitIGREntry() {
   };
 
   saveBtn.disabled = true;
-  saveBtn.textContent = 'Saving...';
+  saveBtn.textContent = editingIGRId ? 'Updating...' : 'Saving...';
 
   try {
-    const res = await apiFetch('/purchase/igr', {
-      method: 'POST',
+    const isEdit = editingIGRId !== null;
+    const url = isEdit ? `/purchase/igr/${editingIGRId}` : '/purchase/igr';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const res = await apiFetch(url, {
+      method,
       body: JSON.stringify(payload)
     });
     if (!res || !res.ok) {
@@ -488,21 +800,25 @@ async function submitIGREntry() {
       throw new Error(err.error || `Server error (${res ? res.status : 'No response'})`);
     }
 
-    showToast('IGR Entry created successfully', 'success');
+    showToast(isEdit ? 'IGR Entry updated successfully' : 'IGR Entry created successfully', 'success');
     document.getElementById('modal-add-igr').classList.add('hidden');
+    resetIGRForm();
     await loadIGREntries();
     await loadAbstractSummary();
   } catch (err) {
     showToast(err.message, 'error');
   } finally {
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Save IGR Entry';
+    saveBtn.textContent = editingIGRId ? 'Update IGR Entry' : 'Save IGR Entry';
   }
 }
 
 async function deleteIGREntry(id) {
-  if (currentUser && currentUser.role !== 'purchase') {
-    showToast('Only Purchase Department users can delete IGR entries', 'error');
+  const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+
+  if (!isPurchaseUser && !isAdminUser) {
+    showToast('Only Purchase Department users or Admin can delete IGR entries', 'error');
     return;
   }
 
@@ -520,28 +836,36 @@ async function deleteIGREntry(id) {
 
 // ─── BPR CRUD ─────────────────────────────────────────────────────────────
 
-async function loadBPREntries() {
+async function loadBPREntries(silent = false) {
   const tbody = document.getElementById('bpr-table-body');
   if (!tbody) return;
 
   const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+  const showActions = isPurchaseUser || isAdminUser;
+
   const thAction = document.getElementById('th-bpr-actions');
   if (thAction) {
-    if (isPurchaseUser) thAction.classList.remove('hidden');
+    if (showActions) thAction.classList.remove('hidden');
     else thAction.classList.add('hidden');
   }
 
+  const selectedMonth = tabMonthFilters['bpr'] || 'all';
+
   try {
-    const res = await apiFetch(`/purchase/bpr?branch=${currentBranch}`);
+    const res = await apiFetch(`/purchase/bpr?branch=${currentBranch}&month=${selectedMonth}`);
     if (!res || !res.ok) throw new Error('Failed to load BPR entries');
     const data = await res.json();
-    currentBPREntries = data || [];
 
-    if (!data || data.length === 0) {
-      const colSpan = isPurchaseUser ? 18 : 17;
-      const msg = isPurchaseUser 
-        ? 'No BPR entries recorded yet. Click <strong>"New BPR Entry"</strong> to add an entry.'
-        : 'No BPR entries recorded yet by the Purchase Department.';
+    const filteredData = filterEntriesBySelectedMonth(data || [], selectedMonth);
+    currentBPREntries = filteredData;
+
+    if (!filteredData || filteredData.length === 0) {
+      const colSpan = showActions ? 18 : 17;
+      const monthText = selectedMonth === 'all' ? '' : ` for <strong>${escapeHtml(selectedMonth)}</strong>`;
+      const msg = isPurchaseUser
+        ? `No BPR entries recorded yet${monthText}. Click <strong>"New BPR Entry"</strong> to add an entry.`
+        : `No BPR entries recorded yet${monthText} by the Purchase Department.`;
       tbody.innerHTML = `
         <tr>
           <td colspan="${colSpan}" style="text-align:center; padding:36px 12px; color:var(--text-muted);">
@@ -553,10 +877,10 @@ async function loadBPREntries() {
       return;
     }
 
-    tbody.innerHTML = data.map(item => `
+    tbody.innerHTML = filteredData.map((item, idx) => `
       <tr>
-        <td style="font-weight:700; color:#991b1b; text-align:center;">${item.sl_no}</td>
-        <td style="font-weight:600; color:#991b1b;">${escapeHtml(item.month)}</td>
+        <td style="font-weight:700; color:#991b1b; text-align:center;">${idx + 1}</td>
+        <td style="font-weight:600; color:#991b1b;">${escapeHtml(item.month || getRealTimeMonth(item.date))}</td>
         <td>${formatDate(item.date)}</td>
         <td style="font-weight:600; color:var(--accent);">${escapeHtml(item.bpr_no || '—')}</td>
         <td><strong>${escapeHtml(item.contractor_name || '—')}</strong></td>
@@ -572,19 +896,54 @@ async function loadBPREntries() {
         <td>₹${item.sgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
         <td style="font-weight:700; color:var(--success);">₹${item.invoice_value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
         <td style="color:var(--text-muted); font-size:0.78rem;">${escapeHtml(item.remarks || '—')}</td>
-        ${isPurchaseUser ? `<td>
-          <button class="btn btn-danger btn-sm" onclick="deleteBPREntry(${item.id})" style="padding:2px 8px; font-size:0.72rem;">Delete</button>
-        </td>` : ''}
+        ${showActions ? `<td>${renderBPRActionsHtml(item)}</td>` : ''}
       </tr>
     `).join('');
   } catch (err) {
-    showToast(`Error loading BPR: ${err.message}`, 'error');
+    if (!silent) showToast(`Error loading BPR: ${err.message}`, 'error');
   }
 }
 
+function openEditBPRModal(id) {
+  const item = currentBPREntries.find(x => String(x.id) === String(id));
+  if (!item) return;
+
+  editingBPRId = id;
+  const modal = document.getElementById('modal-add-bpr');
+  const title = document.getElementById('bpr-modal-title');
+  const saveBtn = document.getElementById('save-bpr-btn');
+
+  if (title) title.textContent = `Edit BPR Entry (#${item.sl_no})`;
+  if (saveBtn) saveBtn.textContent = 'Update BPR Entry';
+
+  const slPreview = document.getElementById('bpr-sl-no-preview');
+  if (slPreview) slPreview.value = `#${item.sl_no}`;
+
+  document.getElementById('bpr-date').value = item.date ? item.date.split('T')[0] : '';
+  document.getElementById('bpr-month-preview').value = item.month || getRealTimeMonth(item.date);
+  document.getElementById('bpr-no').value = item.bpr_no || '';
+  document.getElementById('bpr-contractor-name').value = item.contractor_name || '';
+  document.getElementById('bpr-job-work').value = item.job_work || '';
+  document.getElementById('bpr-supplier').value = item.supplier || '';
+  document.getElementById('bpr-invoice-no-date').value = item.invoice_no_date || '';
+  document.getElementById('bpr-particulars').value = item.particulars || '';
+  document.getElementById('bpr-description').value = item.description || '';
+  document.getElementById('bpr-taxable-value').value = item.taxable_value || '';
+  document.getElementById('bpr-igst').value = item.igst || '';
+  document.getElementById('bpr-cgst').value = item.cgst || '';
+  document.getElementById('bpr-sgst').value = item.sgst || '';
+  document.getElementById('bpr-invoice-value').value = item.invoice_value || '';
+  document.getElementById('bpr-remarks').value = item.remarks || '';
+
+  modal && modal.classList.remove('hidden');
+}
+
 async function submitBPREntry() {
-  if (currentUser && currentUser.role !== 'purchase') {
-    showToast('Only Purchase Department users can create BPR entries', 'error');
+  const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+
+  if (!isPurchaseUser && !isAdminUser) {
+    showToast('Only Purchase Department users or Admin can save BPR entries', 'error');
     return;
   }
 
@@ -617,11 +976,15 @@ async function submitBPREntry() {
   };
 
   saveBtn.disabled = true;
-  saveBtn.textContent = 'Saving...';
+  saveBtn.textContent = editingBPRId ? 'Updating...' : 'Saving...';
 
   try {
-    const res = await apiFetch('/purchase/bpr', {
-      method: 'POST',
+    const isEdit = editingBPRId !== null;
+    const url = isEdit ? `/purchase/bpr/${editingBPRId}` : '/purchase/bpr';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const res = await apiFetch(url, {
+      method,
       body: JSON.stringify(payload)
     });
     if (!res || !res.ok) {
@@ -629,21 +992,25 @@ async function submitBPREntry() {
       throw new Error(err.error || `Server error (${res ? res.status : 'No response'})`);
     }
 
-    showToast('BPR Entry created successfully', 'success');
+    showToast(isEdit ? 'BPR Entry updated successfully' : 'BPR Entry created successfully', 'success');
     document.getElementById('modal-add-bpr').classList.add('hidden');
+    resetBPRForm();
     await loadBPREntries();
     await loadAbstractSummary();
   } catch (err) {
     showToast(err.message, 'error');
   } finally {
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Save BPR Entry';
+    saveBtn.textContent = editingBPRId ? 'Update BPR Entry' : 'Save BPR Entry';
   }
 }
 
 async function deleteBPREntry(id) {
-  if (currentUser && currentUser.role !== 'purchase') {
-    showToast('Only Purchase Department users can delete BPR entries', 'error');
+  const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+
+  if (!isPurchaseUser && !isAdminUser) {
+    showToast('Only Purchase Department users or Admin can delete BPR entries', 'error');
     return;
   }
 
@@ -657,6 +1024,99 @@ async function deleteBPREntry(id) {
   } catch (err) {
     showToast(err.message, 'error');
   }
+}
+
+// ─── REQUEST & UNLOCK HANDLERS ──────────────────────────────────────────────
+
+async function requestEditAccess(type, id) {
+  if (currentUser && currentUser.role !== 'purchase') {
+    showToast('Only Purchase Department users can request edit access', 'error');
+    return;
+  }
+  try {
+    const res = await apiFetch(`/purchase/${type}/${id}/request-edit`, { method: 'POST' });
+    if (!res || !res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to request edit access');
+    }
+    showToast('Edit access request sent to Admin in real time', 'success');
+    if (type === 'igr') await loadIGREntries();
+    else await loadBPREntries();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function approveUnlockEntry(type, id) {
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+  if (!isAdminUser) {
+    showToast('Only Admin users can grant edit access', 'error');
+    return;
+  }
+  try {
+    const res = await apiFetch(`/purchase/${type}/${id}/unlock-edit`, { method: 'POST' });
+    if (!res || !res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to unlock entry');
+    }
+    showToast('Edit access granted to Purchase Department', 'success');
+    if (type === 'igr') await loadIGREntries();
+    else await loadBPREntries();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function lockEntry(type, id) {
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+  if (!isAdminUser) {
+    showToast('Only Admin users can lock entries', 'error');
+    return;
+  }
+  try {
+    const res = await apiFetch(`/purchase/${type}/${id}/lock-edit`, { method: 'POST' });
+    if (!res || !res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to lock entry');
+    }
+    showToast('Entry edit access locked', 'info');
+    if (type === 'igr') await loadIGREntries();
+    else await loadBPREntries();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// Bind handlers to global window object for inline table button onclick events
+window.openEditIGRModal = openEditIGRModal;
+window.openEditBPRModal = openEditBPRModal;
+window.deleteIGREntry = deleteIGREntry;
+window.deleteBPREntry = deleteBPREntry;
+window.requestEditAccess = requestEditAccess;
+window.approveUnlockEntry = approveUnlockEntry;
+window.lockEntry = lockEntry;
+
+function updateTabMonthNotices() {
+  const currentKey = getActiveTabKey();
+  const selectedMonth = tabMonthFilters[currentKey] || 'all';
+  const monthText = selectedMonth === 'all' ? 'All Months' : selectedMonth;
+  document.querySelectorAll('.purchase-placeholder-box').forEach(box => {
+    let notice = box.querySelector('.month-filter-notice');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.className = 'month-filter-notice';
+      notice.style.marginTop = '12px';
+      notice.style.fontSize = '0.82rem';
+      notice.style.fontWeight = '600';
+      notice.style.color = '#4338ca';
+      notice.style.background = '#e0e7ff';
+      notice.style.padding = '4px 12px';
+      notice.style.borderRadius = '12px';
+      notice.style.display = 'inline-block';
+      box.appendChild(notice);
+    }
+    notice.textContent = `📅 Month Filter: ${monthText}`;
+  });
 }
 
 // ─── ABSTRACT SUMMARY MODULE ────────────────────────────────────────────────

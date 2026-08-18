@@ -26,6 +26,21 @@ if (fs.existsSync(DATA_FILE)) {
     if (!data.autoInc) data.autoInc = { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_igr: 1, purchase_bpr: 1 };
     if (!data.autoInc.purchase_igr) data.autoInc.purchase_igr = 1;
     if (!data.autoInc.purchase_bpr) data.autoInc.purchase_bpr = 1;
+    
+    // Sanitize purchase_igr entries
+    data.purchase_igr.forEach(item => {
+      if (!item.created_at) item.created_at = item.date ? new Date(item.date).toISOString() : new Date().toISOString();
+      if (item.is_unlocked === undefined) item.is_unlocked = false;
+      if (item.edit_requested === undefined) item.edit_requested = false;
+    });
+
+    // Sanitize purchase_bpr entries
+    data.purchase_bpr.forEach(item => {
+      if (!item.created_at) item.created_at = item.date ? new Date(item.date).toISOString() : new Date().toISOString();
+      if (item.is_unlocked === undefined) item.is_unlocked = false;
+      if (item.edit_requested === undefined) item.edit_requested = false;
+    });
+
     // Always clear admin_authority on server start — must be granted fresh each session
     data.admin_authority = null;
     saveData();
