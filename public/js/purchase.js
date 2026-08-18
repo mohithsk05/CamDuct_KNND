@@ -433,6 +433,11 @@ function calculateIGRTotalOnly() {
   document.getElementById('igr-invoice-value').value = total > 0 ? total.toFixed(2) : '';
 }
 
+function setElValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
 function resetBPRForm() {
   editingBPRId = null;
   const title = document.getElementById('bpr-modal-title');
@@ -441,42 +446,43 @@ function resetBPRForm() {
   if (saveBtn) saveBtn.textContent = 'Save BPR Entry';
 
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById('bpr-date').value = today;
-  document.getElementById('bpr-month-preview').value = getRealTimeMonth(today);
-  document.getElementById('bpr-no').value = '';
-  document.getElementById('bpr-contractor-name').value = '';
-  document.getElementById('bpr-job-work').value = '';
-  document.getElementById('bpr-supplier').value = '';
-  document.getElementById('bpr-invoice-no-date').value = '';
-  document.getElementById('bpr-particulars').value = '';
-  document.getElementById('bpr-description').value = '';
-  document.getElementById('bpr-taxable-value').value = '';
-  document.getElementById('bpr-tax-mode').value = 'igst18';
-  document.getElementById('bpr-igst').value = '';
-  document.getElementById('bpr-cgst').value = '';
-  document.getElementById('bpr-sgst').value = '';
-  document.getElementById('bpr-invoice-value').value = '';
-  document.getElementById('bpr-remarks').value = '';
+  setElValue('bpr-date', today);
+  setElValue('bpr-month-preview', getRealTimeMonth(today));
+  setElValue('bpr-no', '');
+  setElValue('bpr-contractor-name', '');
+  setElValue('bpr-job-work', '');
+  setElValue('bpr-supplier', '');
+  setElValue('bpr-invoice-no-date', '');
+  setElValue('bpr-particulars', '');
+  setElValue('bpr-description', '');
+  setElValue('bpr-taxable-value', '');
+  setElValue('bpr-tax-mode', 'igst18');
+  setElValue('bpr-igst', '');
+  setElValue('bpr-cgst', '');
+  setElValue('bpr-sgst', '');
+  setElValue('bpr-invoice-value', '');
+  setElValue('bpr-remarks', '');
 }
 
 function calculateBPRForm() {
   const taxableEl = document.getElementById('bpr-taxable-value');
-  const taxable = parseFloat(taxableEl.value) || 0;
+  const taxable = taxableEl ? parseFloat(taxableEl.value) || 0 : 0;
 
-  const taxMode = document.getElementById('bpr-tax-mode').value;
+  const taxModeEl = document.getElementById('bpr-tax-mode');
+  const taxMode = taxModeEl ? taxModeEl.value : 'igst18';
   let igst = 0, cgst = 0, sgst = 0;
 
   if (taxMode === 'igst18') {
     igst = taxable * 0.18;
-    document.getElementById('bpr-igst').value = igst > 0 ? igst.toFixed(2) : '0.00';
-    document.getElementById('bpr-cgst').value = '0.00';
-    document.getElementById('bpr-sgst').value = '0.00';
+    setElValue('bpr-igst', igst > 0 ? igst.toFixed(2) : '0.00');
+    setElValue('bpr-cgst', '0.00');
+    setElValue('bpr-sgst', '0.00');
   } else if (taxMode === 'cgst9_sgst9') {
     cgst = taxable * 0.09;
     sgst = taxable * 0.09;
-    document.getElementById('bpr-igst').value = '0.00';
-    document.getElementById('bpr-cgst').value = cgst > 0 ? cgst.toFixed(2) : '0.00';
-    document.getElementById('bpr-sgst').value = sgst > 0 ? sgst.toFixed(2) : '0.00';
+    setElValue('bpr-igst', '0.00');
+    setElValue('bpr-cgst', cgst > 0 ? cgst.toFixed(2) : '0.00');
+    setElValue('bpr-sgst', sgst > 0 ? sgst.toFixed(2) : '0.00');
   }
 
   calculateBPRTotalOnly();
@@ -499,14 +505,45 @@ function calculateBPRTotalOnly() {
 function renderIGRActionsHtml(item) {
   const isPurchaseUser = currentUser && currentUser.role === 'purchase';
   const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+  const isManagerUser = currentUser && currentUser.role === 'manager';
 
-  if (!isPurchaseUser && !isAdminUser) return '';
+  if (!isPurchaseUser && !isAdminUser && !isManagerUser) return '';
 
   const createdTime = new Date(item.created_at || item.date).getTime();
   const now = Date.now();
   const ageMs = now - createdTime;
   const isWithin48h = !isNaN(createdTime) && ageMs <= EDIT_WINDOW_MS;
   const hoursLeft = isWithin48h ? Math.ceil((EDIT_WINDOW_MS - ageMs) / (1000 * 60 * 60)) : 0;
+
+  // Manager View: Action column shows ONLY the real-time status/time badge (nothing else)
+  if (isManagerUser) {
+    if (item.is_unlocked) {
+      return `
+        <div style="display:flex; align-items:center; justify-content:flex-start;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>
+        </div>
+      `;
+    }
+    if (item.edit_requested) {
+      return `
+        <div style="display:flex; align-items:center; justify-content:flex-start;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Requested</span>
+        </div>
+      `;
+    }
+    if (isWithin48h) {
+      return `
+        <div style="display:flex; align-items:center; justify-content:flex-start;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#e0e7ff; color:#3730a3; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏱️ ${hoursLeft}h left</span>
+        </div>
+      `;
+    }
+    return `
+      <div style="display:flex; align-items:center; justify-content:flex-start;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#f3f4f6; color:#4b5563; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔒 Locked</span>
+      </div>
+    `;
+  }
 
   // Admin View: NO Edit or Delete options. Admin ONLY sees status/time badge (e.g. 31h left), or Approve Edit button if edit is requested by Purchase.
   if (isAdminUser) {
@@ -573,14 +610,45 @@ function renderIGRActionsHtml(item) {
 function renderBPRActionsHtml(item) {
   const isPurchaseUser = currentUser && currentUser.role === 'purchase';
   const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+  const isManagerUser = currentUser && currentUser.role === 'manager';
 
-  if (!isPurchaseUser && !isAdminUser) return '';
+  if (!isPurchaseUser && !isAdminUser && !isManagerUser) return '';
 
   const createdTime = new Date(item.created_at || item.date).getTime();
   const now = Date.now();
   const ageMs = now - createdTime;
   const isWithin48h = !isNaN(createdTime) && ageMs <= EDIT_WINDOW_MS;
   const hoursLeft = isWithin48h ? Math.ceil((EDIT_WINDOW_MS - ageMs) / (1000 * 60 * 60)) : 0;
+
+  // Manager View: Action column shows ONLY the real-time status/time badge (nothing else)
+  if (isManagerUser) {
+    if (item.is_unlocked) {
+      return `
+        <div style="display:flex; align-items:center; justify-content:flex-start;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>
+        </div>
+      `;
+    }
+    if (item.edit_requested) {
+      return `
+        <div style="display:flex; align-items:center; justify-content:flex-start;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Requested</span>
+        </div>
+      `;
+    }
+    if (isWithin48h) {
+      return `
+        <div style="display:flex; align-items:center; justify-content:flex-start;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#e0e7ff; color:#3730a3; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏱️ ${hoursLeft}h left</span>
+        </div>
+      `;
+    }
+    return `
+      <div style="display:flex; align-items:center; justify-content:flex-start;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#f3f4f6; color:#4b5563; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔒 Locked</span>
+      </div>
+    `;
+  }
 
   // Admin View: NO Edit or Delete options. Admin ONLY sees status/time badge (e.g. 31h left), or Approve Edit button if edit is requested by Purchase.
   if (isAdminUser) {
@@ -652,7 +720,8 @@ async function loadIGREntries(silent = false) {
 
   const isPurchaseUser = currentUser && currentUser.role === 'purchase';
   const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
-  const showActions = isPurchaseUser || isAdminUser;
+  const isManagerUser = currentUser && currentUser.role === 'manager';
+  const showActions = isPurchaseUser || isAdminUser || isManagerUser;
 
   const thAction = document.getElementById('th-igr-actions');
   if (thAction) {
@@ -842,7 +911,8 @@ async function loadBPREntries(silent = false) {
 
   const isPurchaseUser = currentUser && currentUser.role === 'purchase';
   const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
-  const showActions = isPurchaseUser || isAdminUser;
+  const isManagerUser = currentUser && currentUser.role === 'manager';
+  const showActions = isPurchaseUser || isAdminUser || isManagerUser;
 
   const thAction = document.getElementById('th-bpr-actions');
   if (thAction) {

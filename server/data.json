@@ -437,7 +437,7 @@
       "type": "planning",
       "message": "New project submitted: Job #CD-KNND-26-006 by Planning – Maalur (MAALUR)",
       "project_id": 11,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-18T09:06:34.744Z"
     },
     {
@@ -472,7 +472,7 @@
       "type": "planning",
       "message": "❌ Job #CD-KNND-26-006 has been REJECTED.",
       "project_id": 11,
-      "is_read": 0,
+      "is_read": 1,
       "created_at": "2026-08-18T09:13:45.474Z"
     }
   ],
@@ -499,7 +499,7 @@
     "projects": 12,
     "notifications": 172,
     "power_grants": 27,
-    "purchase_igr": 3,
+    "purchase_igr": 4,
     "purchase_bpr": 1
   },
   "purchase_igr": [
@@ -526,6 +526,29 @@
       "is_unlocked": false,
       "edit_requested": false,
       "updated_at": "2026-08-18T09:12:36.620Z"
+    },
+    {
+      "id": 3,
+      "month": "August",
+      "date": "2026-08-18",
+      "igr_no": "049/23-24",
+      "invoice_no_date": "HRP/00161/23-24",
+      "supplier_name": "Aloukik Agencies",
+      "description": "GI Corners - 13500 nos",
+      "material_value": 99990,
+      "transport": 1235,
+      "labour_charges": 500,
+      "taxable_value": 101725,
+      "taxable_rate": 0.18,
+      "igst": 18310.5,
+      "cgst": 0,
+      "sgst": 0,
+      "invoice_value": 120035.5,
+      "branch": "maalur",
+      "created_at": "2026-08-18T09:37:23.760Z",
+      "created_by": 6,
+      "is_unlocked": false,
+      "edit_requested": false
     }
   ],
   "purchase_bpr": [],

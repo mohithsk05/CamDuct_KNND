@@ -399,6 +399,25 @@ router.post('/igr/:id/unlock-edit', auth, (req, res) => {
       created_at: now
     });
 
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_unlocked',
+      entry_type: 'igr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '3day',
+      expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
     res.json({ success: true, message: 'Edit access granted successfully', entry });
   } catch (err) {
@@ -424,6 +443,48 @@ router.post('/igr/:id/lock-edit', auth, (req, res) => {
 
     entry.is_unlocked = false;
     entry.edit_requested = false;
+
+    const notifMsg = `🔒 Edit Access Locked: Admin locked edit access for IGR Entry #${entry.igr_no || entry.id} (Supplier: ${entry.supplier_name || 'N/A'}).`;
+    const now = new Date().toISOString();
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Purchase Department',
+      role: 'purchase',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_locked',
+      entry_type: 'igr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '3day',
+      expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_locked',
+      entry_type: 'igr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '3day',
+      expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
 
     res.json({ success: true, message: 'Entry locked successfully', entry });
@@ -447,7 +508,50 @@ router.delete('/igr/:id', auth, (req, res) => {
       return res.status(404).json({ error: 'IGR entry not found' });
     }
 
+    const deletedEntry = db.data.purchase_igr[idx];
     db.data.purchase_igr.splice(idx, 1);
+
+    const notifMsg = `🗑️ IGR Entry Deleted: Purchase Dept (${capitalize(deletedEntry.branch || 'maalur')}) deleted IGR Entry #${deletedEntry.igr_no || deletedEntry.id} (Supplier: ${deletedEntry.supplier_name || 'N/A'})`;
+    const now = new Date().toISOString();
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      dept: 'purchase',
+      branch: deletedEntry.branch || 'maalur',
+      type: 'purchase',
+      entry_type: 'igr',
+      entry_id: deletedEntry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: deletedEntry.branch || 'maalur',
+      type: 'purchase',
+      entry_type: 'igr',
+      entry_id: deletedEntry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
 
     res.json({ success: true, message: 'IGR entry deleted' });
@@ -812,6 +916,25 @@ router.post('/bpr/:id/unlock-edit', auth, (req, res) => {
       created_at: now
     });
 
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_unlocked',
+      entry_type: 'bpr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '3day',
+      expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
     res.json({ success: true, message: 'Edit access granted successfully', entry });
   } catch (err) {
@@ -837,6 +960,48 @@ router.post('/bpr/:id/lock-edit', auth, (req, res) => {
 
     entry.is_unlocked = false;
     entry.edit_requested = false;
+
+    const notifMsg = `🔒 Edit Access Locked: Admin locked edit access for BPR Entry #${entry.bpr_no || entry.id} (Contractor: ${entry.contractor_name || 'N/A'}).`;
+    const now = new Date().toISOString();
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Purchase Department',
+      role: 'purchase',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_locked',
+      entry_type: 'bpr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '3day',
+      expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_locked',
+      entry_type: 'bpr',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '3day',
+      expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
 
     res.json({ success: true, message: 'Entry locked successfully', entry });
@@ -860,7 +1025,50 @@ router.delete('/bpr/:id', auth, (req, res) => {
       return res.status(404).json({ error: 'BPR entry not found' });
     }
 
+    const deletedEntry = db.data.purchase_bpr[idx];
     db.data.purchase_bpr.splice(idx, 1);
+
+    const notifMsg = `🗑️ BPR Entry Deleted: Purchase Dept (${capitalize(deletedEntry.branch || 'maalur')}) deleted BPR Entry #${deletedEntry.bpr_no || deletedEntry.id} (Contractor: ${deletedEntry.contractor_name || 'N/A'})`;
+    const now = new Date().toISOString();
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      dept: 'purchase',
+      branch: deletedEntry.branch || 'maalur',
+      type: 'purchase',
+      entry_type: 'bpr',
+      entry_id: deletedEntry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      sender_id: req.user ? req.user.id : 0,
+      sender_name: req.user ? req.user.full_name : 'Purchase Dept',
+      target_user_id: null,
+      target_user_name: 'Manager',
+      role: 'manager',
+      dept: 'purchase',
+      branch: deletedEntry.branch || 'maalur',
+      type: 'purchase',
+      entry_type: 'bpr',
+      entry_id: deletedEntry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
     db.saveData();
 
     res.json({ success: true, message: 'BPR entry deleted' });
