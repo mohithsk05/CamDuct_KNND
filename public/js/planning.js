@@ -13,7 +13,37 @@ let currentBranchProjects = [];
 let currentBifurcation = 'all';
 let currentStatusFilter = 'all';
 let currentConversionFilter = 'all';
+let currentMonthFilter = 'all';
 let revisingProject = null; // target project object when revising
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+function getProjectMonthName(p) {
+  if (p.month && MONTH_NAMES.includes(p.month)) {
+    return p.month;
+  }
+  const dateStr = p.created_at || p.date || p.updated_at;
+  if (dateStr) {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return MONTH_NAMES[d.getMonth()];
+    }
+  }
+  return MONTH_NAMES[new Date().getMonth()];
+}
+
+function filterProjectsByMonth(projects, selectedMonth) {
+  if (!selectedMonth || selectedMonth.toLowerCase() === 'all') {
+    return projects;
+  }
+  return projects.filter(p => {
+    const m = getProjectMonthName(p);
+    return m.toLowerCase() === selectedMonth.toLowerCase();
+  });
+}
 
 function getProjectConversionStatus(p) {
   if (!p) return 'not_converted';
@@ -625,6 +655,18 @@ async function initPlanning() {
     });
   }
 
+  const monthSelect = document.getElementById('month-filter-select');
+  if (monthSelect) {
+    monthSelect.addEventListener('change', () => {
+      currentMonthFilter = monthSelect.value;
+      updateStatusCounts();
+      updateConversionCounts();
+      renderFilteredList(currentBranchProjects);
+      const monthLabel = currentMonthFilter === 'all' ? 'All Months' : currentMonthFilter;
+      showToast(`Filtered projects by ${monthLabel}`, 'info');
+    });
+  }
+
   await loadProjects();
 }
 
@@ -1086,11 +1128,11 @@ async function loadProjects() {
 }
 
 function updateStatusCounts() {
-  let catProjects = currentBranchProjects;
+  let catProjects = filterProjectsByMonth(currentBranchProjects, currentMonthFilter);
   if (currentBifurcation === 'knnd') {
-    catProjects = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd');
+    catProjects = catProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd');
   } else if (currentBifurcation === 'others') {
-    catProjects = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others');
+    catProjects = catProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others');
   }
 
   // Count unique job groups status
@@ -1115,11 +1157,11 @@ function updateStatusCounts() {
 }
 
 function updateConversionCounts() {
-  let catProjects = currentBranchProjects;
+  let catProjects = filterProjectsByMonth(currentBranchProjects, currentMonthFilter);
   if (currentBifurcation === 'knnd') {
-    catProjects = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd');
+    catProjects = catProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd');
   } else if (currentBifurcation === 'others') {
-    catProjects = currentBranchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others');
+    catProjects = catProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'others');
   }
 
   if (currentStatusFilter === 'accepted') {
@@ -1152,7 +1194,7 @@ function renderFilteredList(branchProjects) {
   const listEl = document.getElementById('projects-list');
   if (!listEl) return;
 
-  let filtered = branchProjects;
+  let filtered = filterProjectsByMonth(branchProjects, currentMonthFilter);
   if (currentBifurcation === 'knnd') {
     filtered = branchProjects.filter(p => (p.customer_type || 'others').toLowerCase() === 'knnd');
   } else if (currentBifurcation === 'others') {

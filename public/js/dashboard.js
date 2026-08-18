@@ -599,15 +599,102 @@ function renderPlanningPanel(container, role, user) {
 
 // ─── Overview Panel ─────────────────────────────────────────────────────────
 async function renderOverviewPanel(container, role, user) {
-  // STRICT BRANCH ISOLATION: scope to current active branch
   const overviewBranch = (currentBranch || sessionStorage.getItem('active_branch') || (user && user.branch) || 'maalur').toLowerCase();
+  const isAdminOrManager = (role === 'admin' || role === 'manager' || (user && user.hasAdminPower));
+  const userRoleDept = (user && user.role) ? user.role.toLowerCase() : 'planning';
 
+  if (!isAdminOrManager) {
+    // Department User View: Only show overview related strictly to THEIR specific department
+    const targetDept = (userRoleDept === 'security') ? 'dispatch' : userRoleDept;
+    const deptInfo = DEPT_LABELS[targetDept] || { label: capitalize(targetDept), icon: '📊' };
+
+    container.innerHTML = `
+      <div style="margin-bottom:20px;">
+        <h3 style="margin-bottom:3px;">Summary &amp; Reports — ${deptInfo.label} Department</h3>
+        <p style="font-size:0.8rem;">Branch: <strong>${capitalize(overviewBranch)}</strong></p>
+      </div>
+      <div id="overview-dept-content"></div>
+    `;
+
+    const contentDiv = document.getElementById('overview-dept-content');
+    if (targetDept === 'planning') {
+      await renderPlanningOverview(contentDiv, overviewBranch);
+    } else if (targetDept === 'purchase') {
+      await renderPurchaseOverview(contentDiv, overviewBranch);
+    } else {
+      renderGenericDeptOverview(contentDiv, targetDept, overviewBranch);
+    }
+    return;
+  }
+
+  // Admin & Manager View: Show tabs for ALL departments
   container.innerHTML = `
-    <div style="margin-bottom:24px;">
+    <div style="margin-bottom:16px;">
       <h3 style="margin-bottom:3px;">Summary &amp; Reports</h3>
-      <p style="font-size:0.8rem;">Branch: <strong>${capitalize(overviewBranch)}</strong></p>
+      <p style="font-size:0.8rem;">Branch: <strong>${capitalize(overviewBranch)}</strong> (Admin &amp; Manager Overview)</p>
     </div>
 
+    <!-- Department Sub-Tabs for Overview -->
+    <div class="overview-dept-tabs" style="display:flex; gap:8px; border-bottom:2px solid var(--border, #e2e8f0); margin-bottom:24px; padding-bottom:8px; flex-wrap:wrap;">
+      <button class="btn btn-sm overview-tab-btn active" data-overview-dept="planning" style="font-weight:600; padding:6px 14px; border-radius:6px; background:#4f46e5; color:#ffffff; border:1px solid #4f46e5; cursor:pointer;">📋 Planning</button>
+      <button class="btn btn-sm overview-tab-btn" data-overview-dept="purchase" style="font-weight:600; padding:6px 14px; border-radius:6px; background:#ffffff; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">🛒 Purchase</button>
+      <button class="btn btn-sm overview-tab-btn" data-overview-dept="consumption" style="font-weight:600; padding:6px 14px; border-radius:6px; background:#ffffff; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">🔧 Consumption</button>
+      <button class="btn btn-sm overview-tab-btn" data-overview-dept="accounts" style="font-weight:600; padding:6px 14px; border-radius:6px; background:#ffffff; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">💼 Accounts</button>
+      <button class="btn btn-sm overview-tab-btn" data-overview-dept="dispatch" style="font-weight:600; padding:6px 14px; border-radius:6px; background:#ffffff; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">🚚 Dispatch</button>
+      <button class="btn btn-sm overview-tab-btn" data-overview-dept="balance" style="font-weight:600; padding:6px 14px; border-radius:6px; background:#ffffff; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">⚖️ Balance</button>
+      <button class="btn btn-sm overview-tab-btn" data-overview-dept="scrap" style="font-weight:600; padding:6px 14px; border-radius:6px; background:#ffffff; color:#334155; border:1px solid #cbd5e1; cursor:pointer;">♻️ Scrap</button>
+    </div>
+
+    <!-- Department Overview View Container -->
+    <div id="overview-dept-content"></div>
+  `;
+
+  const contentDiv = document.getElementById('overview-dept-content');
+  const tabBtns = container.querySelectorAll('.overview-tab-btn');
+
+  const updateTabStyles = (selectedDept) => {
+    tabBtns.forEach(btn => {
+      if (btn.dataset.overviewDept === selectedDept) {
+        btn.classList.add('active');
+        btn.style.background = '#4f46e5';
+        btn.style.color = '#ffffff';
+        btn.style.borderColor = '#4f46e5';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = 'var(--bg-surface, #ffffff)';
+        btn.style.color = 'var(--text-primary, #334155)';
+        btn.style.borderColor = 'var(--border, #cbd5e1)';
+      }
+    });
+  };
+
+  const loadDeptOverview = async (dept) => {
+    updateTabStyles(dept);
+    if (!contentDiv) return;
+
+    contentDiv.innerHTML = `<div style="text-align:center; padding:32px;"><span class="spinner"></span></div>`;
+
+    if (dept === 'planning') {
+      await renderPlanningOverview(contentDiv, overviewBranch);
+    } else if (dept === 'purchase') {
+      await renderPurchaseOverview(contentDiv, overviewBranch);
+    } else {
+      renderGenericDeptOverview(contentDiv, dept, overviewBranch);
+    }
+  };
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadDeptOverview(btn.dataset.overviewDept);
+    });
+  });
+
+  // Default initial view: Planning Department Overview
+  await loadDeptOverview('planning');
+}
+
+async function renderPlanningOverview(container, overviewBranch) {
+  container.innerHTML = `
     <!-- Date Range Export -->
     <div class="card" style="margin-bottom:24px;">
       <div class="card-header"><h4>📥 Export Planning Data — ${capitalize(overviewBranch)} Branch</h4></div>
@@ -637,13 +724,10 @@ async function renderOverviewPanel(container, role, user) {
     </div>
   `;
 
-  // Export button — always scoped to overviewBranch (no cross-branch leakage)
   document.getElementById('export-xlsx-btn').addEventListener('click', () => {
     const from = document.getElementById('export-from').value;
     const to = document.getElementById('export-to').value;
-    const branch = overviewBranch;
-
-    apiFetch(`/planning/export?${from ? 'from=' + from + '&' : ''}${to ? 'to=' + to + '&' : ''}${branch ? 'branch=' + branch : ''}`)
+    apiFetch(`/planning/export?${from ? 'from=' + from + '&' : ''}${to ? 'to=' + to + '&' : ''}branch=${overviewBranch}`)
       .then(r => r.blob())
       .then(blob => {
         const link = document.createElement('a');
@@ -655,7 +739,6 @@ async function renderOverviewPanel(container, role, user) {
       });
   });
 
-  // Load stats — STRICTLY scoped to overviewBranch
   try {
     const res = await apiFetch(`/planning/projects?branch=${overviewBranch}`);
     if (!res || !res.ok) return;
@@ -667,13 +750,81 @@ async function renderOverviewPanel(container, role, user) {
     const revised = projects.filter(p => p.status === 'revised').length;
 
     document.getElementById('overview-stats').innerHTML = `
-      <div class="stat-card"><div class="stat-card-label">Total Projects</div><div class="stat-card-value">${projects.length}</div></div>
-      <div class="stat-card"><div class="stat-card-label">Pending</div><div class="stat-card-value" style="color:var(--warning);">${pending}</div></div>
-      <div class="stat-card"><div class="stat-card-label">Approved</div><div class="stat-card-value" style="color:var(--success);">${approved}</div></div>
-      <div class="stat-card"><div class="stat-card-label">Rejected</div><div class="stat-card-value" style="color:var(--danger);">${rejected}</div></div>
-      <div class="stat-card"><div class="stat-card-label">Revision Pending</div><div class="stat-card-value" style="color:var(--revise);">${revised}</div></div>
+      <div class="stat-card"><div class="stat-card-label">TOTAL PROJECTS</div><div class="stat-card-value">${projects.length}</div></div>
+      <div class="stat-card"><div class="stat-card-label">PENDING</div><div class="stat-card-value" style="color:var(--warning);">${pending}</div></div>
+      <div class="stat-card"><div class="stat-card-label">APPROVED</div><div class="stat-card-value" style="color:var(--success);">${approved}</div></div>
+      <div class="stat-card"><div class="stat-card-label">REJECTED</div><div class="stat-card-value" style="color:var(--danger);">${rejected}</div></div>
+      <div class="stat-card"><div class="stat-card-label">REVISION PENDING</div><div class="stat-card-value" style="color:var(--revise);">${revised}</div></div>
     `;
   } catch (e) { }
+}
+
+async function renderPurchaseOverview(container, overviewBranch) {
+  container.innerHTML = `
+    <!-- Date Range Export -->
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-header"><h4>📥 Export Purchase Data — ${capitalize(overviewBranch)} Branch</h4></div>
+      <div class="card-body">
+        <div class="download-controls">
+          <div class="form-group" style="justify-content:flex-end; padding-top:4px;">
+            <button class="btn btn-primary" id="purchase-export-csv-btn">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Export Purchase CSV
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="overview-stats" id="purchase-overview-stats">
+      <div style="text-align:center; padding:24px; grid-column: 1/-1;"><span class="spinner"></span></div>
+    </div>
+  `;
+
+  document.getElementById('purchase-export-csv-btn').addEventListener('click', () => {
+    window.location.href = `/api/purchase/export?branch=${overviewBranch}`;
+    showToast('Exporting purchase report...', 'info');
+  });
+
+  try {
+    const [resIgr, resBpr] = await Promise.all([
+      apiFetch(`/purchase/igr?branch=${overviewBranch}`),
+      apiFetch(`/purchase/bpr?branch=${overviewBranch}`)
+    ]);
+
+    const igrData = (resIgr && resIgr.ok) ? await resIgr.json() : [];
+    const bprData = (resBpr && resBpr.ok) ? await resBpr.json() : [];
+
+    const totalIgrVal = igrData.reduce((acc, x) => acc + (parseFloat(x.invoice_value) || 0), 0);
+    const totalBprVal = bprData.reduce((acc, x) => acc + (parseFloat(x.invoice_value) || 0), 0);
+
+    document.getElementById('purchase-overview-stats').innerHTML = `
+      <div class="stat-card"><div class="stat-card-label">TOTAL IGR ENTRIES</div><div class="stat-card-value">${igrData.length}</div></div>
+      <div class="stat-card"><div class="stat-card-label">TOTAL BPR ENTRIES</div><div class="stat-card-value">${bprData.length}</div></div>
+      <div class="stat-card"><div class="stat-card-label">TOTAL IGR VALUE</div><div class="stat-card-value" style="color:var(--primary); font-size:1.2rem;">₹${totalIgrVal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div></div>
+      <div class="stat-card"><div class="stat-card-label">TOTAL BPR VALUE</div><div class="stat-card-value" style="color:var(--accent); font-size:1.2rem;">₹${totalBprVal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div></div>
+      <div class="stat-card"><div class="stat-card-label">COMBINED TOTAL</div><div class="stat-card-value" style="color:var(--success); font-size:1.2rem;">₹${(totalIgrVal + totalBprVal).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div></div>
+    `;
+  } catch (e) { }
+}
+
+function renderGenericDeptOverview(container, dept, overviewBranch) {
+  const deptInfo = DEPT_LABELS[dept] || { label: capitalize(dept), icon: '📁', desc: 'Department module' };
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:24px; padding:28px; text-align:center;">
+      <div style="font-size:2.5rem; margin-bottom:12px;">${deptInfo.icon}</div>
+      <h3 style="margin-bottom:6px; color:var(--text-primary);">${deptInfo.label} Department Overview</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted);">${deptInfo.desc} for <strong>${capitalize(overviewBranch)} Branch</strong></p>
+      
+      <div class="overview-stats" style="margin-top:24px; display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:16px;">
+        <div class="stat-card"><div class="stat-card-label">MODULE STATUS</div><div class="stat-card-value" style="font-size:1rem; color:var(--success);">Active</div></div>
+        <div class="stat-card"><div class="stat-card-label">ACTIVE BRANCH</div><div class="stat-card-value" style="font-size:1rem;">${capitalize(overviewBranch)}</div></div>
+        <div class="stat-card"><div class="stat-card-label">RECORDS COUNT</div><div class="stat-card-value" style="font-size:1.2rem;">0</div></div>
+      </div>
+    </div>
+  `;
 }
 
 

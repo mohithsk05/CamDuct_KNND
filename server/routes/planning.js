@@ -160,6 +160,20 @@ router.get('/projects', auth, (req, res) => {
       ORDER BY p.created_at DESC
     `).all(userBranch);
   }
+
+  const monthParam = req.query.month;
+  if (monthParam && monthParam.toLowerCase() !== 'all') {
+    const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    projects = projects.filter(p => {
+      let m = p.month;
+      if (!m) {
+        const d = new Date(p.created_at || p.date);
+        if (!isNaN(d.getTime())) m = MONTH_NAMES[d.getMonth()];
+      }
+      return (m || '').toLowerCase() === monthParam.toLowerCase();
+    });
+  }
+
   res.json(projects);
 });
 

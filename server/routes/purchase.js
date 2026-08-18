@@ -660,15 +660,47 @@ router.delete('/bpr/:id', auth, (req, res) => {
 
 // ─── ABSTRACT ROUTE ─────────────────────────────────────────────────────────
 
-// GET /api/purchase/abstract?branch=...&month=...
+function getEntryYear(item) {
+  if (!item) return 2026;
+  if (item.year && !isNaN(parseInt(item.year, 10))) {
+    return parseInt(item.year, 10);
+  }
+  const dateStr = item.date || item.created_at;
+  if (dateStr) {
+    const s = String(dateStr).trim();
+    // 1. Matches 4-digit year at start (YYYY-MM-DD or YYYY/MM/DD)
+    const matchStart = s.match(/^(\d{4})/);
+    if (matchStart) return parseInt(matchStart[1], 10);
+
+    // 2. Matches 4-digit year at end (DD-MM-YYYY or DD/MM/YYYY)
+    const matchEnd = s.match(/(\d{4})$/);
+    if (matchEnd) return parseInt(matchEnd[1], 10);
+
+    // 3. Matches any 20xx or 21xx 4-digit sequence
+    const matchAny = s.match(/(20\d{2}|21\d{2})/);
+    if (matchAny) return parseInt(matchAny[1], 10);
+
+    const d = new Date(s);
+    if (!isNaN(d.getFullYear())) return d.getFullYear();
+  }
+  return 2026;
+}
+
+// GET /api/purchase/abstract?branch=...&month=...&year=...
 router.get('/abstract', auth, (req, res) => {
   try {
     ensureDbCollections();
     const branchArg = (req.query.branch || (req.user && req.user.branch) || 'maalur').toLowerCase();
     const monthArg = req.query.month;
+    const yearArg = req.query.year ? parseInt(req.query.year, 10) : null;
     
-    const igrList = db.data.purchase_igr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
-    const bprList = db.data.purchase_bpr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
+    let igrList = db.data.purchase_igr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
+    let bprList = db.data.purchase_bpr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
+
+    if (yearArg && !isNaN(yearArg)) {
+      igrList = igrList.filter(item => getEntryYear(item) === yearArg);
+      bprList = bprList.filter(item => getEntryYear(item) === yearArg);
+    }
 
     let calendarMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     
@@ -727,6 +759,30 @@ router.get('/abstract', auth, (req, res) => {
   } catch (err) {
     console.error('Error generating abstract:', err);
     res.status(500).json({ error: 'Failed to generate abstract: ' + err.message });
+  }
+});
+
+// GET /api/purchase/export — Export Purchase data as CSV
+router.get('/export', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const branchArg = (req.query.branch || (req.user && req.user.branch) || 'maalur').toLowerCase();
+    const igrList = db.data.purchase_igr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
+    const bprList = db.data.purchase_bpr.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
+
+    let csv = 'Type,SL NO,Month,Date,Doc No,Invoice No/Date,Party Name,Description,Taxable Value,Invoice Value\n';
+    igrList.forEach((item, idx) => {
+      csv += `IGR,${idx + 1},"${item.month || ''}","${item.date || ''}","${item.igr_no || ''}","${item.invoice_no_date || ''}","${item.supplier_name || ''}","${(item.description || '').replace(/"/g, '""')}",${item.taxable_value || 0},${item.invoice_value || 0}\n`;
+    });
+    bprList.forEach((item, idx) => {
+      csv += `BPR,${idx + 1},"${item.month || ''}","${item.date || ''}","${item.bpr_no || ''}","${item.invoice_no_date || ''}","${item.contractor_name || ''}","${(item.description || '').replace(/"/g, '""')}",${item.taxable_value || 0},${item.invoice_value || 0}\n`;
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=purchase_report_${branchArg}_${new Date().toISOString().split('T')[0]}.csv`);
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to export purchase data: ' + err.message });
   }
 });
 

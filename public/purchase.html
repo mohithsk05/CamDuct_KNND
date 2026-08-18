@@ -285,12 +285,22 @@
     <!-- 3c. Abstract Subtab Panel -->
     <div class="inventory-subpanel hidden" id="subpanel-abstract">
       <div class="purchase-card">
-        <div class="purchase-card-header">
+        <div class="purchase-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
           <div class="purchase-card-title">
             <div class="purchase-card-icon">📊</div>
             <div>
-              <h3>Inventory Abstract Summary</h3>
-              <p>Monthly aggregated invoice values summary table</p>
+              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <h3 style="margin:0;">Inventory Abstract Summary</h3>
+                <div id="abstract-year-filter-container" style="display:flex; align-items:center; gap:8px; background:var(--bg-surface, #ffffff); border:1px solid var(--border); border-radius:8px; padding:4px 12px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                  <label for="abstract-year-select" style="font-size:0.82rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:4px; white-space:nowrap;">
+                    <span>📅</span> Year:
+                  </label>
+                  <select id="abstract-year-select" class="form-select" style="font-size:0.85rem; font-weight:600; padding:4px 10px; border-radius:6px; border:1px solid var(--border); cursor:pointer; background:#fff;">
+                    <!-- Dynamically populated from 2026 to 3026 -->
+                  </select>
+                </div>
+              </div>
+              <p style="font-size:0.8rem; margin-top:4px;">Monthly aggregated invoice values summary table</p>
             </div>
           </div>
           <button class="btn btn-outline btn-sm" id="refresh-abstract-btn">🔄 Refresh Abstract</button>

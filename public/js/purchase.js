@@ -1121,14 +1121,43 @@ function updateTabMonthNotices() {
 
 // ─── ABSTRACT SUMMARY MODULE ────────────────────────────────────────────────
 
+let currentAbstractYear = 2026;
+
+function populateAbstractYearDropdown() {
+  const select = document.getElementById('abstract-year-select');
+  if (!select) return;
+  if (select.children.length === 0) {
+    const fragment = document.createDocumentFragment();
+    for (let y = 2026; y <= 2076; y++) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      fragment.appendChild(opt);
+    }
+    select.appendChild(fragment);
+
+    select.addEventListener('change', () => {
+      currentAbstractYear = parseInt(select.value, 10);
+      loadAbstractSummary();
+      showToast(`Abstract summary updated for year ${currentAbstractYear}`, 'info');
+    });
+  }
+
+  select.value = currentAbstractYear;
+}
+
 async function loadAbstractSummary() {
+  populateAbstractYearDropdown();
   const igrBody = document.getElementById('abstract-igr-tbody');
   const bprBody = document.getElementById('abstract-bpr-tbody');
 
   if (!igrBody || !bprBody) return;
 
+  igrBody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:16px; color:var(--text-muted);"><span class="spinner"></span> Loading ${currentAbstractYear} abstract...</td></tr>`;
+  bprBody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:16px; color:var(--text-muted);"><span class="spinner"></span> Loading ${currentAbstractYear} abstract...</td></tr>`;
+
   try {
-    const res = await apiFetch(`/purchase/abstract?branch=${currentBranch}`);
+    const res = await apiFetch(`/purchase/abstract?branch=${currentBranch}&year=${currentAbstractYear}&_t=${Date.now()}`);
     if (!res || !res.ok) throw new Error('Failed to load Abstract summary');
     const data = await res.json();
 
@@ -1144,7 +1173,7 @@ async function loadAbstractSummary() {
       </tr>
     `).join('') + `
       <tr class="grand-total-row">
-        <td>Grand Total</td>
+        <td>Grand Total (${currentAbstractYear})</td>
         <td style="text-align:right; font-family:monospace;">
           ₹${(igr_grand_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
         </td>
@@ -1161,7 +1190,7 @@ async function loadAbstractSummary() {
       </tr>
     `).join('') + `
       <tr class="grand-total-row">
-        <td>Grand Total</td>
+        <td>Grand Total (${currentAbstractYear})</td>
         <td style="text-align:right; font-family:monospace;">
           ₹${(bpr_grand_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
         </td>
