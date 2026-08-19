@@ -477,7 +477,24 @@ function setupTopNavigation() {
     });
   }
 
+  const exportFromDate = document.getElementById('export-from-date');
+  const exportToDate = document.getElementById('export-to-date');
   const exportSupplierSelect = document.getElementById('export-supplier-select');
+
+  [exportFromDate, exportToDate].forEach(el => {
+    if (el) {
+      el.addEventListener('change', () => {
+        if (activeMainTab === 'po') {
+          loadPOEntries(true);
+        } else if (activeSubTab === 'igr') {
+          loadIGREntries(true);
+        } else if (activeSubTab === 'bpr') {
+          loadBPREntries(true);
+        }
+      });
+    }
+  });
+
   if (exportSupplierSelect) {
     exportSupplierSelect.addEventListener('change', () => {
       if (exportSupplierSelect.value === '__add_new__') {
@@ -493,11 +510,15 @@ function setupTopNavigation() {
         }
       }
 
-      const activeKey = getActiveTabKey();
-      if (activeKey === 'igr') {
-        loadIGREntries(true);
-      } else if (activeKey === 'bpr') {
-        loadBPREntries(true);
+      if (activeMainTab === 'po') {
+        loadPOEntries(true);
+      } else {
+        const activeKey = getActiveTabKey();
+        if (activeKey === 'igr') {
+          loadIGREntries(true);
+        } else if (activeKey === 'bpr') {
+          loadBPREntries(true);
+        }
       }
     });
   }
@@ -929,7 +950,19 @@ async function loadPOEntries(silent = false) {
     populateSupplierDropdowns();
 
     const selectedSupplier = document.getElementById('export-supplier-select')?.value || 'all';
+    const fromDate = document.getElementById('export-from-date')?.value;
+    const toDate = document.getElementById('export-to-date')?.value;
     let filteredEntries = [...currentPOEntries];
+
+    if (fromDate || toDate) {
+      filteredEntries = filteredEntries.filter(item => {
+        const d = item.date ? item.date.split('T')[0] : '';
+        if (!d) return false;
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      });
+    }
 
     if (selectedSupplier !== 'all') {
       const sLower = selectedSupplier.toLowerCase();
@@ -2747,15 +2780,11 @@ function setupMaterialsSubTabs() {
     });
   }
 
-  // Enquiry role tab buttons (for Admin)
-  document.querySelectorAll('#enquiries-role-tabs-bar .materials-subtab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const roleTab = btn.dataset.enquiryRole;
-      if (roleTab) {
-        openEnquiriesModal(roleTab);
-      }
-    });
-  });
+  // Setup Excel Download listeners for Materials subtabs
+  document.getElementById('export-raw-materials-excel-btn')?.addEventListener('click', () => exportMaterialSubTabToExcel('raw_materials'));
+  document.getElementById('export-consumables-excel-btn')?.addEventListener('click', () => exportMaterialSubTabToExcel('consumable_items'));
+  document.getElementById('export-electric-excel-btn')?.addEventListener('click', () => exportMaterialSubTabToExcel('electric_materials'));
+  document.getElementById('export-tools-excel-btn')?.addEventListener('click', () => exportMaterialSubTabToExcel('tools'));
 }
 
 function switchMaterialsSubTab(subtabKey) {
@@ -3404,10 +3433,79 @@ function renderEnquiriesTable(list = []) {
   `).join('');
 }
 
+function exportMaterialSubTabToExcel(category) {
+  if (typeof XLSX === 'undefined') {
+    showToast('Excel export engine is initializing... Please try again in a moment.', 'warning');
+    return;
+  }
+
+  const categoryNames = {
+    raw_materials: 'Raw Materials Inventory',
+    consumable_items: 'Consumable Items Inventory',
+    electric_materials: 'Electric Materials Inventory',
+    tools: 'Tools Inventory'
+  };
+
+  const searchInputIds = {
+    raw_materials: 'raw-materials-search',
+    consumable_items: 'consumable-search',
+    electric_materials: 'electric-search',
+    tools: 'tools-search'
+  };
+
+  let list = (materialsData && materialsData[category]) ? materialsData[category] : [];
+  const searchEl = document.getElementById(searchInputIds[category]);
+  const query = (searchEl?.value || '').toLowerCase().trim();
+  if (query) {
+    list = list.filter(item => item.name && item.name.toLowerCase().includes(query));
+  }
+
+  if (!list || list.length === 0) {
+    showToast(`No material items available to export for ${categoryNames[category] || 'Materials'}.`, 'warning');
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+
+  if (category === 'raw_materials') {
+    const headers = ['SL NO', 'RAW MATERIAL NAME'];
+    const rows = [headers];
+    list.forEach((item, idx) => {
+      rows.push([idx + 1, item.name || '']);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 10 }, { wch: 45 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Raw Materials');
+  } else {
+    const headers = ['SI NO', 'DESCRIPTION', 'QTY', 'UOM'];
+    const rows = [headers];
+    list.forEach((item, idx) => {
+      rows.push([
+        idx + 1,
+        item.name || '',
+        item.qty !== undefined ? item.qty : 0,
+        item.uom || 'NOS'
+      ]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 10 }, { wch: 45 }, { wch: 14 }, { wch: 14 }];
+    const sheetName = category.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  }
+
+  const dateStr = new Date().toISOString().split('T')[0];
+  const catFileName = category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
+  const filename = `${catFileName}_${capitalize(currentBranch)}_${dateStr}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+  showToast(`Downloaded ${categoryNames[category] || 'Materials'} Excel (.xlsx) data (${list.length} items)`, 'success');
+}
+
 window.handleKnowRate = handleKnowRate;
 window.openKnowRateModal = openKnowRateModal;
 window.openUpdateMaterialModal = openUpdateMaterialModal;
 window.openEnquiriesModal = openEnquiriesModal;
+window.exportMaterialSubTabToExcel = exportMaterialSubTabToExcel;
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {

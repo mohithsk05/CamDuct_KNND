@@ -151,30 +151,6 @@
           <span>📊 Abstract</span>
         </button>
       </div>
-
-      <!-- Calendar-based & Supplier Excel Download Option (Right Side) -->
-      <div class="inventory-subtabs-download-group" id="inventory-download-group">
-        <div class="export-date-field">
-          <label for="export-from-date">📅 From:</label>
-          <input type="date" id="export-from-date" title="Select From Date">
-        </div>
-        <div class="export-date-field">
-          <label for="export-to-date">To:</label>
-          <input type="date" id="export-to-date" title="Select To Date">
-        </div>
-        <div class="export-date-field">
-          <label for="export-supplier-select">🏢 Supplier:</label>
-          <select id="export-supplier-select" title="Filter by Supplier" style="font-size:0.8rem; font-weight:600; padding:3px 8px; border-radius:6px; border:1px solid var(--border); background:#fff; max-width:180px;">
-            <option value="all">All Suppliers</option>
-          </select>
-        </div>
-        <button class="btn-export-excel" id="export-excel-btn" type="button" title="Download Excel (.xlsx) data">
-          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-          </svg>
-          <span>Download Excel (.xlsx)</span>
-        </button>
-      </div>
     </div>
   </div>
 
@@ -195,6 +171,32 @@
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           New PO Entry
         </button>
+      </div>
+
+      <!-- Calendar-based & Supplier Excel Download Group (Placed below New PO Entry) -->
+      <div style="display:flex; justify-content:flex-end; margin-top:12px; margin-bottom:16px;">
+        <div class="inventory-subtabs-download-group" id="inventory-download-group" style="margin:0;">
+          <div class="export-date-field">
+            <label for="export-from-date">📅 From:</label>
+            <input type="date" id="export-from-date" title="Select From Date">
+          </div>
+          <div class="export-date-field">
+            <label for="export-to-date">To:</label>
+            <input type="date" id="export-to-date" title="Select To Date">
+          </div>
+          <div class="export-date-field">
+            <label for="export-supplier-select">🏢 Supplier:</label>
+            <select id="export-supplier-select" title="Filter by Supplier" style="font-size:0.8rem; font-weight:600; padding:3px 8px; border-radius:6px; border:1px solid var(--border); background:#fff; max-width:180px;">
+              <option value="all">All Suppliers</option>
+            </select>
+          </div>
+          <button class="btn-export-excel" id="export-excel-btn" type="button" title="Download Excel (.xlsx) data">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            <span>Download Excel (.xlsx)</span>
+          </button>
+        </div>
       </div>
 
       <!-- PO Summary Stat Cards -->
@@ -498,9 +500,15 @@
               <p style="margin-top:4px;">Purchased Unit, Consumed Unit, and Displayed Unit conversions per raw material item</p>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <input type="text" id="raw-materials-search" class="form-input" placeholder="🔍 Search Raw Materials..." style="width:240px; font-size:0.84rem; padding:6px 12px;">
             <span class="purchase-tag-pill" id="raw-materials-count-pill">154 Items</span>
+            <button class="btn-export-excel" id="export-raw-materials-excel-btn" type="button" title="Download Excel (.xlsx) data" style="padding:4px 12px; font-size:0.8rem;">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span>Download Excel (.xlsx)</span>
+            </button>
           </div>
         </div>
 
@@ -532,9 +540,15 @@
               <p>Track consumable stock levels, specifications, and unit of material (UOM)</p>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <input type="text" id="consumable-search" class="form-input" placeholder="🔍 Search Consumables..." style="width:240px; font-size:0.84rem; padding:6px 12px;">
             <span class="purchase-tag-pill" id="consumables-count-pill">0 Items</span>
+            <button class="btn-export-excel" id="export-consumables-excel-btn" type="button" title="Download Excel (.xlsx) data" style="padding:4px 12px; font-size:0.8rem;">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span>Download Excel (.xlsx)</span>
+            </button>
           </div>
         </div>
 
@@ -568,9 +582,15 @@
               <p>Relays, MCBs, wires, cables and electrical components stock management</p>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <input type="text" id="electric-search" class="form-input" placeholder="🔍 Search Electrical Items..." style="width:240px; font-size:0.84rem; padding:6px 12px;">
             <span class="purchase-tag-pill" id="electric-count-pill">0 Items</span>
+            <button class="btn-export-excel" id="export-electric-excel-btn" type="button" title="Download Excel (.xlsx) data" style="padding:4px 12px; font-size:0.8rem;">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span>Download Excel (.xlsx)</span>
+            </button>
           </div>
         </div>
 
@@ -604,9 +624,15 @@
               <p>Pliers, spanners, grinders, cutters, heat guns, and machinery tool assets</p>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <input type="text" id="tools-search" class="form-input" placeholder="🔍 Search Tools..." style="width:240px; font-size:0.84rem; padding:6px 12px;">
             <span class="purchase-tag-pill" id="tools-count-pill">0 Items</span>
+            <button class="btn-export-excel" id="export-tools-excel-btn" type="button" title="Download Excel (.xlsx) data" style="padding:4px 12px; font-size:0.8rem;">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span>Download Excel (.xlsx)</span>
+            </button>
           </div>
         </div>
 
