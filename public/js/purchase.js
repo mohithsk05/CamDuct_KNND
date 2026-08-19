@@ -8,8 +8,10 @@ let currentBranch = 'maalur';
 let activeMainTab = 'po';
 let activeSubTab = 'igr';
 
+let currentPOEntries = [];
 let currentIGREntries = [];
 let currentBPREntries = [];
+let editingPOId = null;
 let editingIGRId = null;
 let editingBPRId = null;
 
@@ -18,6 +20,32 @@ const EDIT_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours in milliseconds
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const PREDEFINED_MAKES = [
+  "JSW", "AMNS", "Uttam", "TATA", "XLPE", "Neoprene", "Urja", "K Flex",
+  "Thermobreak", "Supreme", "Airofoam", "Armaflex", "Armasound", "Aerocell",
+  "Superlon", "Boss GP 122", "Sealant Tube", "Paramount"
+];
+
+const PREDEFINED_RAW_MATERIALS = [
+  "120gsm 26G", "120gsm 24G", "120gsm 22G", "120gsm 20G", "120gsm 18G", "120gsm 16G",
+  "180gsm 26G", "180gsm 24G", "180gsm 22G", "180gsm 20G", "180gsm 18G", "180gsm 16G",
+  "275gsm 26G", "275gsm 24G", "275gsm 22G", "275gsm 20G", "275gsm 18G", "275gsm 16G",
+  "120gsm Slit 26G", "120gsm Slit 24G", "120gsm Slit 22G", "120gsm Slit 20G", "120gsm Slit 18G",
+  "H Bracket", "Neoprene Gasket", "XLPE Gasket", "Cleats", "Corner 32mm", "Corner 25mm",
+  "Sealant Tube", "Silicon Tube", "Sealant Bucket",
+  "Alu. 0.8mm", "Alu. 1mm", "Alu. 1.2mm", "Alu. Rod 10mm",
+  "SS 22G", "SS 20G", "SS 18G", "SS 16G",
+  "Insu Kflex Thermal 6mm", "Insu Kflex Thermal 9mm", "Insu Kflex Thermal 13mm", "Insu Kflex Thermal 16mm", "Insu Kflex Thermal 19mm", "Insu Kflex Thermal 25mm", "Insu Kflex Thermal 32mm",
+  "Insu Kflex Thermal 6mm Al. Foil", "Insu Kflex Thermal 9mm Al. Foil", "Insu Kflex Thermal 13mm Al. Foil", "Insu Kflex Thermal 16mm Al. Foil", "Insu Kflex Thermal 19mm Al. Foil",
+  "Insu Kflex 10mm Acou.", "Insu Kflex 15mm Acou.", "Insu Thermal Tape",
+  "Insu Supreme Thermal 9mm", "Insu Supreme Thermal 13mm", "Insu Supreme Thermal 16mm", "Insu Supreme Thermal 13mm Al. Foil", "Insu Supreme Thermal 19mm Al. Foil", "Insu Supreme Thermal 25mm Al. Foil", "Insu Supreme 10mm Acou.", "Insu Supreme 15mm Acou.",
+  "Insu Airofoam Thermal 19mm Al. Foil",
+  "Insu Armaflex Thermal 6mm", "Insu Armaflex Thermal 25mm", "Insu Armaflex Thermal 19mm Al. Foil", "Insu Armaflex Thermal 25mm Al. Foil",
+  "Insu Armasound Acou. 10mm", "Insu Armasound Acou. 15mm", "Insu Armasound Acou. 25mm",
+  "Insu Aerocell Thermal 16mm", "Insu Aerocell Thermal 32mm (GC-CLOTH)", "Insu Aerocell Acou. 15mm",
+  "Bubble Wrap", "Stretch Film", "MS Angle 25x25x5mm", "8 mm JTR", "10 mm JTR", "Gasket XLPE 10mm", "Bright Rod 8mm", "Bright Rod 10mm", "VCD Handle 20g", "Gear 150 Dia", "Inner Bush", "Outer Bush"
 ];
 
 const PREDEFINED_SUPPLIERS = [
@@ -72,6 +100,42 @@ const PREDEFINED_SUPPLIERS = [
   "The Supreme Industries Limited"
 ];
 
+let customMakes = JSON.parse(localStorage.getItem('custom_makes_list') || '[]');
+let customRawMaterials = JSON.parse(localStorage.getItem('custom_raw_materials_list') || '[]');
+
+function getUnitForRawMaterial(rawMaterialName) {
+  if (!rawMaterialName) return "No's";
+  const name = rawMaterialName.toString();
+  if (/gsm|ss|alu|ms|bucket|stretch|rod/i.test(name)) return "Kg's";
+  if (/thermal|acou/i.test(name)) return "Sqmt";
+  if (/tape|bubble/i.test(name)) return "Roll";
+  if (/gasket|jtr/i.test(name)) return "Rmt";
+  if (/cleats|tube|bracket|corner|handle|gear|bush/i.test(name)) return "No's";
+  return "No's";
+}
+
+function saveCustomMake(name) {
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (trimmed === '—' || trimmed === '-') return;
+  if (!customMakes.some(m => m.toLowerCase() === trimmed.toLowerCase()) && 
+      !PREDEFINED_MAKES.some(m => m.toLowerCase() === trimmed.toLowerCase())) {
+    customMakes.push(trimmed);
+    localStorage.setItem('custom_makes_list', JSON.stringify(customMakes));
+  }
+}
+
+function saveCustomRawMaterial(name) {
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (trimmed === '—' || trimmed === '-') return;
+  if (!customRawMaterials.some(r => r.toLowerCase() === trimmed.toLowerCase()) && 
+      !PREDEFINED_RAW_MATERIALS.some(r => r.toLowerCase() === trimmed.toLowerCase())) {
+    customRawMaterials.push(trimmed);
+    localStorage.setItem('custom_raw_materials_list', JSON.stringify(customRawMaterials));
+  }
+}
+
 let customSuppliers = JSON.parse(localStorage.getItem('custom_suppliers_list') || '[]');
 
 function saveCustomSupplier(name) {
@@ -85,14 +149,97 @@ function saveCustomSupplier(name) {
   }
 }
 
+function populateMakeDropdowns() {
+  const makeSelect = document.getElementById('po-make-select');
+  const datalistEl = document.getElementById('make-datalist-options');
+  if (!makeSelect && !datalistEl) return;
+
+  const makeSet = new Set();
+  PREDEFINED_MAKES.forEach(m => makeSet.add(m));
+  customMakes.forEach(m => makeSet.add(m));
+
+  if (Array.isArray(currentPOEntries)) {
+    currentPOEntries.forEach(item => {
+      if (item.make && item.make.trim() && item.make !== '—') {
+        makeSet.add(item.make.trim());
+      }
+    });
+  }
+
+  const sortedMakes = Array.from(makeSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  if (datalistEl) {
+    datalistEl.innerHTML = sortedMakes.map(m => `<option value="${escapeHtml(m)}"></option>`).join('');
+  }
+
+  if (makeSelect) {
+    const currVal = makeSelect.value;
+    let html = '<option value="">Select Make...</option>';
+    html += '<option value="__add_new__" style="font-weight:700; color:var(--accent);">➕ Add New Make...</option>';
+    sortedMakes.forEach(m => {
+      html += `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`;
+    });
+    makeSelect.innerHTML = html;
+    if (currVal && Array.from(makeSelect.options).some(o => o.value === currVal)) {
+      makeSelect.value = currVal;
+    }
+  }
+}
+
+function populateRawMaterialDropdowns() {
+  const rmSelect = document.getElementById('po-raw-material-select');
+  const datalistEl = document.getElementById('rawmaterial-datalist-options');
+  if (!rmSelect && !datalistEl) return;
+
+  const rmSet = new Set();
+  PREDEFINED_RAW_MATERIALS.forEach(r => rmSet.add(r));
+  customRawMaterials.forEach(r => rmSet.add(r));
+
+  if (Array.isArray(currentPOEntries)) {
+    currentPOEntries.forEach(item => {
+      if (item.raw_material && item.raw_material.trim() && item.raw_material !== '—') {
+        rmSet.add(item.raw_material.trim());
+      }
+    });
+  }
+
+  const sortedRM = Array.from(rmSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  if (datalistEl) {
+    datalistEl.innerHTML = sortedRM.map(r => `<option value="${escapeHtml(r)}"></option>`).join('');
+  }
+
+  if (rmSelect) {
+    const currVal = rmSelect.value;
+    let html = '<option value="">Select Raw Material...</option>';
+    html += '<option value="__add_new__" style="font-weight:700; color:var(--accent);">➕ Add New Raw Material...</option>';
+    sortedRM.forEach(r => {
+      html += `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`;
+    });
+    rmSelect.innerHTML = html;
+    if (currVal && Array.from(rmSelect.options).some(o => o.value === currVal)) {
+      rmSelect.value = currVal;
+    }
+  }
+}
+
 function populateSupplierDropdowns() {
   const exportSelect = document.getElementById('export-supplier-select');
   const subpanelSelect = document.getElementById('supplier-subpanel-select');
+  const poSupplierSelect = document.getElementById('po-supplier-select');
   const datalistEl = document.getElementById('supplier-datalist-options');
 
   const supplierSet = new Set();
   PREDEFINED_SUPPLIERS.forEach(s => supplierSet.add(s));
   customSuppliers.forEach(s => supplierSet.add(s));
+
+  if (Array.isArray(currentPOEntries)) {
+    currentPOEntries.forEach(item => {
+      if (item.supplier && item.supplier.trim() && item.supplier !== '—') {
+        supplierSet.add(item.supplier.trim());
+      }
+    });
+  }
 
   if (Array.isArray(currentIGREntries)) {
     currentIGREntries.forEach(item => {
@@ -116,11 +263,11 @@ function populateSupplierDropdowns() {
     datalistEl.innerHTML = sortedSuppliers.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
   }
 
-  [exportSelect, subpanelSelect].forEach(selectEl => {
+  [exportSelect, subpanelSelect, poSupplierSelect].forEach(selectEl => {
     if (!selectEl) return;
     const currVal = selectEl.value;
 
-    let html = '<option value="all">All Suppliers</option>';
+    let html = selectEl === poSupplierSelect ? '<option value="">Select Supplier...</option>' : '<option value="all">All Suppliers</option>';
     html += '<option value="__add_new__" style="font-weight:700; color:var(--accent);">➕ Add New Supplier...</option>';
 
     sortedSuppliers.forEach(s => {
@@ -228,20 +375,27 @@ async function initPurchase() {
   applyRolePermissions();
   setupTopNavigation();
   setupPurchaseTabs();
+  setupMaterialsSubTabs();
   setupModalsAndCalculations();
 
   updateMonthFilterVisibility();
 
   // Initial load
+  await loadPOEntries();
   await loadIGREntries();
   await loadBPREntries();
   await loadAbstractSummary();
+  await loadMaterialsData();
 
   // Real-time periodic auto-refresh every 5 seconds to sync lock/unlock states dynamically
   setInterval(async () => {
     if (document.visibilityState === 'visible') {
+      await loadPOEntries(true);
       await loadIGREntries(true);
       await loadBPREntries(true);
+      if (activeMainTab === 'materials') {
+        await loadMaterialsData(true);
+      }
     }
   }, 5000);
 }
@@ -249,13 +403,16 @@ async function initPurchase() {
 /** Apply RBAC: "+ New Entry" buttons & editing only for Purchase department users or Admins */
 function applyRolePermissions() {
   const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const openAddPOBtn = document.getElementById('open-add-po-btn');
   const openAddIGRBtn = document.getElementById('open-add-igr-btn');
   const openAddBPRBtn = document.getElementById('open-add-bpr-btn');
 
   if (!isPurchaseUser) {
+    if (openAddPOBtn) openAddPOBtn.classList.add('hidden');
     if (openAddIGRBtn) openAddIGRBtn.classList.add('hidden');
     if (openAddBPRBtn) openAddBPRBtn.classList.add('hidden');
   } else {
+    if (openAddPOBtn) openAddPOBtn.classList.remove('hidden');
     if (openAddIGRBtn) openAddIGRBtn.classList.remove('hidden');
     if (openAddBPRBtn) openAddBPRBtn.classList.remove('hidden');
   }
@@ -283,6 +440,7 @@ function setupTopNavigation() {
         icon.style.transform = 'rotate(360deg)';
         setTimeout(() => { icon.style.transform = 'rotate(0deg)'; }, 600);
       }
+      await loadPOEntries();
       await loadIGREntries();
       await loadBPREntries();
       await loadAbstractSummary();
@@ -304,7 +462,9 @@ function setupTopNavigation() {
       const activeKey = getActiveTabKey();
       tabMonthFilters[activeKey] = monthSelect.value;
 
-      if (activeKey === 'igr') {
+      if (activeKey === 'po') {
+        await loadPOEntries();
+      } else if (activeKey === 'igr') {
         await loadIGREntries();
       } else if (activeKey === 'bpr') {
         await loadBPREntries();
@@ -360,6 +520,7 @@ function setupPurchaseTabs() {
   const mainTabBtns = document.querySelectorAll('.purchase-tab-btn');
   const subTabBtns = document.querySelectorAll('.purchase-subtab-btn');
   const subtabsBar = document.getElementById('inventory-subtabs-bar');
+  const materialsSubtabsBar = document.getElementById('materials-subtabs-bar');
 
   mainTabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -382,9 +543,16 @@ function setupPurchaseTabs() {
 
       if (tabKey === 'inventory') {
         subtabsBar && subtabsBar.classList.remove('hidden');
+        materialsSubtabsBar && materialsSubtabsBar.classList.add('hidden');
         switchInventorySubTab(activeSubTab);
+      } else if (tabKey === 'materials') {
+        subtabsBar && subtabsBar.classList.add('hidden');
+        materialsSubtabsBar && materialsSubtabsBar.classList.remove('hidden');
+        loadMaterialsData(true);
+        switchMaterialsSubTab(activeMaterialsSubTab);
       } else {
         subtabsBar && subtabsBar.classList.add('hidden');
+        materialsSubtabsBar && materialsSubtabsBar.classList.add('hidden');
         updateMonthFilterVisibility();
       }
     });
@@ -431,6 +599,94 @@ function switchInventorySubTab(subtabKey) {
 // ─── MODALS & CALCULATION LOGIC ─────────────────────────────────────────────
 
 function setupModalsAndCalculations() {
+  // Modal toggles for PO
+  const modalAddPO = document.getElementById('modal-add-po');
+  const openAddPOBtn = document.getElementById('open-add-po-btn');
+  const closeAddPOBtn = document.getElementById('close-add-po-modal');
+  const cancelAddPOBtn = document.getElementById('cancel-add-po-modal');
+  const savePOBtn = document.getElementById('save-po-btn');
+
+  if (openAddPOBtn) {
+    openAddPOBtn.addEventListener('click', openAddPOModal);
+  }
+  [closeAddPOBtn, cancelAddPOBtn].forEach(b => {
+    b && b.addEventListener('click', () => modalAddPO && modalAddPO.classList.add('hidden'));
+  });
+  if (savePOBtn) {
+    savePOBtn.addEventListener('click', submitPOEntry);
+  }
+
+  // Auto Calculations & Unit Assignments for PO
+  const poDateInput = document.getElementById('po-date');
+  const poMonthPreview = document.getElementById('po-month-preview');
+  if (poDateInput) {
+    poDateInput.addEventListener('change', () => {
+      if (poMonthPreview) poMonthPreview.value = getRealTimeMonth(poDateInput.value);
+    });
+  }
+
+  const poRMSelect = document.getElementById('po-raw-material-select');
+  if (poRMSelect) {
+    poRMSelect.addEventListener('change', () => {
+      if (poRMSelect.value === '__add_new__') {
+        const newRM = prompt('Enter new Raw Material Name to add to the system:');
+        if (newRM && newRM.trim()) {
+          const cleanName = newRM.trim();
+          saveCustomRawMaterial(cleanName);
+          populateRawMaterialDropdowns();
+          poRMSelect.value = cleanName;
+          showToast(`Added new raw material "${cleanName}"`, 'success');
+        } else {
+          poRMSelect.value = '';
+        }
+      }
+      const unitPreview = document.getElementById('po-unit-preview');
+      if (unitPreview) {
+        unitPreview.value = poRMSelect.value ? getUnitForRawMaterial(poRMSelect.value) : '';
+      }
+    });
+  }
+
+  const poMakeSelect = document.getElementById('po-make-select');
+  if (poMakeSelect) {
+    poMakeSelect.addEventListener('change', () => {
+      if (poMakeSelect.value === '__add_new__') {
+        const newMake = prompt('Enter new Make Brand to add to the system:');
+        if (newMake && newMake.trim()) {
+          const cleanName = newMake.trim();
+          saveCustomMake(cleanName);
+          populateMakeDropdowns();
+          poMakeSelect.value = cleanName;
+          showToast(`Added new make "${cleanName}"`, 'success');
+        } else {
+          poMakeSelect.value = '';
+        }
+      }
+    });
+  }
+
+  const poSupplierSelect = document.getElementById('po-supplier-select');
+  if (poSupplierSelect) {
+    poSupplierSelect.addEventListener('change', () => {
+      if (poSupplierSelect.value === '__add_new__') {
+        const newSupplier = prompt('Enter new Supplier Name to add to the system:');
+        if (newSupplier && newSupplier.trim()) {
+          const cleanName = newSupplier.trim();
+          saveCustomSupplier(cleanName);
+          populateSupplierDropdowns();
+          poSupplierSelect.value = cleanName;
+          showToast(`Added new supplier "${cleanName}"`, 'success');
+        } else {
+          poSupplierSelect.value = '';
+        }
+      }
+    });
+  }
+
+  document.querySelectorAll('.po-calc-trigger').forEach(el => {
+    el.addEventListener('input', recalculatePOModalFields);
+    el.addEventListener('change', recalculatePOModalFields);
+  });
   // Modal toggles for IGR
   const modalAddIGR = document.getElementById('modal-add-igr');
   const openAddIGRBtn = document.getElementById('open-add-igr-btn');
@@ -650,6 +906,382 @@ function calculateBPRTotalOnly() {
   const total = taxable + igst + cgst + sgst;
   document.getElementById('bpr-invoice-value').value = total > 0 ? total.toFixed(2) : '';
 }
+
+// ─── PO (PURCHASE ORDER) DATA MODULE ─────────────────────────────────────────
+
+async function loadPOEntries(silent = false) {
+  const tbody = document.getElementById('po-tbody');
+  if (!tbody) return;
+
+  if (!silent && currentPOEntries.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="21" style="text-align:center; padding:24px; color:var(--text-muted);"><span class="spinner"></span> Loading Purchase Order records...</td></tr>`;
+  }
+
+  try {
+    const selectedMonth = tabMonthFilters['po'] || 'all';
+    const res = await apiFetch(`/purchase/po?branch=${currentBranch}&month=${selectedMonth}&_t=${Date.now()}`);
+    if (!res || !res.ok) throw new Error('Failed to load PO entries');
+    const data = await res.json();
+    currentPOEntries = data || [];
+
+    populateMakeDropdowns();
+    populateRawMaterialDropdowns();
+    populateSupplierDropdowns();
+
+    const selectedSupplier = document.getElementById('export-supplier-select')?.value || 'all';
+    let filteredEntries = [...currentPOEntries];
+
+    if (selectedSupplier !== 'all') {
+      const sLower = selectedSupplier.toLowerCase();
+      filteredEntries = filteredEntries.filter(item => item.supplier && item.supplier.toLowerCase().includes(sLower));
+    }
+
+    // Update Stat Cards
+    const countEl = document.getElementById('po-stat-count');
+    const basicEl = document.getElementById('po-stat-basic-val');
+    const gstEl = document.getElementById('po-stat-gst-val');
+    const totalEl = document.getElementById('po-stat-total-val');
+
+    let totBasic = 0, totGst = 0, totGrand = 0;
+    filteredEntries.forEach(item => {
+      totBasic += (item.basic || 0);
+      totGst += ((item.cgst || 0) + (item.sgst || 0) + (item.igst || 0));
+      totGrand += (item.total || 0);
+    });
+
+    if (countEl) countEl.textContent = filteredEntries.length;
+    if (basicEl) basicEl.textContent = `₹${totBasic.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    if (gstEl) gstEl.textContent = `₹${totGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    if (totalEl) totalEl.textContent = `₹${totGrand.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+    if (filteredEntries.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="21" style="text-align:center; padding:24px; color:var(--text-muted);">No PO entries found for ${capitalize(currentBranch)} (${selectedMonth})</td></tr>`;
+      return;
+    }
+
+    const showActions = currentUser && (currentUser.role === 'purchase' || currentUser.role === 'admin');
+
+    tbody.innerHTML = filteredEntries.map((item, idx) => `
+      <tr>
+        <td style="font-weight:700; color:var(--text-primary); text-align:center;">${idx + 1}</td>
+        <td style="font-weight:600;">${escapeHtml(item.month || getRealTimeMonth(item.date))}</td>
+        <td>${formatDate(item.date)}</td>
+        <td style="font-weight:600; color:var(--accent);">${escapeHtml(item.po_no || '—')}</td>
+        <td>${formatDate(item.po_date)}</td>
+        <td><strong>${escapeHtml(item.supplier || '—')}</strong></td>
+        <td>${escapeHtml(item.make || '—')}</td>
+        <td>${escapeHtml(item.inv_no || '—')}</td>
+        <td>${escapeHtml(item.igr_no || '—')}</td>
+        <td><strong>${escapeHtml(item.raw_material || '—')}</strong></td>
+        <td style="font-weight:600; text-align:center;">${escapeHtml(item.unit || getUnitForRawMaterial(item.raw_material))}</td>
+        <td style="text-align:right;">${(item.qty || 0).toLocaleString('en-IN')}</td>
+        <td style="text-align:right;">₹${(item.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        <td style="text-align:right; font-weight:600;">₹${(item.basic || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        <td style="text-align:right;">₹${(item.cgst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        <td style="text-align:right;">₹${(item.sgst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        <td style="text-align:right;">₹${(item.igst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        <td style="text-align:right;">₹${(item.trans_as_invoice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        <td style="text-align:right; font-weight:600;">₹${(item.trans_per_unit || 0).toLocaleString('en-IN', { minimumFractionDigits: 4 })}</td>
+        <td style="text-align:right; font-weight:700; color:var(--text-primary);">₹${(item.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        ${showActions ? `<td>${renderPOActionsHtml(item)}</td>` : '<td>—</td>'}
+      </tr>
+    `).join('');
+  } catch (err) {
+    if (!silent) showToast(`Error loading PO: ${err.message}`, 'error');
+  }
+}
+
+function renderPOActionsHtml(item) {
+  const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+  const isManagerUser = currentUser && currentUser.role === 'manager';
+
+  if (!isPurchaseUser && !isAdminUser && !isManagerUser) return '—';
+
+  const createdTime = new Date(item.created_at || item.date).getTime();
+  const now = Date.now();
+  const ageMs = now - createdTime;
+  const isWithin48h = !isNaN(createdTime) && ageMs <= EDIT_WINDOW_MS;
+  const hoursLeft = isWithin48h ? Math.ceil((EDIT_WINDOW_MS - ageMs) / (1000 * 60 * 60)) : 0;
+
+  // Manager View: Action column shows ONLY real-time status badge (no edit/delete)
+  if (isManagerUser) {
+    if (item.is_unlocked) {
+      return `<span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>`;
+    }
+    if (item.edit_requested) {
+      return `<span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Requested</span>`;
+    }
+    if (isWithin48h) {
+      return `<span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#e0e7ff; color:#3730a3; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏱️ ${hoursLeft}h left</span>`;
+    }
+    return `<span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#f3f4f6; color:#4b5563; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔒 Locked</span>`;
+  }
+
+  // Admin View: NO Edit or Delete buttons! Admin only sees status or Approve Edit button if requested by Purchase.
+  if (isAdminUser) {
+    if (item.edit_requested) {
+      return `
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Edit Requested</span>
+          <button class="btn btn-warning btn-sm" onclick="approveUnlockEntry('po', ${item.id})" style="padding:3px 10px; font-size:0.75rem; background:#f59e0b; color:#fff; border:none; border-radius:6px; white-space:nowrap; cursor:pointer;">Approve Edit</button>
+        </div>
+      `;
+    }
+    if (item.is_unlocked) {
+      return `
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>
+          <button class="btn btn-outline btn-sm" onclick="lockEntry('po', ${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap; cursor:pointer;">Lock</button>
+        </div>
+      `;
+    }
+    return `
+      <div style="display:flex; align-items:center; justify-content:flex-start;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:${isWithin48h ? '#e0e7ff' : '#f3f4f6'}; color:${isWithin48h ? '#3730a3' : '#4b5563'}; font-size:0.75rem; font-weight:600; white-space:nowrap;">${isWithin48h ? `⏱️ ${hoursLeft}h left` : '🔒 Locked'}</span>
+      </div>
+    `;
+  }
+
+  // Purchase Department User View: Text Edit/Delete options when within 48h or unlocked
+  if (item.is_unlocked) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔓 Unlocked</span>
+        <button class="btn btn-primary btn-sm" onclick="openEditPOModal(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePOEntry(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Delete</button>
+      </div>
+    `;
+  }
+
+  if (isWithin48h) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#e0e7ff; color:#3730a3; font-size:0.75rem; font-weight:600; white-space:nowrap;" title="Editable within 48h of creation">⏱️ ${hoursLeft}h left</span>
+        <button class="btn btn-primary btn-sm" onclick="openEditPOModal(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePOEntry(${item.id})" style="padding:3px 8px; font-size:0.75rem; white-space:nowrap;">Delete</button>
+      </div>
+    `;
+  }
+
+  if (item.edit_requested) {
+    return `
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:12px; background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:600; white-space:nowrap;">⏳ Requested (Pending Admin)</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+      <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#fee2e2; color:#991b1b; font-size:0.75rem; font-weight:600; white-space:nowrap;">🔒 Locked</span>
+      <button class="btn btn-warning btn-sm" onclick="requestEditAccess('po', ${item.id})" style="padding:3px 10px; font-size:0.75rem; background:#f59e0b; color:#fff; border:none; border-radius:6px; white-space:nowrap; cursor:pointer;">Request Edit</button>
+    </div>
+  `;
+}
+
+function openAddPOModal() {
+  editingPOId = null;
+  resetPOForm();
+
+  const nextSl = currentPOEntries.length + 1;
+  const slPreview = document.getElementById('po-sl-no-preview');
+  if (slPreview) slPreview.value = `#${nextSl}`;
+
+  const title = document.getElementById('po-modal-title');
+  const saveBtn = document.getElementById('save-po-btn');
+  if (title) title.textContent = 'New PO Entry';
+  if (saveBtn) saveBtn.textContent = 'Save PO Entry';
+
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('po-date');
+  if (dateInput) dateInput.value = today;
+
+  const poDateInput = document.getElementById('po-date-input');
+  if (poDateInput) poDateInput.value = today;
+
+  const monthPreview = document.getElementById('po-month-preview');
+  if (monthPreview) monthPreview.value = getRealTimeMonth(today);
+
+  populateMakeDropdowns();
+  populateRawMaterialDropdowns();
+  populateSupplierDropdowns();
+
+  const modal = document.getElementById('modal-add-po');
+  modal && modal.classList.remove('hidden');
+}
+
+function resetPOForm() {
+  editingPOId = null;
+  ['po-no', 'po-inv-no', 'po-igr-no', 'po-qty', 'po-rate', 'po-basic-preview', 'po-cgst', 'po-sgst', 'po-igst', 'po-trans-as-invoice', 'po-trans-unit-preview', 'po-total-preview'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['po-supplier-select', 'po-make-select', 'po-raw-material-select'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const unitEl = document.getElementById('po-unit-preview');
+  if (unitEl) unitEl.value = '';
+}
+
+function recalculatePOModalFields() {
+  const qty = parseFloat(document.getElementById('po-qty')?.value) || 0;
+  const rate = parseFloat(document.getElementById('po-rate')?.value) || 0;
+  const basic = qty * rate;
+
+  const basicEl = document.getElementById('po-basic-preview');
+  if (basicEl) basicEl.value = basic.toFixed(2);
+
+  const cgst = parseFloat(document.getElementById('po-cgst')?.value) || 0;
+  const sgst = parseFloat(document.getElementById('po-sgst')?.value) || 0;
+  const igst = parseFloat(document.getElementById('po-igst')?.value) || 0;
+  const trans = parseFloat(document.getElementById('po-trans-as-invoice')?.value) || 0;
+
+  const transUnit = qty > 0 ? (trans / qty) : 0;
+  const transUnitEl = document.getElementById('po-trans-unit-preview');
+  if (transUnitEl) transUnitEl.value = transUnit.toFixed(4);
+
+  const grandTotal = basic + cgst + sgst + igst + trans;
+  const totalEl = document.getElementById('po-total-preview');
+  if (totalEl) totalEl.value = grandTotal.toFixed(2);
+}
+
+async function submitPOEntry() {
+  const isPurchaseUser = currentUser && currentUser.role === 'purchase';
+  const isAdminUser = currentUser && (currentUser.role === 'admin' || currentUser.hasAdminPower);
+
+  if (!isPurchaseUser && !isAdminUser) {
+    showToast('Only Purchase Department users or Admin can save PO entries', 'error');
+    return;
+  }
+
+  const saveBtn = document.getElementById('save-po-btn');
+  const date = document.getElementById('po-date').value;
+  const po_no = document.getElementById('po-no').value.trim();
+  const raw_material = document.getElementById('po-raw-material-select').value.trim();
+  const supplier = document.getElementById('po-supplier-select').value.trim();
+  const make = document.getElementById('po-make-select').value.trim();
+
+  if (!date) {
+    showToast('Please select a Date', 'error');
+    return;
+  }
+
+  const unit = document.getElementById('po-unit-preview').value || getUnitForRawMaterial(raw_material);
+
+  const payload = {
+    date,
+    po_no: po_no || '—',
+    po_date: document.getElementById('po-date-input').value || date,
+    supplier: supplier || '—',
+    make: make || '—',
+    inv_no: document.getElementById('po-inv-no').value.trim(),
+    igr_no: document.getElementById('po-igr-no').value.trim(),
+    raw_material: raw_material || '—',
+    unit,
+    qty: parseFloat(document.getElementById('po-qty').value) || 0,
+    rate: parseFloat(document.getElementById('po-rate').value) || 0,
+    cgst: parseFloat(document.getElementById('po-cgst').value) || 0,
+    sgst: parseFloat(document.getElementById('po-sgst').value) || 0,
+    igst: parseFloat(document.getElementById('po-igst').value) || 0,
+    trans_as_invoice: parseFloat(document.getElementById('po-trans-as-invoice').value) || 0,
+    branch: currentBranch
+  };
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = editingPOId ? 'Updating...' : 'Saving...';
+
+  try {
+    const isEdit = editingPOId !== null;
+    const url = isEdit ? `/purchase/po/${editingPOId}` : '/purchase/po';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const res = await apiFetch(url, {
+      method,
+      body: JSON.stringify(payload)
+    });
+
+    if (!res || !res.ok) {
+      const err = res ? await res.json().catch(() => ({})) : {};
+      throw new Error(err.error || `Server error (${res ? res.status : 'No response'})`);
+    }
+
+    if (make) saveCustomMake(make);
+    if (raw_material) saveCustomRawMaterial(raw_material);
+    if (supplier) saveCustomSupplier(supplier);
+
+    showToast(isEdit ? 'PO Entry updated successfully' : 'PO Entry created successfully', 'success');
+    document.getElementById('modal-add-po').classList.add('hidden');
+    resetPOForm();
+    await loadPOEntries();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = editingPOId ? 'Update PO Entry' : 'Save PO Entry';
+  }
+}
+
+function openEditPOModal(id) {
+  const item = currentPOEntries.find(x => String(x.id) === String(id));
+  if (!item) return;
+
+  editingPOId = id;
+  populateMakeDropdowns();
+  populateRawMaterialDropdowns();
+  populateSupplierDropdowns();
+
+  const modal = document.getElementById('modal-add-po');
+  const title = document.getElementById('po-modal-title');
+  const saveBtn = document.getElementById('save-po-btn');
+
+  if (title) title.textContent = `Edit PO Entry (#${item.sl_no})`;
+  if (saveBtn) saveBtn.textContent = 'Update PO Entry';
+
+  const slPreview = document.getElementById('po-sl-no-preview');
+  if (slPreview) slPreview.value = `#${item.sl_no}`;
+
+  document.getElementById('po-date').value = item.date ? item.date.split('T')[0] : '';
+  document.getElementById('po-month-preview').value = item.month || getRealTimeMonth(item.date);
+  document.getElementById('po-no').value = item.po_no || '';
+  document.getElementById('po-date-input').value = item.po_date ? item.po_date.split('T')[0] : '';
+  document.getElementById('po-supplier-select').value = item.supplier || '';
+  document.getElementById('po-make-select').value = item.make || '';
+  document.getElementById('po-inv-no').value = item.inv_no || '';
+  document.getElementById('po-igr-no').value = item.igr_no || '';
+  document.getElementById('po-raw-material-select').value = item.raw_material || '';
+  document.getElementById('po-unit-preview').value = item.unit || getUnitForRawMaterial(item.raw_material);
+  document.getElementById('po-qty').value = item.qty || '';
+  document.getElementById('po-rate').value = item.rate || '';
+  document.getElementById('po-basic-preview').value = (item.basic || 0).toFixed(2);
+  document.getElementById('po-cgst').value = item.cgst || '';
+  document.getElementById('po-sgst').value = item.sgst || '';
+  document.getElementById('po-igst').value = item.igst || '';
+  document.getElementById('po-trans-as-invoice').value = item.trans_as_invoice || '';
+  document.getElementById('po-trans-unit-preview').value = (item.trans_per_unit || 0).toFixed(4);
+  document.getElementById('po-total-preview').value = (item.total || 0).toFixed(2);
+
+  modal && modal.classList.remove('hidden');
+}
+
+async function deletePOEntry(id) {
+  if (!confirm('Are you sure you want to delete this PO entry?')) return;
+  try {
+    const res = await apiFetch(`/purchase/po/${id}`, { method: 'DELETE' });
+    if (!res || !res.ok) {
+      const err = res ? await res.json().catch(() => ({})) : {};
+      throw new Error(err.error || 'Failed to delete PO entry');
+    }
+    showToast('PO entry deleted successfully', 'success');
+    await loadPOEntries();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+window.openEditPOModal = openEditPOModal;
+window.deletePOEntry = deletePOEntry;
 
 // ─── 48-HOUR EDIT STATUS & ACTIONS RENDERER ────────────────────────────────
 
@@ -1556,6 +2188,103 @@ async function exportInventoryToExcel() {
   if (fromDate || toDate) parts.push(`${fromDate || 'Start'}_to_${toDate || 'End'}`);
   const filterTag = parts.length > 0 ? parts.join('_') : 'All_Records';
 
+  if (activeMainTab === 'po') {
+    let entries = [...currentPOEntries];
+
+    if (fromDate || toDate) {
+      entries = entries.filter(item => {
+        const d = item.date ? item.date.split('T')[0] : '';
+        if (!d) return false;
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      });
+    } else {
+      const selectedMonth = tabMonthFilters['po'] || 'all';
+      if (selectedMonth && selectedMonth.toLowerCase() !== 'all') {
+        entries = filterEntriesBySelectedMonth(entries, selectedMonth);
+      }
+    }
+
+    if (selectedSupplier !== 'all') {
+      const sLower = selectedSupplier.toLowerCase();
+      entries = entries.filter(item => item.supplier && item.supplier.toLowerCase().includes(sLower));
+    }
+
+    if (!entries || entries.length === 0) {
+      const suppText = selectedSupplier !== 'all' ? ` for supplier "${selectedSupplier}"` : '';
+      showToast(`No PO entries found${suppText}.`, 'warning');
+      return;
+    }
+
+    const headers = [
+      'SI NO', 'MONTH', 'DATE', 'PO NO', 'PO DATE', 'SUPPLIER ', 'MAKE', 'INV NO', 'IGR NO',
+      'RAW MATERIAL', 'UNIT', 'QTY', 'Rate', 'BASIC', 'CGST ', 'SGST', 'IGST',
+      'TRANS. AS INVOICE', 'TRANS./UNIT', 'TOTAL'
+    ];
+
+    let totBasic = 0, totCgst = 0, totSgst = 0, totIgst = 0, totTrans = 0, totGrand = 0;
+    const rows = [headers];
+
+    entries.forEach((item, idx) => {
+      const basic = item.basic || 0;
+      const cgst = item.cgst || 0;
+      const sgst = item.sgst || 0;
+      const igst = item.igst || 0;
+      const trans = item.trans_as_invoice || 0;
+      const total = item.total || 0;
+
+      totBasic += basic;
+      totCgst += cgst;
+      totSgst += sgst;
+      totIgst += igst;
+      totTrans += trans;
+      totGrand += total;
+
+      rows.push([
+        idx + 1,
+        item.month || getRealTimeMonth(item.date),
+        item.date ? item.date.split('T')[0] : '—',
+        item.po_no || '—',
+        item.po_date ? item.po_date.split('T')[0] : '—',
+        item.supplier || '—',
+        item.make || '—',
+        item.inv_no || '—',
+        item.igr_no || '—',
+        item.raw_material || '—',
+        item.unit || getUnitForRawMaterial(item.raw_material),
+        item.qty || 0,
+        item.rate || 0,
+        basic,
+        cgst,
+        sgst,
+        igst,
+        trans,
+        item.trans_per_unit || 0,
+        total
+      ]);
+    });
+
+    rows.push([
+      'TOTAL', '', '', '', '', '', '', '', '', '', '', '', '',
+      totBasic, totCgst, totSgst, totIgst, totTrans, '', totGrand
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 8 },  { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 12 },
+      { wch: 24 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 28 },
+      { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 },
+      { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 16 }, { wch: 20 }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'PO Production Sheet');
+    const filename = `PO_Production_Sheet_${capitalize(currentBranch)}_${filterTag}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    showToast(`Downloaded PO Production Sheet Excel (${entries.length} entries)`, 'success');
+    return;
+  }
+
   if (activeSubTab === 'igr') {
     let entries = [...currentIGREntries];
 
@@ -1852,6 +2581,408 @@ async function exportInventoryToExcel() {
 }
 
 window.exportInventoryToExcel = exportInventoryToExcel;
+
+// ─── MATERIALS MODULE LOGIC ──────────────────────────────────────────────────
+let materialsData = { raw_materials: [], consumable_items: [], electric_materials: [], tools: [] };
+let activeMaterialsSubTab = 'raw_materials';
+
+async function fetchWithAuth(url, options = {}) {
+  const token = (typeof getToken === 'function' ? getToken() : null) || sessionStorage.getItem('auth_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  
+  return fetch(url, { ...options, headers });
+}
+
+async function loadMaterialsData(silent = false) {
+  try {
+    const res = await fetchWithAuth('/api/purchase/materials');
+    if (res && res.ok) {
+      const data = await res.json();
+      if (data && typeof data === 'object') {
+        materialsData = {
+          raw_materials: data.raw_materials || [],
+          consumable_items: data.consumable_items || [],
+          electric_materials: data.electric_materials || [],
+          tools: data.tools || []
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching materials data:', err);
+    if (!silent && typeof showToast === 'function') {
+      showToast('Failed to load materials data', 'error');
+    }
+  } finally {
+    renderAllMaterialsTables();
+  }
+}
+
+function renderAllMaterialsTables() {
+  renderRawMaterialsTable();
+  renderConsumableItemsTable();
+  renderElectricMaterialsTable();
+  renderToolsTable();
+}
+
+function setupMaterialsSubTabs() {
+  const materialsSubTabBtns = document.querySelectorAll('.materials-subtab-btn');
+  materialsSubTabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const subtabKey = btn.dataset.subtab;
+      if (!subtabKey) return;
+      switchMaterialsSubTab(subtabKey);
+    });
+  });
+
+  // Setup search input listeners
+  const rawSearch = document.getElementById('raw-materials-search');
+  if (rawSearch) {
+    rawSearch.addEventListener('input', () => renderRawMaterialsTable());
+  }
+
+  const conSearch = document.getElementById('consumable-search');
+  if (conSearch) {
+    conSearch.addEventListener('input', () => renderConsumableItemsTable());
+  }
+
+  const eleSearch = document.getElementById('electric-search');
+  if (eleSearch) {
+    eleSearch.addEventListener('input', () => renderElectricMaterialsTable());
+  }
+
+  const toolSearch = document.getElementById('tools-search');
+  if (toolSearch) {
+    toolSearch.addEventListener('input', () => renderToolsTable());
+  }
+
+  // Setup Modal listeners
+  const closeModalBtn = document.getElementById('close-update-material-modal');
+  const cancelModalBtn = document.getElementById('cancel-update-material-modal');
+  const saveModalBtn = document.getElementById('save-update-material-btn');
+  const modalBackdrop = document.getElementById('modal-update-material');
+
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => modalBackdrop.classList.add('hidden'));
+  }
+
+  if (cancelModalBtn) {
+    cancelModalBtn.addEventListener('click', () => modalBackdrop.classList.add('hidden'));
+  }
+
+  if (saveModalBtn) {
+    saveModalBtn.addEventListener('click', saveMaterialUpdate);
+  }
+}
+
+function switchMaterialsSubTab(subtabKey) {
+  activeMaterialsSubTab = subtabKey;
+  const materialsSubTabBtns = document.querySelectorAll('.materials-subtab-btn');
+  materialsSubTabBtns.forEach(b => {
+    b.classList.toggle('active', b.dataset.subtab === subtabKey);
+  });
+
+  document.querySelectorAll('.materials-subpanel').forEach(panel => {
+    panel.classList.add('hidden');
+  });
+
+  const targetPanel = document.getElementById(`materials-subpanel-${subtabKey}`);
+  if (targetPanel) {
+    targetPanel.classList.remove('hidden');
+  }
+
+  renderAllMaterialsTables();
+}
+
+function renderActiveMaterialsTable() {
+  renderAllMaterialsTables();
+}
+
+function renderRawMaterialsTable() {
+  const tbody = document.getElementById('raw-materials-tbody');
+  const countPill = document.getElementById('raw-materials-count-pill');
+  if (!tbody) return;
+
+  let list = materialsData.raw_materials || [];
+  const query = (document.getElementById('raw-materials-search')?.value || '').toLowerCase().trim();
+  if (query) {
+    list = list.filter(item => item.name && item.name.toLowerCase().includes(query));
+  }
+
+  if (countPill) countPill.textContent = `${list.length} Items`;
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" style="text-align:center; padding:32px; color:var(--text-muted);">
+          No raw materials match your search criteria.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((item, idx) => `
+    <tr>
+      <td style="font-weight:700; color:var(--text-muted);">${idx + 1}</td>
+      <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(item.name)}</td>
+      <td style="text-align:center;">
+        <button class="btn-know-rate" data-name="${escapeHtml(item.name)}" onclick="handleKnowRate('${escapeHtml(item.name)}')">
+          ℹ️ Know the rate
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function isPurchaseUserRole() {
+  if (typeof getAuthUser === 'function') {
+    const u = getAuthUser();
+    if (u && (u.role === 'admin' || u.role === 'manager')) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function renderConsumableItemsTable() {
+  const tbody = document.getElementById('consumable-items-tbody');
+  const countPill = document.getElementById('consumables-count-pill');
+  if (!tbody) return;
+
+  const showAction = isPurchaseUserRole();
+  const table = tbody.closest('table');
+  if (table) {
+    const actionTh = table.querySelector('thead tr th:last-child');
+    if (actionTh && actionTh.textContent.trim().toUpperCase() === 'ACTION') {
+      actionTh.style.display = showAction ? '' : 'none';
+    }
+  }
+
+  let list = materialsData.consumable_items || [];
+  const query = (document.getElementById('consumable-search')?.value || '').toLowerCase().trim();
+  if (query) {
+    list = list.filter(item => item.name && item.name.toLowerCase().includes(query));
+  }
+
+  if (countPill) countPill.textContent = `${list.length} Items`;
+
+  const colspan = showAction ? 5 : 4;
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="${colspan}" style="text-align:center; padding:32px; color:var(--text-muted);">
+          No consumable items found.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((item, idx) => `
+    <tr>
+      <td style="font-weight:700; color:var(--text-muted);">${idx + 1}</td>
+      <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(item.name)}</td>
+      <td style="text-align:right; font-weight:700; color:var(--accent);">${item.qty !== undefined ? item.qty : 0}</td>
+      <td style="text-align:center;"><span class="unit-badge">${escapeHtml(item.uom || 'NOS')}</span></td>
+      ${showAction ? `
+      <td style="text-align:center;">
+        <button class="btn-update-item" onclick="openUpdateMaterialModal('consumable_items', ${item.id})">
+          ✏️ Edit
+        </button>
+      </td>` : ''}
+    </tr>
+  `).join('');
+}
+
+function renderElectricMaterialsTable() {
+  const tbody = document.getElementById('electric-materials-tbody');
+  const countPill = document.getElementById('electric-count-pill');
+  if (!tbody) return;
+
+  const showAction = isPurchaseUserRole();
+  const table = tbody.closest('table');
+  if (table) {
+    const actionTh = table.querySelector('thead tr th:last-child');
+    if (actionTh && actionTh.textContent.trim().toUpperCase() === 'ACTION') {
+      actionTh.style.display = showAction ? '' : 'none';
+    }
+  }
+
+  let list = materialsData.electric_materials || [];
+  const query = (document.getElementById('electric-search')?.value || '').toLowerCase().trim();
+  if (query) {
+    list = list.filter(item => item.name && item.name.toLowerCase().includes(query));
+  }
+
+  if (countPill) countPill.textContent = `${list.length} Items`;
+
+  const colspan = showAction ? 5 : 4;
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="${colspan}" style="text-align:center; padding:32px; color:var(--text-muted);">
+          No electric materials found.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((item, idx) => `
+    <tr>
+      <td style="font-weight:700; color:var(--text-muted);">${idx + 1}</td>
+      <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(item.name)}</td>
+      <td style="text-align:right; font-weight:700; color:var(--accent);">${item.qty !== undefined ? item.qty : 0}</td>
+      <td style="text-align:center;"><span class="unit-badge">${escapeHtml(item.uom || 'NOS')}</span></td>
+      ${showAction ? `
+      <td style="text-align:center;">
+        <button class="btn-update-item" onclick="openUpdateMaterialModal('electric_materials', ${item.id})">
+          ✏️ Edit
+        </button>
+      </td>` : ''}
+    </tr>
+  `).join('');
+}
+
+function renderToolsTable() {
+  const tbody = document.getElementById('tools-tbody');
+  const countPill = document.getElementById('tools-count-pill');
+  if (!tbody) return;
+
+  const showAction = isPurchaseUserRole();
+  const table = tbody.closest('table');
+  if (table) {
+    const actionTh = table.querySelector('thead tr th:last-child');
+    if (actionTh && actionTh.textContent.trim().toUpperCase() === 'ACTION') {
+      actionTh.style.display = showAction ? '' : 'none';
+    }
+  }
+
+  let list = materialsData.tools || [];
+  const query = (document.getElementById('tools-search')?.value || '').toLowerCase().trim();
+  if (query) {
+    list = list.filter(item => item.name && item.name.toLowerCase().includes(query));
+  }
+
+  if (countPill) countPill.textContent = `${list.length} Items`;
+
+  const colspan = showAction ? 5 : 4;
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="${colspan}" style="text-align:center; padding:32px; color:var(--text-muted);">
+          No tools found matching your search.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((item, idx) => `
+    <tr>
+      <td style="font-weight:700; color:var(--text-muted);">${idx + 1}</td>
+      <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(item.name)}</td>
+      <td style="text-align:right; font-weight:700; color:var(--accent);">${item.qty !== undefined ? item.qty : 0}</td>
+      <td style="text-align:center;"><span class="unit-badge">${escapeHtml(item.uom || 'NOS')}</span></td>
+      ${showAction ? `
+      <td style="text-align:center;">
+        <button class="btn-update-item" onclick="openUpdateMaterialModal('tools', ${item.id})">
+          ✏️ Edit
+        </button>
+      </td>` : ''}
+    </tr>
+  `).join('');
+}
+
+function handleKnowRate(materialName) {
+  showToast(`ℹ️ "Know the rate" feature for "${materialName}" will be configured soon.`, 'info');
+}
+
+function openUpdateMaterialModal(category, itemId) {
+  const list = materialsData[category] || [];
+  const item = list.find(i => String(i.id) === String(itemId));
+  if (!item) {
+    showToast('Material item not found', 'error');
+    return;
+  }
+
+  const categoryEl = document.getElementById('update-material-category');
+  const idEl = document.getElementById('update-material-id');
+  const nameEl = document.getElementById('update-material-name');
+  const qtyEl = document.getElementById('update-material-qty');
+  const uomSelect = document.getElementById('update-material-uom');
+  const titleEl = document.getElementById('update-material-modal-title');
+  const modal = document.getElementById('modal-update-material');
+
+  if (categoryEl) categoryEl.value = category;
+  if (idEl) idEl.value = itemId;
+  if (nameEl) nameEl.value = item.name || '';
+  if (qtyEl) qtyEl.value = item.qty !== undefined ? item.qty : 0;
+  if (titleEl) titleEl.textContent = `Edit Material: ${item.name}`;
+
+  if (uomSelect) {
+    const itemUom = item.uom || 'NOS';
+    if (!Array.from(uomSelect.options).some(o => o.value.toLowerCase() === itemUom.toLowerCase())) {
+      const opt = document.createElement('option');
+      opt.value = itemUom;
+      opt.textContent = itemUom;
+      uomSelect.appendChild(opt);
+    }
+    uomSelect.value = itemUom;
+  }
+
+  if (modal) {
+    modal.classList.remove('hidden');
+  }
+}
+
+async function saveMaterialUpdate() {
+  const category = document.getElementById('update-material-category')?.value;
+  const id = document.getElementById('update-material-id')?.value;
+  const qtyRaw = document.getElementById('update-material-qty')?.value;
+  const uom = document.getElementById('update-material-uom')?.value || 'NOS';
+
+  if (!category || !id) return;
+
+  const qty = parseFloat(qtyRaw);
+  if (isNaN(qty) || qty < 0) {
+    showToast('Please enter a valid non-negative quantity', 'warning');
+    return;
+  }
+
+  try {
+    const res = await fetchWithAuth(`/api/purchase/materials/${category}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qty, uom })
+    });
+
+    if (res && res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        // Update local memory state immediately
+        const list = materialsData[category] || [];
+        const item = list.find(i => String(i.id) === String(id));
+        if (item) {
+          item.qty = qty;
+          item.uom = uom;
+        }
+        renderAllMaterialsTables();
+        const modal = document.getElementById('modal-update-material');
+        if (modal) modal.classList.add('hidden');
+        showToast(`Updated "${item ? item.name : 'Item'}" stock to ${qty} ${uom}`, 'success');
+        return;
+      }
+    }
+    showToast('Failed to update material item', 'error');
+  } catch (err) {
+    console.error('Error saving material update:', err);
+    showToast('Failed to save material update: ' + err.message, 'error');
+  }
+}
+
+window.handleKnowRate = handleKnowRate;
+window.openUpdateMaterialModal = openUpdateMaterialModal;
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {

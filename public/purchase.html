@@ -106,9 +106,33 @@
       <button class="purchase-tab-btn" data-tab="low_stock" id="tab-btn-low_stock">
         <span>⚠️ Low Stock</span>
       </button>
+      <button class="purchase-tab-btn" data-tab="materials" id="tab-btn-materials">
+        <span>🧱 Materials</span>
+      </button>
       <button class="purchase-tab-btn" data-tab="attendence" id="tab-btn-attendence">
         <span>🕒 Attendence</span>
       </button>
+    </div>
+
+    <!-- Materials Subtabs (Only visible when Materials main tab is active) -->
+    <div class="purchase-subtabs-bar hidden" id="materials-subtabs-bar">
+      <div class="inventory-subtabs-left">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-right:4px;">
+          MATERIALS SUBTABS:
+        </span>
+        <button class="materials-subtab-btn active" data-subtab="raw_materials" id="subtab-btn-raw_materials">
+          <span>📥 Raw Materials</span>
+        </button>
+        <button class="materials-subtab-btn" data-subtab="consumable_items" id="subtab-btn-consumable_items">
+          <span>🧰 Consumable Items</span>
+        </button>
+        <button class="materials-subtab-btn" data-subtab="electric_materials" id="subtab-btn-electric_materials">
+          <span>⚡ Electric Materials</span>
+        </button>
+        <button class="materials-subtab-btn" data-subtab="tools" id="subtab-btn-tools">
+          <span>🛠️ Tools</span>
+        </button>
+      </div>
     </div>
 
     <!-- Inventory Subtabs (Only visible when Inventory main tab is active) -->
@@ -159,21 +183,78 @@
   <!-- 1. PO Tab Content -->
   <div class="purchase-content-panel" id="panel-po">
     <div class="purchase-card">
-      <div class="purchase-card-header">
+      <div class="purchase-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
         <div class="purchase-card-title">
           <div class="purchase-card-icon">📑</div>
           <div>
-            <h3>PO (Purchase Order) Workspace</h3>
-            <p>Purchase Order management and tracking</p>
+            <h3>PO (Purchase Order) Workspace — Production Sheet Format</h3>
+            <p>Track purchase orders, raw materials, supplier makes, and unit conversions</p>
           </div>
         </div>
-        <span class="purchase-tag-pill">PO Module</span>
+        <button class="btn btn-primary btn-sm hidden" id="open-add-po-btn">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          New PO Entry
+        </button>
       </div>
-      <div class="purchase-placeholder-box">
-        <div class="purchase-placeholder-icon">📋</div>
-        <h4>PO Tab Initialized</h4>
-        <p>This tab is created and ready. Further functional workflows for Purchase Orders will be integrated in the next stage.</p>
+
+      <!-- PO Summary Stat Cards -->
+      <div class="supplier-stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:20px;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:8px;">
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Total PO Entries</div>
+          <div id="po-stat-count" style="font-size:1.1rem; font-weight:700; color:var(--accent); margin-top:2px;">0</div>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:8px;">
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Total Basic Value</div>
+          <div id="po-stat-basic-val" style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin-top:2px;">₹0.00</div>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:8px;">
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Total GST Taxes</div>
+          <div id="po-stat-gst-val" style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin-top:2px;">₹0.00</div>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:8px;">
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Grand Total Amount</div>
+          <div id="po-stat-total-val" style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin-top:2px;">₹0.00</div>
+        </div>
       </div>
+
+      <!-- PO Table -->
+      <div class="table-responsive">
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th>SI NO</th>
+              <th>MONTH</th>
+              <th>DATE</th>
+              <th>PO NO</th>
+              <th>PO DATE</th>
+              <th>SUPPLIER</th>
+              <th>MAKE</th>
+              <th>INV NO</th>
+              <th>IGR NO</th>
+              <th>RAW MATERIAL</th>
+              <th>UNIT</th>
+              <th>QTY</th>
+              <th>Rate</th>
+              <th>BASIC</th>
+              <th>CGST</th>
+              <th>SGST</th>
+              <th>IGST</th>
+              <th>TRANS. AS INVOICE</th>
+              <th>TRANS./UNIT</th>
+              <th>TOTAL</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="po-tbody">
+            <tr>
+              <td colspan="21" style="text-align:center; padding:24px; color:var(--text-muted);">
+                <span class="spinner"></span> Loading Purchase Order records...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
     </div>
   </div>
 
@@ -398,7 +479,154 @@
     </div>
   </div>
 
-  <!-- 5. Attendence Tab Content -->
+  <!-- 5. Materials Tab Content -->
+  <div class="purchase-content-panel hidden" id="panel-materials">
+    
+    <!-- Subpanel 1: Raw Materials -->
+    <div class="materials-subpanel" id="materials-subpanel-raw_materials">
+      <div class="purchase-card">
+        <div class="purchase-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+          <div class="purchase-card-title">
+            <div class="purchase-card-icon">📥</div>
+            <div>
+              <h3>Raw Materials Registry — Production Sheet Specifications</h3>
+              <p>Purchased Unit, Consumed Unit, and Displayed Unit conversions per raw material item</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="text" id="raw-materials-search" class="form-input" placeholder="🔍 Search Raw Materials..." style="width:240px; font-size:0.84rem; padding:6px 12px;">
+            <span class="purchase-tag-pill" id="raw-materials-count-pill">154 Items</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">SL NO</th>
+                <th>RAW MATERIAL NAME</th>
+                <th style="text-align:center; width:160px;">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="raw-materials-tbody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subpanel 2: Consumable Items -->
+    <div class="materials-subpanel hidden" id="materials-subpanel-consumable_items">
+      <div class="purchase-card">
+        <div class="purchase-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+          <div class="purchase-card-title">
+            <div class="purchase-card-icon">🧰</div>
+            <div>
+              <h3>Consumable Items Inventory</h3>
+              <p>Track consumable stock levels, specifications, and unit of material (UOM)</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="text" id="consumable-search" class="form-input" placeholder="🔍 Search Consumables..." style="width:240px; font-size:0.84rem; padding:6px 12px;">
+            <span class="purchase-tag-pill" id="consumables-count-pill">0 Items</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">SI NO</th>
+                <th>DESCRIPTION</th>
+                <th style="text-align:right; width:100px;">QTY</th>
+                <th style="text-align:center; width:100px;">UOM</th>
+                <th style="text-align:center; width:140px;">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="consumable-items-tbody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subpanel 3: Electric Materials -->
+    <div class="materials-subpanel hidden" id="materials-subpanel-electric_materials">
+      <div class="purchase-card">
+        <div class="purchase-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+          <div class="purchase-card-title">
+            <div class="purchase-card-icon">⚡</div>
+            <div>
+              <h3>Electric Materials Inventory</h3>
+              <p>Relays, MCBs, wires, cables and electrical components stock management</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="text" id="electric-search" class="form-input" placeholder="🔍 Search Electrical Items..." style="width:240px; font-size:0.84rem; padding:6px 12px;">
+            <span class="purchase-tag-pill" id="electric-count-pill">0 Items</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">SI NO</th>
+                <th>DESCRIPTION</th>
+                <th style="text-align:right; width:100px;">QTY</th>
+                <th style="text-align:center; width:100px;">UOM</th>
+                <th style="text-align:center; width:140px;">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="electric-materials-tbody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subpanel 4: Tools -->
+    <div class="materials-subpanel hidden" id="materials-subpanel-tools">
+      <div class="purchase-card">
+        <div class="purchase-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+          <div class="purchase-card-title">
+            <div class="purchase-card-icon">🛠️</div>
+            <div>
+              <h3>Factory Physical Tools Inventory</h3>
+              <p>Pliers, spanners, grinders, cutters, heat guns, and machinery tool assets</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="text" id="tools-search" class="form-input" placeholder="🔍 Search Tools..." style="width:240px; font-size:0.84rem; padding:6px 12px;">
+            <span class="purchase-tag-pill" id="tools-count-pill">0 Items</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">SI NO</th>
+                <th>DESCRIPTION</th>
+                <th style="text-align:right; width:100px;">QTY</th>
+                <th style="text-align:center; width:100px;">UOM</th>
+                <th style="text-align:center; width:140px;">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="tools-tbody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 6. Attendence Tab Content -->
   <div class="purchase-content-panel hidden" id="panel-attendence">
     <div class="purchase-card">
       <div class="purchase-card-header">
@@ -644,6 +872,187 @@
   </div>
 </div>
 
+<!-- ─── MODAL: Add / Edit PO Entry ────────────────────────────────────── -->
+<div class="modal-backdrop hidden" id="modal-add-po">
+  <div class="modal" style="max-width:840px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.3rem;">📋</span>
+        <h3 style="margin:0;" id="po-modal-title">New PO Entry</h3>
+      </div>
+      <button class="modal-close" id="close-add-po-modal">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:75vh; overflow-y:auto;">
+      <p style="font-size:0.83rem; color:var(--text-muted); margin-bottom:16px;">
+        Production Sheet PO Format — Enter purchase order details below. Basic Amount, Unit, and Totals are calculated automatically.
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">SL NO</label>
+          <input class="form-input" type="text" id="po-sl-no-preview" readonly value="#Auto" style="font-weight:700;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="po-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Month</label>
+          <input class="form-input" type="text" id="po-month-preview" readonly placeholder="Auto Month" style="font-weight:700;">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">PO NO</label>
+          <input class="form-input" type="text" id="po-no" placeholder="e.g. PO-001/24-25">
+        </div>
+        <div class="form-group">
+          <label class="form-label">PO Date</label>
+          <input class="form-input" type="date" id="po-date-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Supplier</label>
+          <select class="form-select" id="po-supplier-select" style="font-weight:600;">
+            <option value="all">Select Supplier...</option>
+            <option value="__add_new__" style="font-weight:700; color:var(--accent);">➕ Add New Supplier...</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Make Brand</label>
+          <select class="form-select" id="po-make-select" style="font-weight:600;">
+            <option value="">Select Make...</option>
+            <option value="__add_new__" style="font-weight:700; color:var(--accent);">➕ Add New Make...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">INV NO</label>
+          <input class="form-input" type="text" id="po-inv-no" placeholder="Invoice No">
+        </div>
+        <div class="form-group">
+          <label class="form-label">IGR NO</label>
+          <input class="form-input" type="text" id="po-igr-no" placeholder="IGR No">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Raw Material</label>
+          <select class="form-select" id="po-raw-material-select" style="font-weight:600;">
+            <option value="">Select Raw Material...</option>
+            <option value="__add_new__" style="font-weight:700; color:var(--accent);">➕ Add New Raw Material...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit</label>
+          <input class="form-input" type="text" id="po-unit-preview" readonly placeholder="" style="font-weight:700;">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Quantity</label>
+          <input class="form-input po-calc-trigger" type="number" step="0.01" id="po-qty" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rate (₹)</label>
+          <input class="form-input po-calc-trigger" type="number" step="0.01" id="po-rate" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Basic Amount (₹)</label>
+          <input class="form-input" type="number" step="0.01" id="po-basic-preview" readonly placeholder="0.00" style="font-weight:700;">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">CGST (₹)</label>
+          <input class="form-input po-calc-trigger" type="number" step="0.01" id="po-cgst" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">SGST (₹)</label>
+          <input class="form-input po-calc-trigger" type="number" step="0.01" id="po-sgst" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">IGST (₹)</label>
+          <input class="form-input po-calc-trigger" type="number" step="0.01" id="po-igst" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Trans. As Invoice (₹)</label>
+          <input class="form-input po-calc-trigger" type="number" step="0.01" id="po-trans-as-invoice" placeholder="0.00">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Trans. / Unit (₹)</label>
+          <input class="form-input" type="number" step="0.0001" id="po-trans-unit-preview" readonly placeholder="0.00" style="font-weight:700;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Amount (₹)</label>
+          <input class="form-input" type="number" step="0.01" id="po-total-preview" readonly placeholder="0.00" style="font-weight:700; color:var(--accent); font-size:1.05rem;">
+        </div>
+      </div>
+
+    </div>
+<!-- ─── MODAL: Update Material Quantity & UOM ────────────────────────── -->
+<div class="modal-backdrop hidden" id="modal-update-material">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.3rem;">✏️</span>
+        <h3 style="margin:0;" id="update-material-modal-title">Update Material Item</h3>
+      </div>
+      <button class="modal-close" id="close-update-material-modal">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex; flex-direction:column; gap:14px;">
+      <input type="hidden" id="update-material-category">
+      <input type="hidden" id="update-material-id">
+
+      <div class="form-group">
+        <label class="form-label">Item Description / Name</label>
+        <input class="form-input" id="update-material-name" readonly style="font-weight:700; background:#f8fafc;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Quantity *</label>
+        <input class="form-input" type="number" step="0.01" id="update-material-qty" placeholder="Enter Quantity">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Unit of Material (UOM) *</label>
+        <select class="form-select" id="update-material-uom" style="font-weight:600;">
+          <option value="NOS">NOS</option>
+          <option value="Box">Box</option>
+          <option value="Set">Set</option>
+          <option value="Mtr">Mtr</option>
+          <option value="Ltr">Ltr</option>
+          <option value="Kg">Kg</option>
+          <option value="Sqmt">Sqmt</option>
+          <option value="Rmt">Rmt</option>
+          <option value="Pair">Pair</option>
+          <option value="Pocket">Pocket</option>
+          <option value="Can">Can</option>
+          <option value="Tin">Tin</option>
+          <option value="Roll">Roll</option>
+          <option value="Kg's">Kg's</option>
+          <option value="Sqm">Sqm</option>
+        </select>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Select from all available system units</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancel-update-material-modal">Cancel</button>
+      <button class="btn btn-primary" id="save-update-material-btn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="make-datalist-options"></datalist>
+<datalist id="rawmaterial-datalist-options"></datalist>
 <datalist id="supplier-datalist-options"></datalist>
 <div class="toast-container" id="toast-container"></div>
 

@@ -1,0 +1,2327 @@
+{
+  "raw_materials": [
+    {
+      "id": 1,
+      "name": "120gsm 26G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 2,
+      "name": "120gsm 24G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 3,
+      "name": "120gsm 22G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 4,
+      "name": "120gsm 20G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 5,
+      "name": "120gsm 18G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 6,
+      "name": "120gsm 16G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 7,
+      "name": "180gsm 26G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 8,
+      "name": "180gsm 24G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 9,
+      "name": "180gsm 22G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 10,
+      "name": "180gsm 20G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 11,
+      "name": "180gsm 18G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 12,
+      "name": "180gsm 16G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 13,
+      "name": "275gsm 26G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 14,
+      "name": "275gsm 24G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 15,
+      "name": "275gsm 22G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 16,
+      "name": "275gsm 20G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 17,
+      "name": "275gsm 18G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 18,
+      "name": "275gsm 16G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 19,
+      "name": "120gsm Slit 26G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 20,
+      "name": "120gsm Slit 24G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 21,
+      "name": "120gsm Slit 22G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 22,
+      "name": "120gsm Slit 20G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 23,
+      "name": "120gsm Slit 18G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 24,
+      "name": "H Bracket",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 25,
+      "name": "Neoprene Gasket",
+      "purchased_unit": "Rmt",
+      "consumed_unit": "Rmt",
+      "displayed_unit": "Rmt"
+    },
+    {
+      "id": 26,
+      "name": "XLPE Gasket",
+      "purchased_unit": "Rmt",
+      "consumed_unit": "Rmt",
+      "displayed_unit": "Rmt"
+    },
+    {
+      "id": 27,
+      "name": "Cleats",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 28,
+      "name": "Corner 32mm",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 29,
+      "name": "Sealant Tube",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 30,
+      "name": "Silicon Tube",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 31,
+      "name": "Alu. 0.8mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 32,
+      "name": "Alu. 1mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 33,
+      "name": "Alu. 1.2mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 34,
+      "name": "SS 22G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 35,
+      "name": "SS 20G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 36,
+      "name": "SS 18G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 37,
+      "name": "SS 16G",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 38,
+      "name": "Insu Kflex Thermal 6mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 39,
+      "name": "Insu Kflex Thermal 9mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 40,
+      "name": "Insu Kflex Thermal 13mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 41,
+      "name": "Insu Kflex Thermal 16mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 42,
+      "name": "Insu Kflex Thermal 19mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 43,
+      "name": "Insu Kflex Thermal 25mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 44,
+      "name": "Insu Kflex Thermal 32mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 45,
+      "name": "Insu Kflex Thermal 6mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 46,
+      "name": "Insu Kflex Thermal 9mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 47,
+      "name": "Insu Kflex Thermal 13mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 48,
+      "name": "Insu Kflex Thermal 16mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 49,
+      "name": "Insu Kflex Thermal 19mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 50,
+      "name": "Insu Kflex Thermal 25mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 51,
+      "name": "Insu Kflex Thermal 32mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 52,
+      "name": "Insu Kflex Thermal 6mm (Clad Grey)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 53,
+      "name": "Insu Kflex Thermal 9mm (Clad Grey)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 54,
+      "name": "Insu Kflex Thermal 13mm (Clad Grey)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 55,
+      "name": "Insu Kflex Thermal 16mm (Clad Grey)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 56,
+      "name": "Insu Kflex Thermal 19mm (Clad Grey)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 57,
+      "name": "Insu Kflex Thermal 25mm (Clad Grey)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 58,
+      "name": "Insu Kflex Thermal 32mm (Clad Grey)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 59,
+      "name": "Insu Kflex Thermal 6mm (IC-Clad Black)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 60,
+      "name": "Insu Kflex Thermal 9mm (IC-Clad Black)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 61,
+      "name": "Insu Kflex Thermal 13mm (IC-Clad Black)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 62,
+      "name": "Insu Kflex Thermal 16mm (IC-Clad Black)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 63,
+      "name": "Insu Kflex Thermal 19mm (IC-Clad Black)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 64,
+      "name": "Insu Kflex Thermal 25mm (IC-Clad Black)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 65,
+      "name": "Insu Kflex Thermal 32mm (IC-Clad Black)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 66,
+      "name": "Insu Kflex 6mm Acou.",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 67,
+      "name": "Insu Kflex 10mm Acou.",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 68,
+      "name": "Insu Kflex 15mm Acou.",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 69,
+      "name": "Insu Kflex Thermal 25mm Acou.",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 70,
+      "name": "Insu Superlon Thermal 6mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 71,
+      "name": "Insu Superlon Thermal 9mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 72,
+      "name": "Insu Superlon Thermal 13mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 73,
+      "name": "Insu Superlon Thermal 16mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 74,
+      "name": "Insu Superlon Thermal 19mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 75,
+      "name": "Insu Superlon Thermal 25mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 76,
+      "name": "Insu Superlon Thermal 32mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 77,
+      "name": "Insu Superlon Thermal 6mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 78,
+      "name": "Insu Superlon Thermal 9mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 79,
+      "name": "Insu Superlon Thermal 13mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 80,
+      "name": "Insu Superlon Thermal 16mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 81,
+      "name": "Insu Superlon Thermal 19mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 82,
+      "name": "Insu Superlon Thermal 25mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 83,
+      "name": "Insu Superlon Thermal 32mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 84,
+      "name": "Insu Supreme Thermal 9mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 85,
+      "name": "Insu Supreme Thermal 13mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 86,
+      "name": "Insu Supreme Thermal 16mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 87,
+      "name": "Insu Supreme Thermal 19mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 88,
+      "name": "Insu Supreme Thermal 25mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 89,
+      "name": "Insu Supreme Thermal 13mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 90,
+      "name": "Insu Supreme Thermal 19mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 91,
+      "name": "Insu Supreme Thermal 25mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 92,
+      "name": "Insu Supreme 15mm Acou.",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 93,
+      "name": "Insu TB Thermal 9mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 94,
+      "name": "Insu TB Acou 10mm Al. Foil",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 95,
+      "name": "Insu TB Thermal 13mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 96,
+      "name": "Insu TB Acou 15mm Al. Foil",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 97,
+      "name": "Insu TB Thermal 19mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 98,
+      "name": "Insu TB Thermal 25mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 99,
+      "name": "Insu TB Thermal 30mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 100,
+      "name": "Insu Airofoam Thermal 13mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 101,
+      "name": "Insu Airofoam Thermal 16mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 102,
+      "name": "Insu Airofoam Thermal 19mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 103,
+      "name": "Insu Armaflex Thermal 6mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 104,
+      "name": "Insu Armaflex Thermal 9mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 105,
+      "name": "Insu Armaflex Thermal 13mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 106,
+      "name": "Insu Armaflex Thermal 6mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 107,
+      "name": "Insu Armaflex Thermal 9mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 108,
+      "name": "Insu Armaflex Thermal 19mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 109,
+      "name": "Insu Armasound Acou. 10mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 110,
+      "name": "Insu Armasound Acou. 15mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 111,
+      "name": "Insu Armasound Acou. 25mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 112,
+      "name": "Insu Aerocell Thermal 9mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 113,
+      "name": "Insu Aerocell Thermal 13mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 114,
+      "name": "Insu Aerocell Thermal 19mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 115,
+      "name": "Insu Aerocell Thermal 13mm (GC-CLOTH)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 116,
+      "name": "Insu Aerocell Acou. 10mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 117,
+      "name": "Insu Aerocell Acou. 15mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 118,
+      "name": "MS Angle 25x25x5mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 119,
+      "name": "MS Angle 30x30x3mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 120,
+      "name": "MS Angle 32x32x3mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 121,
+      "name": "MS Angle 35x35x5mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 122,
+      "name": "MS Angle 40x40x5mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 123,
+      "name": "MS Angle 25x25x3mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 124,
+      "name": "MS Angle 37x37x3mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 125,
+      "name": "Corner 25mm",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 126,
+      "name": "Insu Armaflex Thermal 13mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 127,
+      "name": "Insu Superlon Acou. 16mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 128,
+      "name": "Insu Superlon Acou. 19mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 129,
+      "name": "Sealant Bucket",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 130,
+      "name": "Tape THBR 50mm x 50Mtr Alumn",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 131,
+      "name": "Stretch Film",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Roll",
+      "displayed_unit": "Roll"
+    },
+    {
+      "id": 132,
+      "name": "Bubble Wrap",
+      "purchased_unit": "Roll",
+      "consumed_unit": "Roll",
+      "displayed_unit": "Roll"
+    },
+    {
+      "id": 133,
+      "name": "Gasket XLPE 10mm",
+      "purchased_unit": "Rmt",
+      "consumed_unit": "Rmt",
+      "displayed_unit": "Rmt"
+    },
+    {
+      "id": 134,
+      "name": "Insu Aerocell Thermal 32mm (GC-CLOTH)",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 135,
+      "name": "12 mm JTR",
+      "purchased_unit": "Rmt",
+      "consumed_unit": "Rmt",
+      "displayed_unit": "Rmt"
+    },
+    {
+      "id": 136,
+      "name": "10 mm JTR",
+      "purchased_unit": "Rmt",
+      "consumed_unit": "Rmt",
+      "displayed_unit": "Rmt"
+    },
+    {
+      "id": 137,
+      "name": "8 mm JTR",
+      "purchased_unit": "Rmt",
+      "consumed_unit": "Rmt",
+      "displayed_unit": "Rmt"
+    },
+    {
+      "id": 138,
+      "name": "Insu Paramount Thermal 13mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 139,
+      "name": "Insu Paramount Acou 10mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 140,
+      "name": "C Clamp",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 141,
+      "name": "Insu Armaflex Thermal 25mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 142,
+      "name": "Insu Armaflex Thermal 25mm Al. Foil",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 143,
+      "name": "Insu Thermal Tape",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 144,
+      "name": "Insu Thermal IC Clad Tape",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 145,
+      "name": "Insu TB Acou 24mm Al. Foil",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 146,
+      "name": "Plain Corner",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 147,
+      "name": "Insu Supreme 10mm Acou.",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 148,
+      "name": "PIR 20mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 149,
+      "name": "PIR 30mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 150,
+      "name": "Bright Rod 10mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 151,
+      "name": "Bright Rod 8mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Kg's",
+      "displayed_unit": "Kg's"
+    },
+    {
+      "id": 152,
+      "name": "VCD Handle 20g",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 153,
+      "name": "Gear 150 Dia",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 154,
+      "name": "Inner Bush",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 155,
+      "name": "Outer Bush",
+      "purchased_unit": "No's",
+      "consumed_unit": "No's",
+      "displayed_unit": "No's"
+    },
+    {
+      "id": 156,
+      "name": "Insu Aerocell Thermal 16mm",
+      "purchased_unit": "Sqmt",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 157,
+      "name": "Alu. Rod 10mm",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    },
+    {
+      "id": 158,
+      "name": "Alu. Tape",
+      "purchased_unit": "Kg's",
+      "consumed_unit": "Sqmt",
+      "displayed_unit": "Sqmt"
+    }
+  ],
+  "consumable_items": [
+    {
+      "id": 1,
+      "name": "Drilling Bit (8MM)",
+      "make": "",
+      "qty": 40,
+      "uom": "NOS"
+    },
+    {
+      "id": 2,
+      "name": "Drilling Bit (8.2MM)",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 3,
+      "name": "Drilling Bit (10MM)",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 4,
+      "name": "Drilling Bit (12MM)",
+      "make": "",
+      "qty": 5,
+      "uom": "NOS"
+    },
+    {
+      "id": 5,
+      "name": "Drilling Bit (3.5MM)",
+      "make": "",
+      "qty": 150,
+      "uom": "NOS"
+    },
+    {
+      "id": 6,
+      "name": "Drilling Bit (05MM)",
+      "make": "",
+      "qty": 50,
+      "uom": "NOS"
+    },
+    {
+      "id": 7,
+      "name": "Drilling Bit (06MM)",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 8,
+      "name": "Drilling Bit (18MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 9,
+      "name": "Drilling Bit (20MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 10,
+      "name": "Tapping Bit",
+      "make": "",
+      "qty": 1,
+      "uom": "Set"
+    },
+    {
+      "id": 11,
+      "name": "Grainding Stone Bit 22mm",
+      "make": "",
+      "qty": 90,
+      "uom": "NOS"
+    },
+    {
+      "id": 12,
+      "name": "Axa Blade",
+      "make": "",
+      "qty": 10,
+      "uom": "NOS"
+    },
+    {
+      "id": 13,
+      "name": "Self Tapping Bit 8mm",
+      "make": "",
+      "qty": 10,
+      "uom": "NOS"
+    },
+    {
+      "id": 14,
+      "name": "Self Tapping Bit 10mm",
+      "make": "",
+      "qty": 10,
+      "uom": "NOS"
+    },
+    {
+      "id": 15,
+      "name": "Cutting Wheel 4\" inch",
+      "make": "",
+      "qty": 100,
+      "uom": "NOS"
+    },
+    {
+      "id": 16,
+      "name": "Cutting Wheel (14 Inches)",
+      "make": "",
+      "qty": 15,
+      "uom": "NOS"
+    },
+    {
+      "id": 17,
+      "name": "Welding Black Glass",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 18,
+      "name": "Grinding Wheel (4 Inches)",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 19,
+      "name": "Saftey Goggle White",
+      "make": "",
+      "qty": 10,
+      "uom": "NOS"
+    },
+    {
+      "id": 20,
+      "name": "Saftey Goggle Black",
+      "make": "",
+      "qty": 10,
+      "uom": "BOX"
+    },
+    {
+      "id": 21,
+      "name": "Eletrode",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 22,
+      "name": "Bearing 6206",
+      "make": "",
+      "qty": 4,
+      "uom": "NOS"
+    },
+    {
+      "id": 23,
+      "name": "Bearing 151801",
+      "make": "",
+      "qty": 6,
+      "uom": "NOS"
+    },
+    {
+      "id": 24,
+      "name": "Bearing 205 G",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 25,
+      "name": "Vulcan Bearing",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 26,
+      "name": "Bearing NJ203Y",
+      "make": "",
+      "qty": 4,
+      "uom": "NOS"
+    },
+    {
+      "id": 27,
+      "name": "Bearing 6203Z",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 28,
+      "name": "Bearing (CF18B)",
+      "make": "",
+      "qty": 4,
+      "uom": "NOS"
+    },
+    {
+      "id": 29,
+      "name": "Bearing 6203",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 30,
+      "name": "Emery Sheet",
+      "make": "",
+      "qty": 50,
+      "uom": "NOS"
+    },
+    {
+      "id": 31,
+      "name": "Aluminium Cutting Blade",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 32,
+      "name": "Hand Gloves (80 Gram)",
+      "make": "",
+      "qty": 200,
+      "uom": "Pair"
+    },
+    {
+      "id": 33,
+      "name": "Ear plug",
+      "make": "",
+      "qty": 1500,
+      "uom": "NOS"
+    },
+    {
+      "id": 34,
+      "name": "Cutting Wheel (4 Inches)",
+      "make": "",
+      "qty": 120,
+      "uom": "NOS"
+    },
+    {
+      "id": 35,
+      "name": "Crane Belt 2 ton (2 Mtr)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 36,
+      "name": "Coil Belt 3 ton ( 2 Mtr)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 37,
+      "name": "Coil Belt 3 ton ( 3 Mtr)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 38,
+      "name": "Cleaner Spray (WD 40)",
+      "make": "",
+      "qty": 25,
+      "uom": "Nos"
+    },
+    {
+      "id": 39,
+      "name": "Welding Spray",
+      "make": "",
+      "qty": 25,
+      "uom": "Nos"
+    },
+    {
+      "id": 40,
+      "name": "Castrol White Grease 1 kg",
+      "make": "",
+      "qty": 20,
+      "uom": "KG"
+    },
+    {
+      "id": 41,
+      "name": "Alluminum Paint 4ltr",
+      "make": "",
+      "qty": 20,
+      "uom": "Can"
+    },
+    {
+      "id": 42,
+      "name": "Paint Brush 1\"",
+      "make": "",
+      "qty": 10,
+      "uom": "NOS"
+    },
+    {
+      "id": 43,
+      "name": "Paint Brush 4\"",
+      "make": "",
+      "qty": 12,
+      "uom": "NOS"
+    },
+    {
+      "id": 44,
+      "name": "PopRivit (4.8x12mm)",
+      "make": "",
+      "qty": 30,
+      "uom": "BOX"
+    },
+    {
+      "id": 45,
+      "name": "PopRivit (3.5x12mm)",
+      "make": "",
+      "qty": 20,
+      "uom": "BOX"
+    },
+    {
+      "id": 46,
+      "name": "Multi Meter",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 47,
+      "name": "Welding Rod",
+      "make": "",
+      "qty": 2,
+      "uom": "Box"
+    },
+    {
+      "id": 48,
+      "name": "Welding Gas Meter",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 49,
+      "name": "Greese Gun",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 50,
+      "name": "Stanley Tester",
+      "make": "",
+      "qty": 10,
+      "uom": "BOX"
+    },
+    {
+      "id": 51,
+      "name": "Air Hose Pipe6mmx4mm",
+      "make": "",
+      "qty": 100,
+      "uom": "Mtr"
+    },
+    {
+      "id": 52,
+      "name": "Air Hose Pipe8mmx5mm",
+      "make": "",
+      "qty": 50,
+      "uom": "Mtr"
+    },
+    {
+      "id": 53,
+      "name": "Paint Gun",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 54,
+      "name": "Measurement Tape 10mm",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 55,
+      "name": "Measurement Tape 5mm",
+      "make": "",
+      "qty": 40,
+      "uom": "NOS"
+    },
+    {
+      "id": 56,
+      "name": "Measurement Tape 7.5mm",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 57,
+      "name": "Teflon Tape",
+      "make": "",
+      "qty": 30,
+      "uom": "NOS"
+    },
+    {
+      "id": 58,
+      "name": "Wire Tag",
+      "make": "",
+      "qty": 10,
+      "uom": "Pkt"
+    },
+    {
+      "id": 59,
+      "name": "Welding Nozzle",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 60,
+      "name": "Gear Oil",
+      "make": "",
+      "qty": 20,
+      "uom": "LTR"
+    },
+    {
+      "id": 61,
+      "name": "Co2 Welding Coil",
+      "make": "",
+      "qty": 15,
+      "uom": "NOS"
+    },
+    {
+      "id": 62,
+      "name": "Insulation Tape",
+      "make": "",
+      "qty": 15,
+      "uom": "NOS"
+    },
+    {
+      "id": 63,
+      "name": "Electronic Digital Vernier",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 64,
+      "name": "Copper Rod 22",
+      "make": "",
+      "qty": 25,
+      "uom": "KG"
+    },
+    {
+      "id": 65,
+      "name": "Mask V44",
+      "make": "",
+      "qty": 200,
+      "uom": "KG"
+    },
+    {
+      "id": 66,
+      "name": "Thinner Make - Sheenlac",
+      "make": "",
+      "qty": 60,
+      "uom": "LTR"
+    },
+    {
+      "id": 67,
+      "name": "Marker",
+      "make": "",
+      "qty": 150,
+      "uom": "NOS"
+    },
+    {
+      "id": 68,
+      "name": "Washer 6\"",
+      "make": "",
+      "qty": 25,
+      "uom": "KG"
+    },
+    {
+      "id": 69,
+      "name": "Washer 8\"",
+      "make": "",
+      "qty": 20,
+      "uom": "KG"
+    },
+    {
+      "id": 70,
+      "name": "Washer 10\"",
+      "make": "",
+      "qty": 15,
+      "uom": "KG"
+    },
+    {
+      "id": 71,
+      "name": "Bolt 8\"",
+      "make": "",
+      "qty": 50,
+      "uom": "KG"
+    },
+    {
+      "id": 72,
+      "name": "Nut 8\"",
+      "make": "",
+      "qty": 25,
+      "uom": "KG"
+    },
+    {
+      "id": 73,
+      "name": "6mm 2\" Screw Bolt",
+      "make": "",
+      "qty": 30,
+      "uom": "KG"
+    },
+    {
+      "id": 74,
+      "name": "Paint Roller",
+      "make": "",
+      "qty": 15,
+      "uom": "NOS"
+    },
+    {
+      "id": 75,
+      "name": "Berger Enamel Paint Yellow 4ltrs",
+      "make": "",
+      "qty": 20,
+      "uom": "Ltr"
+    },
+    {
+      "id": 76,
+      "name": "Yellow Primer paint",
+      "make": "",
+      "qty": 125,
+      "uom": "Ltr"
+    },
+    {
+      "id": 77,
+      "name": "Colour Cloth Waste",
+      "make": "",
+      "qty": 40,
+      "uom": "KG"
+    },
+    {
+      "id": 78,
+      "name": "Hijack Super Chemical",
+      "make": "",
+      "qty": 50,
+      "uom": "LTR"
+    }
+  ],
+  "electric_materials": [
+    {
+      "id": 1,
+      "name": "Sarterline Safety Relay",
+      "make": "",
+      "qty": 1,
+      "uom": "nos"
+    },
+    {
+      "id": 2,
+      "name": "MCB C25",
+      "make": "",
+      "qty": 4,
+      "uom": "nos"
+    },
+    {
+      "id": 3,
+      "name": "MCB C32",
+      "make": "",
+      "qty": 7,
+      "uom": "nos"
+    },
+    {
+      "id": 4,
+      "name": "MCB C16",
+      "make": "",
+      "qty": 5,
+      "uom": "nos"
+    },
+    {
+      "id": 5,
+      "name": "MCB C10",
+      "make": "",
+      "qty": 5,
+      "uom": "nos"
+    },
+    {
+      "id": 6,
+      "name": "MCB C6",
+      "make": "",
+      "qty": 3,
+      "uom": "nos"
+    },
+    {
+      "id": 7,
+      "name": "Polycab Cable 2Core x 1.5 Sq.mm",
+      "make": "",
+      "qty": 100,
+      "uom": "mtr"
+    },
+    {
+      "id": 8,
+      "name": "Polycab Cable 4Core x 2.5 Sq.mm",
+      "make": "",
+      "qty": 100,
+      "uom": "mtr"
+    },
+    {
+      "id": 9,
+      "name": "2 Core Wire 2.5 mm",
+      "make": "",
+      "qty": 50,
+      "uom": "mtr"
+    },
+    {
+      "id": 10,
+      "name": "3 Core Wire 1.5 mm",
+      "make": "",
+      "qty": 50,
+      "uom": "mtr"
+    }
+  ],
+  "tools": [
+    {
+      "id": 1,
+      "name": "Open Type Spaner (30/32)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 2,
+      "name": "Open Type Spaner (28/25)",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 3,
+      "name": "Open Type Spaner (24/27)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 4,
+      "name": "Open Type Spaner (21/23)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 5,
+      "name": "Open Type Spaner (20/22)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 6,
+      "name": "Open Type Spaner (14/15)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 7,
+      "name": "Open Type Spaner (10/11)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 8,
+      "name": "Open Type Spaner (6/7)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 9,
+      "name": "Ring Type Spaner (25/28)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 10,
+      "name": "Ring Type Spaner (30/32)",
+      "make": "",
+      "qty": 4,
+      "uom": "NOS"
+    },
+    {
+      "id": 11,
+      "name": "Ring Type Spaner (21/23)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 12,
+      "name": "Ring Type Spaner (18/19)",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 13,
+      "name": "Ring Type Spaner (16/17)",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 14,
+      "name": "Ring Type Spaner (14/15)",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 15,
+      "name": "Ring Type Spaner (6/7)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 16,
+      "name": "Ring Type Spaner (8/9)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 17,
+      "name": "T Spaner (7MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 18,
+      "name": "T Spaner (8MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 19,
+      "name": "T Spaner (9MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 20,
+      "name": "T Spaner (10MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 21,
+      "name": "T Spaner (11MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 22,
+      "name": "T Spaner (12MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 23,
+      "name": "T Spaner (14MM)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 24,
+      "name": "Spanner Kit",
+      "make": "",
+      "qty": 1,
+      "uom": "set"
+    },
+    {
+      "id": 25,
+      "name": "Cutting Plier",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 26,
+      "name": "Screwdriver Set",
+      "make": "",
+      "qty": 3,
+      "uom": "BOX"
+    },
+    {
+      "id": 27,
+      "name": "Wire Cutter",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 28,
+      "name": "Taparia Wire cutter",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 29,
+      "name": "Taparia Adjustable Spanner 300mm Lgth",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 30,
+      "name": "Bosch Star Screw Bit",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 31,
+      "name": "Rinch Big",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 32,
+      "name": "Rinch",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 33,
+      "name": "Adjustable Spaners",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 34,
+      "name": "Hammaring Drilling Machine",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 35,
+      "name": "Drilling Machine 16mm",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 36,
+      "name": "Drilling Machine 10mm",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 37,
+      "name": "Grinding Machine 5\"",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 38,
+      "name": "Grinding Machine 4\"",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 39,
+      "name": "Welding Sheald",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 40,
+      "name": "Hammer 300 Grams",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 41,
+      "name": "Hammer 350 Grams",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 42,
+      "name": "Hammer 75 LB",
+      "make": "",
+      "qty": 5,
+      "uom": "NOS"
+    },
+    {
+      "id": 43,
+      "name": "Hydraulic Rivit Gun",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 44,
+      "name": "C Clamp",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 45,
+      "name": "Sheet Cutter",
+      "make": "",
+      "qty": 5,
+      "uom": "NOS"
+    },
+    {
+      "id": 46,
+      "name": "Grip Player 12\"",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 47,
+      "name": "Grip Player 10\"",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 48,
+      "name": "Grip Player 8\"",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 49,
+      "name": "Allankey(12MM)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 50,
+      "name": "Allankey(14MM)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 51,
+      "name": "Allankey(16MM)",
+      "make": "",
+      "qty": 3,
+      "uom": "set"
+    },
+    {
+      "id": 52,
+      "name": "Allankey",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 53,
+      "name": "Air blower",
+      "make": "",
+      "qty": 10,
+      "uom": "NOS"
+    },
+    {
+      "id": 54,
+      "name": "Screwdriver (Minus)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 55,
+      "name": "PIR Sheet Cuter(V)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 56,
+      "name": "PIR Sheet Cuter(Left)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 57,
+      "name": "PIR Sheet Cuter(Right)",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 58,
+      "name": "PIR Sheet Cuter(Straight)",
+      "make": "",
+      "qty": 4,
+      "uom": "NOS"
+    },
+    {
+      "id": 59,
+      "name": "TRALLY WHEEL Big",
+      "make": "",
+      "qty": 4,
+      "uom": "NOS"
+    },
+    {
+      "id": 60,
+      "name": "TRALLY WHEEL Small",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 61,
+      "name": "Yuken Pump ( Hydraulic)",
+      "make": "",
+      "qty": 100,
+      "uom": "NOS"
+    },
+    {
+      "id": 62,
+      "name": "Buffling Wheel 4\"",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 63,
+      "name": "Yamato Regulator Heater",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 64,
+      "name": "Heat Gun",
+      "make": "",
+      "qty": 4,
+      "uom": "NOS"
+    },
+    {
+      "id": 65,
+      "name": "Sealant Gun",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 66,
+      "name": "Taparia / Stanley Allen Key Set MM",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 67,
+      "name": "Taparia / Stanley Allen Key Set Inches",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    },
+    {
+      "id": 68,
+      "name": "Oil Gun",
+      "make": "",
+      "qty": 20,
+      "uom": "Set"
+    },
+    {
+      "id": 69,
+      "name": "Leather Hand Gloves",
+      "make": "",
+      "qty": 20,
+      "uom": "Set"
+    },
+    {
+      "id": 70,
+      "name": "Soldring Gun",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 71,
+      "name": "Nose plier",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 72,
+      "name": "Wood Hammer",
+      "make": "",
+      "qty": 30,
+      "uom": "NOS"
+    },
+    {
+      "id": 73,
+      "name": "Wood Hammer Stick",
+      "make": "",
+      "qty": 50,
+      "uom": "NOS"
+    },
+    {
+      "id": 74,
+      "name": "Soldring Gun",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 75,
+      "name": "Polyhose Hose Pipe Pu8",
+      "make": "",
+      "qty": 100,
+      "uom": "Rmt"
+    },
+    {
+      "id": 76,
+      "name": "Polyhose Hose Pipe Pu10",
+      "make": "",
+      "qty": 100,
+      "uom": "Rmt"
+    },
+    {
+      "id": 77,
+      "name": "Aluminium Cutting Machine",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 78,
+      "name": "Makita Grainding machine (M9509B) 4\"",
+      "make": "",
+      "qty": 6,
+      "uom": "NOS"
+    },
+    {
+      "id": 79,
+      "name": "Cutting Machine (Big) 14\"",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 80,
+      "name": "Pressure Guage",
+      "make": "",
+      "qty": 1,
+      "uom": "NOS"
+    },
+    {
+      "id": 81,
+      "name": "Directional Valve ( Oval Machine)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 82,
+      "name": "Makita Heat Gun (HG6530V-HG6531C)",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 83,
+      "name": "Solenoid Controlled Relieg Valve",
+      "make": "",
+      "qty": 2,
+      "uom": "NOS"
+    },
+    {
+      "id": 84,
+      "name": "Tin Sheet Cutter",
+      "make": "",
+      "qty": 20,
+      "uom": "NOS"
+    },
+    {
+      "id": 85,
+      "name": "Axcel Frame",
+      "make": "",
+      "qty": 3,
+      "uom": "NOS"
+    }
+  ]
+}

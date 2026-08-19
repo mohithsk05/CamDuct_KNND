@@ -39,13 +39,32 @@ function isEntryEditable(entry, user) {
 
 function ensureDbCollections() {
   if (!db.data) db.data = {};
+  if (!db.data.purchase_po) db.data.purchase_po = [];
   if (!db.data.purchase_igr) db.data.purchase_igr = [];
   if (!db.data.purchase_bpr) db.data.purchase_bpr = [];
   if (!db.data.notifications) db.data.notifications = [];
   if (!db.data.autoInc) db.data.autoInc = {};
+  if (!db.data.autoInc.purchase_po) db.data.autoInc.purchase_po = 1;
   if (!db.data.autoInc.purchase_igr) db.data.autoInc.purchase_igr = 1;
   if (!db.data.autoInc.purchase_bpr) db.data.autoInc.purchase_bpr = 1;
   if (!db.data.autoInc.notifications) db.data.autoInc.notifications = 1;
+
+  if (!db.data.purchase_materials || !db.data.purchase_materials.raw_materials || db.data.purchase_materials.raw_materials.length < 158 || !db.data.purchase_materials.tools || db.data.purchase_materials.tools.length < 85) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const seedPath = path.join(__dirname, '../materials_seed.json');
+      if (fs.existsSync(seedPath)) {
+        db.data.purchase_materials = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
+        db.saveData();
+      } else {
+        db.data.purchase_materials = { raw_materials: [], consumable_items: [], electric_materials: [], tools: [] };
+      }
+    } catch (e) {
+      console.error('Failed to load materials seed:', e);
+      db.data.purchase_materials = { raw_materials: [], consumable_items: [], electric_materials: [], tools: [] };
+    }
+  }
 }
 
 // ─── IGR ROUTES ─────────────────────────────────────────────────────────────
@@ -1203,6 +1222,424 @@ router.get('/export', auth, (req, res) => {
     res.send(csv);
   } catch (err) {
     res.status(500).json({ error: 'Failed to export purchase data: ' + err.message });
+  }
+});
+
+// ─── PO (PURCHASE ORDER) ROUTES ──────────────────────────────────────────────
+
+// Helper function to auto-assign unit based on Raw Material name
+function computeUnitForRawMaterial(rawMaterial) {
+  if (!rawMaterial) return "No's";
+  const name = rawMaterial.toString();
+  if (/gsm|ss|alu|ms|bucket|stretch|rod/i.test(name)) return "Kg's";
+  if (/thermal|acou/i.test(name)) return "Sqmt";
+  if (/tape|bubble/i.test(name)) return "Roll";
+  if (/gasket|jtr/i.test(name)) return "Rmt";
+  if (/cleats|tube|bracket|corner|handle|gear|bush/i.test(name)) return "No's";
+  return "No's";
+}
+
+// GET /api/purchase/po?branch=...&month=...
+router.get('/po', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const branchArg = (req.query.branch || (req.user && req.user.branch) || 'maalur').toLowerCase();
+    const monthArg = req.query.month;
+    let list = db.data.purchase_po.filter(item => (item.branch || 'maalur').toLowerCase() === branchArg);
+
+    if (monthArg && monthArg.toLowerCase() !== 'all') {
+      list = list.filter(item => {
+        const m = item.month || getMonthNameFromDate(item.date);
+        return (m || '').toLowerCase() === monthArg.toLowerCase();
+      });
+    }
+
+    list.sort((a, b) => new Date(a.date || a.created_at) - new Date(b.date || b.created_at));
+
+    const formatted = list.map((item, idx) => ({
+      ...item,
+      sl_no: idx + 1,
+      is_editable: isEntryEditable(item, req.user)
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error('Error fetching PO entries:', err);
+    res.status(500).json({ error: 'Failed to fetch PO entries: ' + err.message });
+  }
+});
+
+// POST /api/purchase/po
+router.post('/po', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+
+    if (!req.user || (req.user.role !== 'purchase' && req.user.role !== 'admin')) {
+      return res.status(403).json({ error: 'Only Purchase Department users or Admin can create PO entries' });
+    }
+
+    const {
+      date,
+      po_no,
+      po_date,
+      supplier,
+      make,
+      inv_no,
+      igr_no,
+      raw_material,
+      unit,
+      qty,
+      rate,
+      cgst,
+      sgst,
+      igst,
+      trans_as_invoice,
+      branch
+    } = req.body;
+
+    const parsedQty = parseFloat(qty) || 0;
+    const parsedRate = parseFloat(rate) || 0;
+    const parsedBasic = parsedQty * parsedRate;
+
+    const parsedCgst = parseFloat(cgst) || 0;
+    const parsedSgst = parseFloat(sgst) || 0;
+    const parsedIgst = parseFloat(igst) || 0;
+    const parsedTrans = parseFloat(trans_as_invoice) || 0;
+
+    const computedUnit = unit || computeUnitForRawMaterial(raw_material);
+    const transPerUnit = parsedQty > 0 ? (parsedTrans / parsedQty) : 0;
+    const total = parsedBasic + parsedCgst + parsedSgst + parsedIgst + parsedTrans;
+
+    const newId = db.data.autoInc.purchase_po++;
+    const targetBranch = (branch || req.user.branch || 'maalur').toLowerCase();
+    const entryDate = date || new Date().toISOString().split('T')[0];
+    const month = getMonthNameFromDate(entryDate);
+
+    const newEntry = {
+      id: newId,
+      branch: targetBranch,
+      month,
+      date: entryDate,
+      po_no: po_no || '—',
+      po_date: po_date || entryDate,
+      supplier: supplier || '—',
+      make: make || '—',
+      inv_no: inv_no || '—',
+      igr_no: igr_no || '—',
+      raw_material: raw_material || '—',
+      unit: computedUnit,
+      qty: parsedQty,
+      rate: parsedRate,
+      basic: parsedBasic,
+      cgst: parsedCgst,
+      sgst: parsedSgst,
+      igst: parsedIgst,
+      trans_as_invoice: parsedTrans,
+      trans_per_unit: transPerUnit,
+      total: total,
+      created_by: req.user.username || req.user.name,
+      created_at: new Date().toISOString(),
+      is_unlocked: false
+    };
+
+    db.data.purchase_po.push(newEntry);
+    db.saveData();
+
+    res.status(201).json(newEntry);
+  } catch (err) {
+    console.error('Error creating PO entry:', err);
+    res.status(500).json({ error: 'Failed to create PO entry: ' + err.message });
+  }
+});
+
+// PUT /api/purchase/po/:id
+router.put('/po/:id', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const id = parseInt(req.params.id, 10);
+    const entry = db.data.purchase_po.find(x => x.id === id);
+
+    if (!entry) {
+      return res.status(404).json({ error: 'PO entry not found' });
+    }
+
+    if (!isEntryEditable(entry, req.user) && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Editing window closed (48h limit). Request unlock from admin.' });
+    }
+
+    const {
+      date,
+      po_no,
+      po_date,
+      supplier,
+      make,
+      inv_no,
+      igr_no,
+      raw_material,
+      unit,
+      qty,
+      rate,
+      cgst,
+      sgst,
+      igst,
+      trans_as_invoice
+    } = req.body;
+
+    if (date !== undefined) entry.date = date;
+    if (date) entry.month = getMonthNameFromDate(date);
+    if (po_no !== undefined) entry.po_no = po_no;
+    if (po_date !== undefined) entry.po_date = po_date;
+    if (supplier !== undefined) entry.supplier = supplier;
+    if (make !== undefined) entry.make = make;
+    if (inv_no !== undefined) entry.inv_no = inv_no;
+    if (igr_no !== undefined) entry.igr_no = igr_no;
+    if (raw_material !== undefined) {
+      entry.raw_material = raw_material;
+      entry.unit = unit || computeUnitForRawMaterial(raw_material);
+    }
+    if (unit !== undefined) entry.unit = unit;
+
+    if (qty !== undefined) entry.qty = parseFloat(qty) || 0;
+    if (rate !== undefined) entry.rate = parseFloat(rate) || 0;
+    entry.basic = entry.qty * entry.rate;
+
+    if (cgst !== undefined) entry.cgst = parseFloat(cgst) || 0;
+    if (sgst !== undefined) entry.sgst = parseFloat(sgst) || 0;
+    if (igst !== undefined) entry.igst = parseFloat(igst) || 0;
+    if (trans_as_invoice !== undefined) entry.trans_as_invoice = parseFloat(trans_as_invoice) || 0;
+
+    entry.trans_per_unit = entry.qty > 0 ? (entry.trans_as_invoice / entry.qty) : 0;
+    entry.total = entry.basic + entry.cgst + entry.sgst + entry.igst + entry.trans_as_invoice;
+    entry.updated_at = new Date().toISOString();
+
+    db.saveData();
+    res.json(entry);
+  } catch (err) {
+    console.error('Error updating PO entry:', err);
+    res.status(500).json({ error: 'Failed to update PO entry: ' + err.message });
+  }
+});
+
+// DELETE /api/purchase/po/:id
+router.delete('/po/:id', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const id = parseInt(req.params.id, 10);
+    const idx = db.data.purchase_po.findIndex(x => x.id === id);
+
+    if (idx === -1) {
+      return res.status(404).json({ error: 'PO entry not found' });
+    }
+
+    const entry = db.data.purchase_po[idx];
+    db.data.purchase_po.splice(idx, 1);
+    db.saveData();
+    res.json({ message: 'PO entry deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting PO entry:', err);
+    res.status(500).json({ error: 'Failed to delete PO entry: ' + err.message });
+  }
+});
+
+// POST /api/purchase/po/:id/request-edit — Purchase Dept requests Admin edit access after 48h
+router.post('/po/:id/request-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    if (!req.user || req.user.role !== 'purchase') {
+      return res.status(403).json({ error: 'Only Purchase Department users can request edit access' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_po.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'PO entry not found' });
+    }
+
+    entry.edit_requested = true;
+    entry.edit_requested_at = new Date().toISOString();
+
+    const notifId = db.data.autoInc.notifications++;
+    const now = new Date().toISOString();
+    const notifMsg = `🛒 Edit Access Request: Purchase Dept (${capitalize(entry.branch || 'maalur')}) requested edit access for PO Entry #${entry.po_no || entry.id} (Supplier: ${entry.supplier || 'N/A'})`;
+
+    db.data.notifications.push({
+      id: notifId,
+      sender_id: req.user.id,
+      sender_name: req.user.full_name,
+      target_user_id: null,
+      target_user_name: 'Admin',
+      role: 'admin',
+      dept: 'purchase',
+      branch: entry.branch || null,
+      type: 'purchase_edit_request',
+      entry_type: 'po',
+      entry_id: entry.id,
+      message: notifMsg,
+      validity: '1week',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_read: 0,
+      created_at: now
+    });
+
+    db.saveData();
+    res.json({ success: true, message: 'Edit access request sent to Admin in real time', entry });
+  } catch (err) {
+    console.error('Error requesting PO edit access:', err);
+    res.status(500).json({ error: 'Failed to request edit access: ' + err.message });
+  }
+});
+
+// POST /api/purchase/po/:id/unlock-edit — Admin grants edit access
+router.post('/po/:id/unlock-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.hasAdminPower);
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only Admin users can grant edit access' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_po.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'PO entry not found' });
+    }
+
+    entry.is_unlocked = true;
+    entry.edit_requested = false;
+    entry.unlocked_by = req.user.full_name;
+    entry.unlocked_at = new Date().toISOString();
+
+    db.saveData();
+    res.json({ success: true, message: 'PO entry unlocked successfully', entry });
+  } catch (err) {
+    console.error('Error unlocking PO entry:', err);
+    res.status(500).json({ error: 'Failed to unlock PO entry: ' + err.message });
+  }
+});
+
+// POST /api/purchase/po/:id/lock-edit — Admin locks entry back
+router.post('/po/:id/lock-edit', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.hasAdminPower);
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only Admin users can lock entries' });
+    }
+
+    const id = req.params.id;
+    const entry = db.data.purchase_po.find(item => String(item.id) === String(id));
+    if (!entry) {
+      return res.status(404).json({ error: 'PO entry not found' });
+    }
+
+    entry.is_unlocked = false;
+    entry.edit_requested = false;
+
+    db.saveData();
+    res.json({ success: true, message: 'PO entry locked successfully', entry });
+  } catch (err) {
+    console.error('Error locking PO entry:', err);
+    res.status(500).json({ error: 'Failed to lock PO entry: ' + err.message });
+  }
+});
+// ─── MATERIALS ROUTES ────────────────────────────────────────────────────────
+
+// GET /api/purchase/materials — Fetch all materials dataset
+router.get('/materials', auth, (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const seedPath = path.join(__dirname, '../materials_seed.json');
+    
+    if (fs.existsSync(seedPath)) {
+      const seed = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
+      if (!db.data.purchase_materials || 
+          !db.data.purchase_materials.raw_materials || 
+          db.data.purchase_materials.raw_materials.length < 158 || 
+          !db.data.purchase_materials.tools || 
+          db.data.purchase_materials.tools.length < 85 ||
+          !db.data.purchase_materials.consumable_items ||
+          db.data.purchase_materials.consumable_items.length !== seed.consumable_items.length) {
+        db.data.purchase_materials = seed;
+        db.saveData();
+      }
+    }
+    res.json(db.data.purchase_materials || { raw_materials: [], consumable_items: [], electric_materials: [], tools: [] });
+  } catch (err) {
+    console.error('Error fetching materials:', err);
+    res.status(500).json({ error: 'Failed to fetch materials: ' + err.message });
+  }
+});
+
+// PUT /api/purchase/materials/:category/:id — Update quantity and UOM for material item
+router.put('/materials/:category/:id', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const { category, id } = req.params;
+    const { qty, uom } = req.body;
+
+    if (!db.data.purchase_materials || !db.data.purchase_materials[category]) {
+      return res.status(404).json({ error: 'Invalid materials category: ' + category });
+    }
+
+    const items = db.data.purchase_materials[category];
+    const item = items.find(i => String(i.id) === String(id));
+
+    if (!item) {
+      return res.status(404).json({ error: 'Material item not found' });
+    }
+
+    if (qty !== undefined) {
+      const parsedQty = parseFloat(qty);
+      if (!isNaN(parsedQty)) item.qty = parsedQty;
+    }
+
+    if (uom !== undefined && String(uom).trim()) {
+      item.uom = String(uom).trim();
+    }
+
+    item.updated_at = new Date().toISOString();
+    item.updated_by = req.user ? req.user.full_name : 'Purchase Dept';
+
+    // Create notifications for Admin and Manager
+    const categoryName = category.replace('_', ' ');
+    const notifMsg = `[Materials Update] ${item.updated_by} updated ${categoryName} item "${item.name}": Qty = ${item.qty}, UOM = ${item.uom}`;
+
+    if (!db.data.notifications) db.data.notifications = [];
+    if (!db.data.autoInc) db.data.autoInc = {};
+    if (!db.data.autoInc.notifications) db.data.autoInc.notifications = 1;
+
+    // 1. Notify Admin
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      role: 'admin',
+      branch: null,
+      type: 'materials_update',
+      message: notifMsg,
+      sender_id: req.user.id,
+      sender_name: item.updated_by,
+      is_read: 0,
+      created_at: new Date().toISOString()
+    });
+
+    // 2. Notify Manager
+    db.data.notifications.push({
+      id: db.data.autoInc.notifications++,
+      role: 'manager',
+      branch: (req.user.branch || 'maalur').toLowerCase(),
+      type: 'materials_update',
+      message: notifMsg,
+      sender_id: req.user.id,
+      sender_name: item.updated_by,
+      is_read: 0,
+      created_at: new Date().toISOString()
+    });
+
+    db.saveData();
+    res.json({ success: true, message: 'Material updated successfully', item });
+  } catch (err) {
+    console.error('Error updating material:', err);
+    res.status(500).json({ error: 'Failed to update material: ' + err.message });
   }
 });
 

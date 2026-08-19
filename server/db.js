@@ -10,10 +10,11 @@ let data = {
   projects: [],
   notifications: [],
   power_grants: [],
+  purchase_po: [],
   purchase_igr: [],
   purchase_bpr: [],
   admin_authority: null,
-  autoInc: { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_igr: 1, purchase_bpr: 1 }
+  autoInc: { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_po: 1, purchase_igr: 1, purchase_bpr: 1 }
 };
 
 // Load data if exists
@@ -21,9 +22,11 @@ if (fs.existsSync(DATA_FILE)) {
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf-8');
     data = JSON.parse(raw);
+    if (!data.purchase_po) data.purchase_po = [];
     if (!data.purchase_igr) data.purchase_igr = [];
     if (!data.purchase_bpr) data.purchase_bpr = [];
-    if (!data.autoInc) data.autoInc = { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_igr: 1, purchase_bpr: 1 };
+    if (!data.autoInc) data.autoInc = { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_po: 1, purchase_igr: 1, purchase_bpr: 1 };
+    if (!data.autoInc.purchase_po) data.autoInc.purchase_po = 1;
     if (!data.autoInc.purchase_igr) data.autoInc.purchase_igr = 1;
     if (!data.autoInc.purchase_bpr) data.autoInc.purchase_bpr = 1;
     
@@ -594,20 +597,20 @@ function seedUsers() {
   const defaultUsers = [
     { username: 'gate',             password: 'camduct@2024',   role: 'gate',               branch: null,      full_name: 'Gate Access' },
     { username: 'admin',            password: 'admin@2024',     role: 'admin',              branch: null,      full_name: 'Admin / Owner' },
-    { username: 'manager_maalur',   password: 'mgr_maalur@24',  role: 'manager',            branch: 'maalur',  full_name: 'Manager – Maalur' },
-    { username: 'manager_haryana',  password: 'mgr_haryana@24', role: 'manager',            branch: 'haryana', full_name: 'Manager – Haryana' },
-    { username: 'plan_maalur',      password: 'plan@24',        role: 'planning',           branch: 'maalur',  full_name: 'Planning – Maalur' },
-    { username: 'purchase_maalur',  password: 'purchase@24',    role: 'purchase',           branch: 'maalur',  full_name: 'Purchase – Maalur' },
-    { username: 'consume_maalur',   password: 'consume@24',     role: 'consumption',        branch: 'maalur',  full_name: 'Consumption – Maalur' },
-    { username: 'dispatch_maalur',  password: 'dispatch@24',    role: 'dispatch',           branch: 'maalur',  full_name: 'Dispatch – Maalur' },
-    { username: 'accounts_maalur',  password: 'accounts@24',    role: 'accounts',           branch: 'maalur',  full_name: 'Accounts – Maalur' },
-    { username: 'security_maalur',  password: 'security@24',    role: 'security',           branch: 'maalur',  full_name: 'Security – Maalur' },
-    { username: 'plan_haryana',     password: 'plan@24h',       role: 'planning',           branch: 'haryana', full_name: 'Planning – Haryana' },
-    { username: 'purchase_haryana', password: 'purchase@24h',   role: 'purchase',           branch: 'haryana', full_name: 'Purchase – Haryana' },
-    { username: 'consume_haryana',  password: 'consume@24h',    role: 'consumption',        branch: 'haryana', full_name: 'Consumption – Haryana' },
-    { username: 'dispatch_haryana', password: 'dispatch@24h',   role: 'dispatch',           branch: 'haryana', full_name: 'Dispatch – Haryana' },
-    { username: 'accounts_haryana', password: 'accounts@24h',   role: 'accounts',           branch: 'haryana', full_name: 'Accounts – Haryana' },
-    { username: 'security_haryana', password: 'security@24h',   role: 'security',           branch: 'haryana', full_name: 'Security – Haryana' },
+    { username: 'manager_maalur',   password: 'mgr_maalur@24',  role: 'manager',            branch: 'maalur',  full_name: 'Manager - Maalur' },
+    { username: 'manager_haryana',  password: 'mgr_haryana@24', role: 'manager',            branch: 'haryana', full_name: 'Manager - Haryana' },
+    { username: 'plan_maalur',      password: 'plan@24',        role: 'planning',           branch: 'maalur',  full_name: 'Planning - Maalur' },
+    { username: 'purchase_maalur',  password: 'purchase@24',    role: 'purchase',           branch: 'maalur',  full_name: 'Purchase - Maalur' },
+    { username: 'consume_maalur',   password: 'consume@24',     role: 'consumption',        branch: 'maalur',  full_name: 'Consumption - Maalur' },
+    { username: 'dispatch_maalur',  password: 'dispatch@24',    role: 'dispatch',           branch: 'maalur',  full_name: 'Dispatch - Maalur' },
+    { username: 'accounts_maalur',  password: 'accounts@24',    role: 'accounts',           branch: 'maalur',  full_name: 'Accounts - Maalur' },
+    { username: 'security_maalur',  password: 'security@24',    role: 'security',           branch: 'maalur',  full_name: 'Security - Maalur' },
+    { username: 'plan_haryana',     password: 'plan@24h',       role: 'planning',           branch: 'haryana', full_name: 'Planning - Haryana' },
+    { username: 'purchase_haryana', password: 'purchase@24h',   role: 'purchase',           branch: 'haryana', full_name: 'Purchase - Haryana' },
+    { username: 'consume_haryana',  password: 'consume@24h',    role: 'consumption',        branch: 'haryana', full_name: 'Consumption - Haryana' },
+    { username: 'dispatch_haryana', password: 'dispatch@24h',   role: 'dispatch',           branch: 'haryana', full_name: 'Dispatch - Haryana' },
+    { username: 'accounts_haryana', password: 'accounts@24h',   role: 'accounts',           branch: 'haryana', full_name: 'Accounts - Haryana' },
+    { username: 'security_haryana', password: 'security@24h',   role: 'security',           branch: 'haryana', full_name: 'Security - Haryana' },
   ];
 
   for (const u of defaultUsers) {
