@@ -621,7 +621,8 @@
     "power_grants": 27,
     "purchase_igr": 4,
     "purchase_bpr": 1,
-    "purchase_po": 3
+    "purchase_po": 3,
+    "rate_enquiries": 5
   },
   "purchase_igr": [
     {
@@ -3030,5 +3031,55 @@
         "uom": "NOS"
       }
     ]
-  }
+  },
+  "rate_enquiries": [
+    {
+      "id": 1,
+      "material_name": "120gsm 26G",
+      "supplier_name": "Aloukik Agencies",
+      "supplier_email": "sales@aloukikagencies.com",
+      "message": "Test enquiry message",
+      "sent_by_role": "purchase",
+      "sent_by_user_id": 1,
+      "sent_by_user_name": "Purchase User",
+      "branch": "maalur",
+      "created_at": "2026-08-19T18:36:11.211Z"
+    },
+    {
+      "id": 2,
+      "material_name": "120gsm 26G",
+      "supplier_name": "Amba Aluminium Pvt Ltd",
+      "supplier_email": "sales@ambaaluminiumpvtltd.com",
+      "message": "Dear Amba Aluminium Pvt Ltd,\n\nWe would like to inquire about the current market rate, availability, and lead time for the raw material item: \"120gsm 26G\".\n\nPlease reply with your official quotation at your earliest convenience.\n\nThank you,\nCamDuct KNND Purchase Department",
+      "sent_by_role": "admin",
+      "sent_by_user_id": 2,
+      "sent_by_user_name": "Admin / Owner",
+      "branch": "maalur",
+      "created_at": "2026-08-19T18:37:31.135Z"
+    },
+    {
+      "id": 3,
+      "material_name": "120gsm 26G",
+      "supplier_name": "Ananth Technodes",
+      "supplier_email": "sales@ananthtechnodes.com",
+      "message": "Dear Ananth Technodes,\n\nWe would like to inquire about the current market rate, availability, and lead time for the raw material item: \"120gsm 26G\".\n\nPlease reply with your official quotation at your earliest convenience.\n\nThank you,\nCamDuct KNND Purchase Department",
+      "sent_by_role": "purchase",
+      "sent_by_user_id": 6,
+      "sent_by_user_name": "Purchase - Maalur",
+      "branch": "maalur",
+      "created_at": "2026-08-19T18:38:18.581Z"
+    },
+    {
+      "id": 4,
+      "material_name": "120gsm 24G",
+      "supplier_name": "Blue Volt Services",
+      "supplier_email": "sales@bluevoltservices.com",
+      "message": "Dear Blue Volt Services,\n\nWe would like to inquire about the current market rate, availability, and lead time for the raw material item: \"120gsm 24G\".\n\nPlease reply with your official quotation at your earliest convenience.\n\nThank you,\nCamDuct KNND Purchase Department",
+      "sent_by_role": "purchase",
+      "sent_by_user_id": 6,
+      "sent_by_user_name": "Purchase - Maalur",
+      "branch": "maalur",
+      "created_at": "2026-08-19T18:38:51.750Z"
+    }
+  ]
 }

@@ -13,8 +13,9 @@ let data = {
   purchase_po: [],
   purchase_igr: [],
   purchase_bpr: [],
+  rate_enquiries: [],
   admin_authority: null,
-  autoInc: { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_po: 1, purchase_igr: 1, purchase_bpr: 1 }
+  autoInc: { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_po: 1, purchase_igr: 1, purchase_bpr: 1, rate_enquiries: 1 }
 };
 
 // Load data if exists
@@ -25,10 +26,12 @@ if (fs.existsSync(DATA_FILE)) {
     if (!data.purchase_po) data.purchase_po = [];
     if (!data.purchase_igr) data.purchase_igr = [];
     if (!data.purchase_bpr) data.purchase_bpr = [];
-    if (!data.autoInc) data.autoInc = { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_po: 1, purchase_igr: 1, purchase_bpr: 1 };
+    if (!data.rate_enquiries) data.rate_enquiries = [];
+    if (!data.autoInc) data.autoInc = { users: 1, projects: 1, notifications: 1, power_grants: 1, purchase_po: 1, purchase_igr: 1, purchase_bpr: 1, rate_enquiries: 1 };
     if (!data.autoInc.purchase_po) data.autoInc.purchase_po = 1;
     if (!data.autoInc.purchase_igr) data.autoInc.purchase_igr = 1;
     if (!data.autoInc.purchase_bpr) data.autoInc.purchase_bpr = 1;
+    if (!data.autoInc.rate_enquiries) data.autoInc.rate_enquiries = 1;
     
     // Sanitize purchase_igr entries
     data.purchase_igr.forEach(item => {

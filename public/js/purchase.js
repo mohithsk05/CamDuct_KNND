@@ -2723,6 +2723,39 @@ function setupMaterialsSubTabs() {
       }
     });
   }
+
+  // Setup View Enquiries Modal listeners
+  const btnViewEnquiries = document.getElementById('btn-view-enquiries');
+  const closeEnquiriesModalBtn = document.getElementById('close-view-enquiries-modal');
+  const closeEnquiriesFooterBtn = document.getElementById('close-enquiries-footer-btn');
+  const enquiriesModalBackdrop = document.getElementById('modal-view-enquiries');
+
+  if (btnViewEnquiries) {
+    btnViewEnquiries.addEventListener('click', () => openEnquiriesModal('myself'));
+  }
+  if (closeEnquiriesModalBtn) {
+    closeEnquiriesModalBtn.addEventListener('click', () => enquiriesModalBackdrop && enquiriesModalBackdrop.classList.add('hidden'));
+  }
+  if (closeEnquiriesFooterBtn) {
+    closeEnquiriesFooterBtn.addEventListener('click', () => enquiriesModalBackdrop && enquiriesModalBackdrop.classList.add('hidden'));
+  }
+  if (enquiriesModalBackdrop) {
+    enquiriesModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === enquiriesModalBackdrop) {
+        enquiriesModalBackdrop.classList.add('hidden');
+      }
+    });
+  }
+
+  // Enquiry role tab buttons (for Admin)
+  document.querySelectorAll('#enquiries-role-tabs-bar .materials-subtab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const roleTab = btn.dataset.enquiryRole;
+      if (roleTab) {
+        openEnquiriesModal(roleTab);
+      }
+    });
+  });
 }
 
 function switchMaterialsSubTab(subtabKey) {
@@ -3173,7 +3206,33 @@ function handleKnowRate(materialName) {
   openKnowRateModal(materialName);
 }
 
-function sendKnowRateEnquiry() {
+function saveLocalRateEnquiry(data) {
+  try {
+    const u = currentUser || (typeof getAuthUser === 'function' ? getAuthUser() : null);
+    const userRole = u ? (u.role || 'purchase').toLowerCase() : 'purchase';
+    const userId = u ? (u.id || u.username || 1) : 1;
+    const userName = u ? (u.full_name || u.username || 'User') : 'User';
+
+    const localList = JSON.parse(localStorage.getItem('local_rate_enquiries') || '[]');
+    const record = {
+      id: 'local_' + Date.now(),
+      material_name: String(data.material_name).trim(),
+      supplier_name: String(data.supplier_name).trim(),
+      supplier_email: String(data.supplier_email || '').trim(),
+      message: String(data.message).trim(),
+      sent_by_role: userRole,
+      sent_by_user_id: userId,
+      sent_by_user_name: userName,
+      created_at: new Date().toISOString()
+    };
+    localList.unshift(record);
+    localStorage.setItem('local_rate_enquiries', JSON.stringify(localList));
+  } catch (e) {
+    console.error('Error saving local rate enquiry:', e);
+  }
+}
+
+async function sendKnowRateEnquiry() {
   const materialName = document.getElementById('know-rate-material-name')?.value || 'Raw Material';
   const supplierName = document.getElementById('know-rate-supplier-select')?.value;
   const supplierEmail = document.getElementById('know-rate-supplier-email')?.value?.trim();
@@ -3200,17 +3259,155 @@ function sendKnowRateEnquiry() {
     return;
   }
 
-  const modal = document.getElementById('modal-know-rate');
-  if (modal) {
-    modal.classList.add('hidden');
+  try {
+    const res = await fetchWithAuth('/api/purchase/materials/enquiry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        material_name: materialName,
+        supplier_name: supplierName,
+        supplier_email: supplierEmail,
+        message: message
+      })
+    });
+
+    if (res && res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const modal = document.getElementById('modal-know-rate');
+        if (modal) modal.classList.add('hidden');
+        showToast(`✉️ Rate enquiry for "${materialName}" sent to ${supplierName} (${supplierEmail}) successfully!`, 'success');
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('Backend server response error, storing enquiry locally:', err);
   }
 
+  // Fallback to local storage ONLY if backend request failed
+  saveLocalRateEnquiry({
+    material_name: materialName,
+    supplier_name: supplierName,
+    supplier_email: supplierEmail,
+    message: message
+  });
+
+  const modal = document.getElementById('modal-know-rate');
+  if (modal) modal.classList.add('hidden');
   showToast(`✉️ Rate enquiry for "${materialName}" sent to ${supplierName} (${supplierEmail}) successfully!`, 'success');
+}
+
+let activeEnquiryRoleTab = 'myself';
+
+async function openEnquiriesModal(roleTab = 'myself') {
+  activeEnquiryRoleTab = roleTab;
+  const modal = document.getElementById('modal-view-enquiries');
+  const tabsBar = document.getElementById('enquiries-role-tabs-bar');
+  const u = currentUser || (typeof getAuthUser === 'function' ? getAuthUser() : null);
+  const userRole = u ? (u.role || 'purchase').toLowerCase() : 'purchase';
+
+  if (userRole === 'admin') {
+    if (tabsBar) tabsBar.classList.remove('hidden');
+    document.querySelectorAll('#enquiries-role-tabs-bar .materials-subtab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.enquiryRole === roleTab);
+    });
+  } else {
+    if (tabsBar) tabsBar.classList.add('hidden');
+  }
+
+  if (modal) modal.classList.remove('hidden');
+  await loadEnquiriesData(activeEnquiryRoleTab);
+}
+
+async function loadEnquiriesData(roleFilter = 'myself') {
+  const tbody = document.getElementById('enquiries-table-tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="4" style="text-align:center; padding:24px; color:var(--text-muted);">
+        ⌛ Loading enquiries...
+      </td>
+    </tr>`;
+
+  let serverList = [];
+  try {
+    const u = currentUser || (typeof getAuthUser === 'function' ? getAuthUser() : null);
+    const userRole = u ? (u.role || 'purchase').toLowerCase() : 'purchase';
+    const queryParam = userRole === 'admin' ? `?role=${roleFilter}` : '';
+    const res = await fetchWithAuth(`/api/purchase/materials/enquiries${queryParam}`);
+
+    if (res && res.ok) {
+      serverList = await res.json();
+    }
+  } catch (err) {
+    console.warn('Backend endpoint unavailable, falling back to local data:', err);
+  }
+
+  // Clear temporary local storage entries if server entries are returned to prevent duplicate display
+  if (Array.isArray(serverList) && serverList.length > 0) {
+    try { localStorage.removeItem('local_rate_enquiries'); } catch(e) {}
+  }
+
+  const u = currentUser || (typeof getAuthUser === 'function' ? getAuthUser() : null);
+  const userRole = u ? (u.role || 'purchase').toLowerCase() : 'purchase';
+  const localList = (Array.isArray(serverList) && serverList.length > 0) ? [] : JSON.parse(localStorage.getItem('local_rate_enquiries') || '[]');
+  
+  let filteredLocal = localList;
+  if (userRole === 'admin') {
+    if (roleFilter === 'myself') {
+      filteredLocal = localList.filter(e => e.sent_by_role === 'admin');
+    } else if (roleFilter === 'manager') {
+      filteredLocal = localList.filter(e => e.sent_by_role === 'manager');
+    } else if (roleFilter === 'purchase') {
+      filteredLocal = localList.filter(e => e.sent_by_role === 'purchase');
+    }
+  } else if (userRole === 'manager') {
+    filteredLocal = localList.filter(e => e.sent_by_role === 'manager');
+  } else {
+    filteredLocal = localList.filter(e => e.sent_by_role === 'purchase');
+  }
+
+  const combinedMap = new Map();
+  if (Array.isArray(serverList)) {
+    serverList.forEach(e => combinedMap.set(String(e.id), e));
+  }
+  if (Array.isArray(filteredLocal)) {
+    filteredLocal.forEach(e => combinedMap.set(String(e.id), e));
+  }
+
+  const combinedList = Array.from(combinedMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  renderEnquiriesTable(combinedList);
+}
+
+function renderEnquiriesTable(list = []) {
+  const tbody = document.getElementById('enquiries-table-tbody');
+  if (!tbody) return;
+
+  if (!Array.isArray(list) || list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align:center; padding:32px; color:var(--text-muted);">
+          No sent rate enquiries found.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((item, idx) => `
+    <tr>
+      <td style="font-weight:700; color:var(--text-muted);">${idx + 1}</td>
+      <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(item.material_name || '')}</td>
+      <td style="font-weight:600; color:var(--accent);">${escapeHtml(item.supplier_name || '')}</td>
+      <td style="font-size:0.85rem; color:var(--text-secondary); white-space:pre-wrap; max-width:320px;">${escapeHtml(item.message || '')}</td>
+    </tr>
+  `).join('');
 }
 
 window.handleKnowRate = handleKnowRate;
 window.openKnowRateModal = openKnowRateModal;
 window.openUpdateMaterialModal = openUpdateMaterialModal;
+window.openEnquiriesModal = openEnquiriesModal;
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {

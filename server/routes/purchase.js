@@ -42,11 +42,13 @@ function ensureDbCollections() {
   if (!db.data.purchase_po) db.data.purchase_po = [];
   if (!db.data.purchase_igr) db.data.purchase_igr = [];
   if (!db.data.purchase_bpr) db.data.purchase_bpr = [];
+  if (!db.data.rate_enquiries) db.data.rate_enquiries = [];
   if (!db.data.notifications) db.data.notifications = [];
   if (!db.data.autoInc) db.data.autoInc = {};
   if (!db.data.autoInc.purchase_po) db.data.autoInc.purchase_po = 1;
   if (!db.data.autoInc.purchase_igr) db.data.autoInc.purchase_igr = 1;
   if (!db.data.autoInc.purchase_bpr) db.data.autoInc.purchase_bpr = 1;
+  if (!db.data.autoInc.rate_enquiries) db.data.autoInc.rate_enquiries = 1;
   if (!db.data.autoInc.notifications) db.data.autoInc.notifications = 1;
 
   if (!db.data.purchase_materials || !db.data.purchase_materials.raw_materials || db.data.purchase_materials.raw_materials.length < 158 || !db.data.purchase_materials.tools || db.data.purchase_materials.tools.length < 85) {
@@ -1641,6 +1643,75 @@ router.put('/materials/:category/:id', auth, (req, res) => {
   } catch (err) {
     console.error('Error updating material:', err);
     res.status(500).json({ error: 'Failed to update material: ' + err.message });
+  }
+});
+
+// POST /api/purchase/materials/enquiry — Save a new rate enquiry
+router.post('/materials/enquiry', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const { material_name, supplier_name, supplier_email, message } = req.body;
+
+    if (!material_name || !supplier_name || !message) {
+      return res.status(400).json({ error: 'Material name, supplier name, and message are required' });
+    }
+
+    const role = (req.user ? (req.user.role || 'purchase') : 'purchase').toLowerCase();
+    const userId = req.user ? (req.user.id || req.user.username || 1) : 1;
+    const userName = req.user ? (req.user.full_name || req.user.username || 'User') : 'User';
+
+    const enquiry = {
+      id: db.data.autoInc.rate_enquiries++,
+      material_name: String(material_name).trim(),
+      supplier_name: String(supplier_name).trim(),
+      supplier_email: String(supplier_email || '').trim(),
+      message: String(message).trim(),
+      sent_by_role: role,
+      sent_by_user_id: userId,
+      sent_by_user_name: userName,
+      branch: req.user && req.user.branch ? req.user.branch.toLowerCase() : 'maalur',
+      created_at: new Date().toISOString()
+    };
+
+    db.data.rate_enquiries.push(enquiry);
+    db.saveData();
+
+    res.json({ success: true, message: 'Rate enquiry sent and recorded successfully', enquiry });
+  } catch (err) {
+    console.error('Error saving rate enquiry:', err);
+    res.status(500).json({ error: 'Failed to save rate enquiry: ' + err.message });
+  }
+});
+
+// GET /api/purchase/materials/enquiries — Fetch sent rate enquiries with role filters
+router.get('/materials/enquiries', auth, (req, res) => {
+  try {
+    ensureDbCollections();
+    const userRole = (req.user ? (req.user.role || 'purchase') : 'purchase').toLowerCase();
+    const targetRole = req.query.role ? req.query.role.toLowerCase() : null;
+
+    let list = db.data.rate_enquiries || [];
+
+    if (userRole === 'admin') {
+      if (targetRole === 'myself') {
+        list = list.filter(e => e.sent_by_role === 'admin');
+      } else if (targetRole === 'manager') {
+        list = list.filter(e => e.sent_by_role === 'manager');
+      } else if (targetRole === 'purchase') {
+        list = list.filter(e => e.sent_by_role === 'purchase');
+      }
+    } else if (userRole === 'manager') {
+      list = list.filter(e => e.sent_by_role === 'manager');
+    } else {
+      list = list.filter(e => e.sent_by_role === 'purchase');
+    }
+
+    list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.json(list);
+  } catch (err) {
+    console.error('Error fetching rate enquiries:', err);
+    res.status(500).json({ error: 'Failed to fetch rate enquiries: ' + err.message });
   }
 });
 

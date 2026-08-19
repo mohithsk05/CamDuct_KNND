@@ -489,8 +489,13 @@
           <div class="purchase-card-title">
             <div class="purchase-card-icon">📥</div>
             <div>
-              <h3>Raw Materials Registry — Production Sheet Specifications</h3>
-              <p>Purchased Unit, Consumed Unit, and Displayed Unit conversions per raw material item</p>
+              <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <h3 style="margin:0;">Raw Materials Registry — Production Sheet Specifications</h3>
+                <button class="btn btn-outline" id="btn-view-enquiries" style="padding:4px 12px; font-size:0.8rem; font-weight:700; border-color:var(--primary); color:var(--primary); display:inline-flex; align-items:center; gap:6px;">
+                  📩 Enquiry
+                </button>
+              </div>
+              <p style="margin-top:4px;">Purchased Unit, Consumed Unit, and Displayed Unit conversions per raw material item</p>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
@@ -1098,6 +1103,55 @@
       <button class="btn btn-primary" id="send-know-rate-btn" style="background:var(--accent); border-color:var(--accent);">
         ✉️ Send Enquiry
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: View Sent Rate Enquiries History ─────────────────────── -->
+<div class="modal-backdrop hidden" id="modal-view-enquiries">
+  <div class="modal" style="max-width:800px; width:95%;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.3rem;">📩</span>
+        <h3 style="margin:0;" id="enquiries-modal-title">Sent Rate Enquiries</h3>
+      </div>
+      <button class="modal-close" id="close-view-enquiries-modal">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex; flex-direction:column; gap:14px; min-height:280px;">
+
+      <!-- Role Subtabs Bar (Visible only for Admin) -->
+      <div class="materials-subtabs-bar hidden" id="enquiries-role-tabs-bar" style="margin:0 0 10px 0; background:#f1f5f9; padding:6px 10px; border-radius:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">FILTER BY ROLE:</span>
+        <button class="materials-subtab-btn active" data-enquiry-role="myself" id="enquiry-tab-myself">
+          <span>👤 Myself</span>
+        </button>
+        <button class="materials-subtab-btn" data-enquiry-role="manager" id="enquiry-tab-manager">
+          <span>👔 Manager</span>
+        </button>
+        <button class="materials-subtab-btn" data-enquiry-role="purchase" id="enquiry-tab-purchase">
+          <span>🛍️ Purchase Department</span>
+        </button>
+      </div>
+
+      <div class="table-responsive" style="max-height:420px; overflow-y:auto;">
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th style="width:50px;">SI NO</th>
+              <th style="width:180px;">RAW MATERIAL NAME</th>
+              <th style="width:160px;">SUPPLIER NAME</th>
+              <th>MESSAGE / ENQUIRY</th>
+            </tr>
+          </thead>
+          <tbody id="enquiries-table-tbody">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="close-enquiries-footer-btn">Close</button>
     </div>
   </div>
 </div>
