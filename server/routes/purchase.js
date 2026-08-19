@@ -1555,11 +1555,7 @@ router.get('/materials', auth, (req, res) => {
       const seed = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
       if (!db.data.purchase_materials || 
           !db.data.purchase_materials.raw_materials || 
-          db.data.purchase_materials.raw_materials.length < 158 || 
-          !db.data.purchase_materials.tools || 
-          db.data.purchase_materials.tools.length < 85 ||
-          !db.data.purchase_materials.consumable_items ||
-          db.data.purchase_materials.consumable_items.length !== seed.consumable_items.length) {
+          db.data.purchase_materials.raw_materials.length === 0) {
         db.data.purchase_materials = seed;
         db.saveData();
       }
@@ -1596,10 +1592,13 @@ router.put('/materials/:category/:id', auth, (req, res) => {
 
     if (uom !== undefined && String(uom).trim()) {
       item.uom = String(uom).trim();
+      if (category === 'raw_materials') {
+        item.displayed_unit = String(uom).trim();
+      }
     }
 
     item.updated_at = new Date().toISOString();
-    item.updated_by = req.user ? req.user.full_name : 'Purchase Dept';
+    item.updated_by = req.user ? (req.user.full_name || req.user.username || 'Purchase Dept') : 'Purchase Dept';
 
     // Create notifications for Admin and Manager
     const categoryName = category.replace('_', ' ');
@@ -1609,6 +1608,8 @@ router.put('/materials/:category/:id', auth, (req, res) => {
     if (!db.data.autoInc) db.data.autoInc = {};
     if (!db.data.autoInc.notifications) db.data.autoInc.notifications = 1;
 
+    const senderId = req.user ? (req.user.id || req.user.username || 1) : 1;
+
     // 1. Notify Admin
     db.data.notifications.push({
       id: db.data.autoInc.notifications++,
@@ -1616,7 +1617,7 @@ router.put('/materials/:category/:id', auth, (req, res) => {
       branch: null,
       type: 'materials_update',
       message: notifMsg,
-      sender_id: req.user.id,
+      sender_id: senderId,
       sender_name: item.updated_by,
       is_read: 0,
       created_at: new Date().toISOString()
@@ -1626,10 +1627,10 @@ router.put('/materials/:category/:id', auth, (req, res) => {
     db.data.notifications.push({
       id: db.data.autoInc.notifications++,
       role: 'manager',
-      branch: (req.user.branch || 'maalur').toLowerCase(),
+      branch: req.user && req.user.branch ? req.user.branch.toLowerCase() : 'maalur',
       type: 'materials_update',
       message: notifMsg,
-      sender_id: req.user.id,
+      sender_id: senderId,
       sender_name: item.updated_by,
       is_read: 0,
       created_at: new Date().toISOString()

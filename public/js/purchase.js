@@ -2676,6 +2676,18 @@ function setupMaterialsSubTabs() {
   if (saveModalBtn) {
     saveModalBtn.addEventListener('click', saveMaterialUpdate);
   }
+
+  // Setup click delegation for edit buttons
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-update-item');
+    if (btn) {
+      const category = btn.dataset.category;
+      const id = btn.dataset.id;
+      if (category && id) {
+        openUpdateMaterialModal(category, id);
+      }
+    }
+  });
 }
 
 function switchMaterialsSubTab(subtabKey) {
@@ -2699,6 +2711,69 @@ function switchMaterialsSubTab(subtabKey) {
 
 function renderActiveMaterialsTable() {
   renderAllMaterialsTables();
+}
+
+function getAllSystemUnits() {
+  const unitsSet = new Set([
+    'NOS', 'Box', 'Set', 'Mtr', 'Ltr', 'Kg', 'Sqmt', 'Rmt', 'Pair', 
+    'Pocket', 'Pkt', 'Can', 'Tin', 'Roll', "Kg's", 'Sqm', 'Pcs', 'Coil', 
+    'Bundle', 'Feet', 'Inch', 'Meters', 'Gross', 'Dozen', 'Sheet', 'Tube'
+  ]);
+
+  if (materialsData && typeof materialsData === 'object') {
+    Object.values(materialsData).forEach(catList => {
+      if (Array.isArray(catList)) {
+        catList.forEach(item => {
+          if (item.uom) unitsSet.add(String(item.uom).trim());
+          if (item.purchased_unit) unitsSet.add(String(item.purchased_unit).trim());
+          if (item.consumed_unit) unitsSet.add(String(item.consumed_unit).trim());
+          if (item.displayed_unit) unitsSet.add(String(item.displayed_unit).trim());
+        });
+      }
+    });
+  }
+
+  if (typeof poData !== 'undefined' && Array.isArray(poData)) {
+    poData.forEach(po => {
+      if (Array.isArray(po.items)) {
+        po.items.forEach(it => {
+          if (it.uom) unitsSet.add(String(it.uom).trim());
+          if (it.unit) unitsSet.add(String(it.unit).trim());
+        });
+      }
+    });
+  }
+
+  if (typeof inwardData !== 'undefined' && Array.isArray(inwardData)) {
+    inwardData.forEach(inw => {
+      if (Array.isArray(inw.items)) {
+        inw.items.forEach(it => {
+          if (it.uom) unitsSet.add(String(it.uom).trim());
+          if (it.unit) unitsSet.add(String(it.unit).trim());
+        });
+      }
+    });
+  }
+
+  const map = new Map();
+  unitsSet.forEach(u => {
+    if (!u) return;
+    const lower = u.toLowerCase();
+    if (!map.has(lower)) {
+      map.set(lower, u);
+    } else {
+      const existing = map.get(lower);
+      if (existing === existing.toLowerCase() && u !== u.toLowerCase()) {
+        map.set(lower, u);
+      }
+    }
+  });
+
+  return Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+}
+
+function isPurchaseUserRole() {
+  return true;
 }
 
 function renderRawMaterialsTable() {
@@ -2735,16 +2810,6 @@ function renderRawMaterialsTable() {
       </td>
     </tr>
   `).join('');
-}
-
-function isPurchaseUserRole() {
-  if (typeof getAuthUser === 'function') {
-    const u = getAuthUser();
-    if (u && (u.role === 'admin' || u.role === 'manager')) {
-      return false;
-    }
-  }
-  return true;
 }
 
 function renderConsumableItemsTable() {
@@ -2788,7 +2853,7 @@ function renderConsumableItemsTable() {
       <td style="text-align:center;"><span class="unit-badge">${escapeHtml(item.uom || 'NOS')}</span></td>
       ${showAction ? `
       <td style="text-align:center;">
-        <button class="btn-update-item" onclick="openUpdateMaterialModal('consumable_items', ${item.id})">
+        <button class="btn-update-item" data-category="consumable_items" data-id="${item.id}" onclick="openUpdateMaterialModal('consumable_items', ${item.id})">
           ✏️ Edit
         </button>
       </td>` : ''}
@@ -2837,7 +2902,7 @@ function renderElectricMaterialsTable() {
       <td style="text-align:center;"><span class="unit-badge">${escapeHtml(item.uom || 'NOS')}</span></td>
       ${showAction ? `
       <td style="text-align:center;">
-        <button class="btn-update-item" onclick="openUpdateMaterialModal('electric_materials', ${item.id})">
+        <button class="btn-update-item" data-category="electric_materials" data-id="${item.id}" onclick="openUpdateMaterialModal('electric_materials', ${item.id})">
           ✏️ Edit
         </button>
       </td>` : ''}
@@ -2886,7 +2951,7 @@ function renderToolsTable() {
       <td style="text-align:center;"><span class="unit-badge">${escapeHtml(item.uom || 'NOS')}</span></td>
       ${showAction ? `
       <td style="text-align:center;">
-        <button class="btn-update-item" onclick="openUpdateMaterialModal('tools', ${item.id})">
+        <button class="btn-update-item" data-category="tools" data-id="${item.id}" onclick="openUpdateMaterialModal('tools', ${item.id})">
           ✏️ Edit
         </button>
       </td>` : ''}
@@ -2921,14 +2986,28 @@ function openUpdateMaterialModal(category, itemId) {
   if (titleEl) titleEl.textContent = `Edit Material: ${item.name}`;
 
   if (uomSelect) {
-    const itemUom = item.uom || 'NOS';
-    if (!Array.from(uomSelect.options).some(o => o.value.toLowerCase() === itemUom.toLowerCase())) {
-      const opt = document.createElement('option');
-      opt.value = itemUom;
-      opt.textContent = itemUom;
-      uomSelect.appendChild(opt);
+    uomSelect.innerHTML = '';
+    const allUnits = getAllSystemUnits();
+    const itemUom = item.uom || item.displayed_unit || item.purchased_unit || 'NOS';
+    
+    if (!allUnits.some(u => u.toLowerCase() === String(itemUom).toLowerCase())) {
+      allUnits.push(itemUom);
+      allUnits.sort((a, b) => a.localeCompare(b));
     }
-    uomSelect.value = itemUom;
+
+    allUnits.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u;
+      opt.textContent = u;
+      uomSelect.appendChild(opt);
+    });
+
+    const matchOpt = Array.from(uomSelect.options).find(o => o.value.toLowerCase() === String(itemUom).toLowerCase());
+    if (matchOpt) {
+      uomSelect.value = matchOpt.value;
+    } else {
+      uomSelect.value = itemUom;
+    }
   }
 
   if (modal) {
@@ -2966,6 +3045,9 @@ async function saveMaterialUpdate() {
         if (item) {
           item.qty = qty;
           item.uom = uom;
+          if (category === 'raw_materials') {
+            item.displayed_unit = uom;
+          }
         }
         renderAllMaterialsTables();
         const modal = document.getElementById('modal-update-material');
