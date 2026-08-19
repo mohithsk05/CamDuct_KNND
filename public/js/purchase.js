@@ -20,6 +20,121 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+const PREDEFINED_SUPPLIERS = [
+  "AD-ART & Press Fabs",
+  "Aloukik Agencies",
+  "Amba Aluminium Pvt Ltd",
+  "Ananth Technodes",
+  "Asta Engineering Solutions",
+  "AVK Industrial Supplies",
+  "BIG C Technologies Pvt Ltd",
+  "Blue Volt Services",
+  "Cauvery Petrochemicals Pvt. Ltd",
+  "D G Faabs (P) Ltd",
+  "HAFA Hoists Pvt Ltd",
+  "Hardware Junction",
+  "Harsh Enterprises",
+  "HR PRECISIONS",
+  "Hydro Ion Pure Systems",
+  "Industrial Marketing",
+  "Izzy Agencies",
+  "J.R & Co.,",
+  "Jindal Aluminium Limited",
+  "JK Powder Coating",
+  "JR & Co",
+  "Kothari Metals",
+  "LR Multi Speciality Products",
+  "Mandot Inc",
+  "Meenakshi Steel Corporation",
+  "Mulrich Fabrics",
+  "Munot Agencies",
+  "Neha Graphics",
+  "NEW Mataji Electricals",
+  "NS Industrial Hardware",
+  "Orient Eco Systems Pvt Ltd",
+  "PSI Global",
+  "SG Engineering",
+  "Shree Jashraj Insulation",
+  "Shri Rupana Industrial Suppliers",
+  "Siddhi Kabel Corporation Pvt Ltd",
+  "Slider Bags Bengaluru Pvt Ltd",
+  "Sneha Enterprise Self Adhesive Tapes",
+  "Sri Arihant Industries",
+  "Sri Vasavi Adhesive Tapes Pvt Ltd",
+  "Superin",
+  "Thanu Enterprises",
+  "Truecon Enterprises",
+  "Urja Sealant Pvt Ltd",
+  "Weld Phile Technology",
+  "Steel Center",
+  "Cresco Industrial Products Pvt Ltd",
+  "Tooling Ocean",
+  "The Supreme Industries Limited"
+];
+
+let customSuppliers = JSON.parse(localStorage.getItem('custom_suppliers_list') || '[]');
+
+function saveCustomSupplier(name) {
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (trimmed === '—' || trimmed === '-') return;
+  if (!customSuppliers.some(s => s.toLowerCase() === trimmed.toLowerCase()) && 
+      !PREDEFINED_SUPPLIERS.some(s => s.toLowerCase() === trimmed.toLowerCase())) {
+    customSuppliers.push(trimmed);
+    localStorage.setItem('custom_suppliers_list', JSON.stringify(customSuppliers));
+  }
+}
+
+function populateSupplierDropdowns() {
+  const exportSelect = document.getElementById('export-supplier-select');
+  const subpanelSelect = document.getElementById('supplier-subpanel-select');
+  const datalistEl = document.getElementById('supplier-datalist-options');
+
+  const supplierSet = new Set();
+  PREDEFINED_SUPPLIERS.forEach(s => supplierSet.add(s));
+  customSuppliers.forEach(s => supplierSet.add(s));
+
+  if (Array.isArray(currentIGREntries)) {
+    currentIGREntries.forEach(item => {
+      if (item.supplier_name && item.supplier_name.trim() && item.supplier_name !== '—') {
+        supplierSet.add(item.supplier_name.trim());
+      }
+    });
+  }
+
+  if (Array.isArray(currentBPREntries)) {
+    currentBPREntries.forEach(item => {
+      if (item.supplier && item.supplier.trim() && item.supplier !== '—') {
+        supplierSet.add(item.supplier.trim());
+      }
+    });
+  }
+
+  const sortedSuppliers = Array.from(supplierSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  if (datalistEl) {
+    datalistEl.innerHTML = sortedSuppliers.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
+  }
+
+  [exportSelect, subpanelSelect].forEach(selectEl => {
+    if (!selectEl) return;
+    const currVal = selectEl.value;
+
+    let html = '<option value="all">All Suppliers</option>';
+    html += '<option value="__add_new__" style="font-weight:700; color:var(--accent);">➕ Add New Supplier...</option>';
+
+    sortedSuppliers.forEach(s => {
+      html += `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`;
+    });
+
+    selectEl.innerHTML = html;
+
+    if (currVal && Array.from(selectEl.options).some(o => o.value === currVal)) {
+      selectEl.value = currVal;
+    }
+  });
+}
+
 const tabMonthFilters = {
   po: 'all',
   wo: 'all',
@@ -200,6 +315,44 @@ function setupTopNavigation() {
       const monthLabel = monthSelect.value === 'all' ? 'All Months' : monthSelect.value;
       showToast(`Filtered ${activeKey.toUpperCase()} tab by ${monthLabel}`, 'info');
     });
+  }
+
+  const exportSupplierSelect = document.getElementById('export-supplier-select');
+  if (exportSupplierSelect) {
+    exportSupplierSelect.addEventListener('change', () => {
+      if (exportSupplierSelect.value === '__add_new__') {
+        const newSupplier = prompt('Enter new Supplier Name to add to the system:');
+        if (newSupplier && newSupplier.trim()) {
+          const cleanName = newSupplier.trim();
+          saveCustomSupplier(cleanName);
+          populateSupplierDropdowns();
+          exportSupplierSelect.value = cleanName;
+          showToast(`Added new supplier "${cleanName}"`, 'success');
+        } else {
+          exportSupplierSelect.value = 'all';
+        }
+      }
+
+      const activeKey = getActiveTabKey();
+      if (activeKey === 'igr') {
+        loadIGREntries(true);
+      } else if (activeKey === 'bpr') {
+        loadBPREntries(true);
+      }
+    });
+  }
+
+  const subpanelSupplierSelect = document.getElementById('supplier-subpanel-select');
+  if (subpanelSupplierSelect) {
+    subpanelSupplierSelect.addEventListener('change', () => {
+      if (exportSupplierSelect) exportSupplierSelect.value = subpanelSupplierSelect.value;
+      loadSupplierView();
+    });
+  }
+
+  const exportBtn = document.getElementById('export-excel-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportInventoryToExcel);
   }
 }
 
@@ -738,13 +891,24 @@ async function loadIGREntries(silent = false) {
 
     const filteredData = filterEntriesBySelectedMonth(data || [], selectedMonth);
     currentIGREntries = filteredData;
+    populateSupplierDropdowns();
 
-    if (!filteredData || filteredData.length === 0) {
+    const supplierSelect = document.getElementById('export-supplier-select');
+    const selectedSupplier = supplierSelect ? supplierSelect.value : 'all';
+
+    let displayData = filteredData;
+    if (selectedSupplier !== 'all') {
+      const sLower = selectedSupplier.toLowerCase();
+      displayData = filteredData.filter(item => item.supplier_name && item.supplier_name.toLowerCase().includes(sLower));
+    }
+
+    if (!displayData || displayData.length === 0) {
       const colSpan = showActions ? 17 : 16;
       const monthText = selectedMonth === 'all' ? '' : ` for <strong>${escapeHtml(selectedMonth)}</strong>`;
+      const suppText = selectedSupplier === 'all' ? '' : ` for supplier <strong>"${escapeHtml(selectedSupplier)}"</strong>`;
       const msg = isPurchaseUser
-        ? `No IGR entries recorded yet${monthText}. Click <strong>"New IGR Entry"</strong> to add an entry.`
-        : `No IGR entries recorded yet${monthText} by the Purchase Department.`;
+        ? `No IGR entries recorded yet${monthText}${suppText}. Click <strong>"New IGR Entry"</strong> to add an entry.`
+        : `No IGR entries recorded yet${monthText}${suppText} by the Purchase Department.`;
       tbody.innerHTML = `
         <tr>
           <td colspan="${colSpan}" style="text-align:center; padding:36px 12px; color:var(--text-muted);">
@@ -756,7 +920,7 @@ async function loadIGREntries(silent = false) {
       return;
     }
 
-    tbody.innerHTML = filteredData.map((item, idx) => `
+    tbody.innerHTML = displayData.map((item, idx) => `
       <tr>
         <td style="font-weight:700; color:#991b1b; text-align:center;">${idx + 1}</td>
         <td style="font-weight:600; color:#991b1b;">${escapeHtml(item.month || getRealTimeMonth(item.date))}</td>
@@ -869,6 +1033,7 @@ async function submitIGREntry() {
       throw new Error(err.error || `Server error (${res ? res.status : 'No response'})`);
     }
 
+    if (supplier_name) saveCustomSupplier(supplier_name);
     showToast(isEdit ? 'IGR Entry updated successfully' : 'IGR Entry created successfully', 'success');
     document.getElementById('modal-add-igr').classList.add('hidden');
     resetIGRForm();
@@ -929,13 +1094,24 @@ async function loadBPREntries(silent = false) {
 
     const filteredData = filterEntriesBySelectedMonth(data || [], selectedMonth);
     currentBPREntries = filteredData;
+    populateSupplierDropdowns();
 
-    if (!filteredData || filteredData.length === 0) {
+    const supplierSelect = document.getElementById('export-supplier-select');
+    const selectedSupplier = supplierSelect ? supplierSelect.value : 'all';
+
+    let displayData = filteredData;
+    if (selectedSupplier !== 'all') {
+      const sLower = selectedSupplier.toLowerCase();
+      displayData = filteredData.filter(item => item.supplier && item.supplier.toLowerCase().includes(sLower));
+    }
+
+    if (!displayData || displayData.length === 0) {
       const colSpan = showActions ? 18 : 17;
       const monthText = selectedMonth === 'all' ? '' : ` for <strong>${escapeHtml(selectedMonth)}</strong>`;
+      const suppText = selectedSupplier === 'all' ? '' : ` for supplier <strong>"${escapeHtml(selectedSupplier)}"</strong>`;
       const msg = isPurchaseUser
-        ? `No BPR entries recorded yet${monthText}. Click <strong>"New BPR Entry"</strong> to add an entry.`
-        : `No BPR entries recorded yet${monthText} by the Purchase Department.`;
+        ? `No BPR entries recorded yet${monthText}${suppText}. Click <strong>"New BPR Entry"</strong> to add an entry.`
+        : `No BPR entries recorded yet${monthText}${suppText} by the Purchase Department.`;
       tbody.innerHTML = `
         <tr>
           <td colspan="${colSpan}" style="text-align:center; padding:36px 12px; color:var(--text-muted);">
@@ -947,7 +1123,7 @@ async function loadBPREntries(silent = false) {
       return;
     }
 
-    tbody.innerHTML = filteredData.map((item, idx) => `
+    tbody.innerHTML = displayData.map((item, idx) => `
       <tr>
         <td style="font-weight:700; color:#991b1b; text-align:center;">${idx + 1}</td>
         <td style="font-weight:600; color:#991b1b;">${escapeHtml(item.month || getRealTimeMonth(item.date))}</td>
@@ -1062,6 +1238,7 @@ async function submitBPREntry() {
       throw new Error(err.error || `Server error (${res ? res.status : 'No response'})`);
     }
 
+    if (payload.supplier) saveCustomSupplier(payload.supplier);
     showToast(isEdit ? 'BPR Entry updated successfully' : 'BPR Entry created successfully', 'success');
     document.getElementById('modal-add-bpr').classList.add('hidden');
     resetBPRForm();
@@ -1271,6 +1448,410 @@ async function loadAbstractSummary() {
     showToast(`Error loading Abstract: ${err.message}`, 'error');
   }
 }
+
+// ─── SUPPLIER VIEW MODULE ───────────────────────────────────────────────────
+
+function loadSupplierView() {
+  populateSupplierDropdowns();
+  const subpanelSelect = document.getElementById('supplier-subpanel-select');
+  const exportSelect = document.getElementById('export-supplier-select');
+  const selectedSupplier = subpanelSelect ? subpanelSelect.value : (exportSelect ? exportSelect.value : 'all');
+
+  const statName = document.getElementById('supplier-stat-name');
+  const statIgrCount = document.getElementById('supplier-stat-igr-count');
+  const statBprCount = document.getElementById('supplier-stat-bpr-count');
+  const statTotalVal = document.getElementById('supplier-stat-total-val');
+
+  if (statName) statName.textContent = selectedSupplier === 'all' ? 'All Suppliers' : selectedSupplier;
+
+  let igrMatches = [...(currentIGREntries || [])];
+  let bprMatches = [...(currentBPREntries || [])];
+
+  if (selectedSupplier !== 'all') {
+    const sLower = selectedSupplier.toLowerCase();
+    igrMatches = igrMatches.filter(item => item.supplier_name && item.supplier_name.toLowerCase().includes(sLower));
+    bprMatches = bprMatches.filter(item => item.supplier && item.supplier.toLowerCase().includes(sLower));
+  }
+
+  if (statIgrCount) statIgrCount.textContent = igrMatches.length;
+  if (statBprCount) statBprCount.textContent = bprMatches.length;
+
+  let totalValue = 0;
+  igrMatches.forEach(item => totalValue += (item.invoice_value || 0));
+  bprMatches.forEach(item => totalValue += (item.invoice_value || 0));
+  if (statTotalVal) statTotalVal.textContent = `₹${totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+  // Render IGR rows for supplier subpanel
+  const igrTbody = document.getElementById('supplier-igr-tbody');
+  if (igrTbody) {
+    if (igrMatches.length === 0) {
+      igrTbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:20px; color:var(--text-muted);">No IGR entries recorded for ${escapeHtml(selectedSupplier)}</td></tr>`;
+    } else {
+      igrTbody.innerHTML = igrMatches.map((item, idx) => `
+        <tr>
+          <td style="font-weight:700; color:#991b1b; text-align:center;">${idx + 1}</td>
+          <td>${escapeHtml(item.month || getRealTimeMonth(item.date))}</td>
+          <td>${formatDate(item.date)}</td>
+          <td style="font-weight:600; color:var(--accent);">${escapeHtml(item.igr_no || '—')}</td>
+          <td>${escapeHtml(item.invoice_no_date || '—')}</td>
+          <td><strong>${escapeHtml(item.supplier_name || '—')}</strong></td>
+          <td>${escapeHtml(item.description || '—')}</td>
+          <td>₹${(item.taxable_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          <td>₹${(item.igst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          <td>₹${(item.cgst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          <td>₹${(item.sgst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          <td style="font-weight:700; color:var(--success);">₹${(item.invoice_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // Render BPR rows for supplier subpanel
+  const bprTbody = document.getElementById('supplier-bpr-tbody');
+  if (bprTbody) {
+    if (bprMatches.length === 0) {
+      bprTbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:20px; color:var(--text-muted);">No BPR entries recorded for ${escapeHtml(selectedSupplier)}</td></tr>`;
+    } else {
+      bprTbody.innerHTML = bprMatches.map((item, idx) => `
+        <tr>
+          <td style="font-weight:700; color:#991b1b; text-align:center;">${idx + 1}</td>
+          <td>${escapeHtml(item.month || getRealTimeMonth(item.date))}</td>
+          <td>${formatDate(item.date)}</td>
+          <td style="font-weight:600; color:var(--accent);">${escapeHtml(item.bpr_no || '—')}</td>
+          <td>${escapeHtml(item.contractor_name || '—')}</td>
+          <td><strong>${escapeHtml(item.supplier || '—')}</strong></td>
+          <td>${escapeHtml(item.invoice_no_date || '—')}</td>
+          <td>${escapeHtml(item.particulars || '—')}</td>
+          <td>₹${(item.taxable_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          <td>₹${(item.igst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          <td>₹${(item.cgst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          <td>₹${(item.sgst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          <td style="font-weight:700; color:var(--success);">₹${(item.invoice_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        </tr>
+      `).join('');
+    }
+  }
+}
+
+// ─── EXCEL (.XLSX) CALENDAR & SUPPLIER EXPORT ─────────────────────────────
+
+async function exportInventoryToExcel() {
+  if (typeof XLSX === 'undefined') {
+    showToast('Excel export engine is initializing... Please try again in a moment.', 'warning');
+    return;
+  }
+
+  const fromDateInput = document.getElementById('export-from-date');
+  const toDateInput = document.getElementById('export-to-date');
+  const supplierSelect = document.getElementById('export-supplier-select');
+
+  const fromDate = fromDateInput ? fromDateInput.value.trim() : '';
+  const toDate = toDateInput ? toDateInput.value.trim() : '';
+  const selectedSupplier = supplierSelect ? supplierSelect.value.trim() : 'all';
+
+  const wb = XLSX.utils.book_new();
+
+  const parts = [];
+  if (selectedSupplier !== 'all') parts.push(selectedSupplier.replace(/[^a-zA-Z0-9]/g, '_'));
+  if (fromDate || toDate) parts.push(`${fromDate || 'Start'}_to_${toDate || 'End'}`);
+  const filterTag = parts.length > 0 ? parts.join('_') : 'All_Records';
+
+  if (activeSubTab === 'igr') {
+    let entries = [...currentIGREntries];
+
+    // Date range filter
+    if (fromDate || toDate) {
+      entries = entries.filter(item => {
+        const d = item.date ? item.date.split('T')[0] : '';
+        if (!d) return false;
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      });
+    } else {
+      const selectedMonth = tabMonthFilters['igr'] || 'all';
+      if (selectedMonth && selectedMonth.toLowerCase() !== 'all') {
+        entries = filterEntriesBySelectedMonth(entries, selectedMonth);
+      }
+    }
+
+    // Supplier filter
+    if (selectedSupplier !== 'all') {
+      const sLower = selectedSupplier.toLowerCase();
+      entries = entries.filter(item => item.supplier_name && item.supplier_name.toLowerCase().includes(sLower));
+    }
+
+    if (!entries || entries.length === 0) {
+      const suppText = selectedSupplier !== 'all' ? ` for supplier "${selectedSupplier}"` : '';
+      const msg = (fromDate || toDate)
+        ? `No IGR entries found between ${fromDate || 'Start'} and ${toDate || 'End'}${suppText}.`
+        : `No IGR entries found${suppText}.`;
+      showToast(msg, 'warning');
+      return;
+    }
+
+    const headers = [
+      'SL NO', 'MONTH', 'DATE', 'IGR NO', 'INVOICE NO & DATE', 'SUPPLIER NAME',
+      'DESCRIPTION', 'MATERIAL VALUE (₹)', 'TRANSPORT (₹)', 'LABOUR CHARGES (₹)',
+      'TAXABLE VALUE (₹)', 'TAX RATE (%)', 'IGST (₹)', 'CGST (₹)', 'SGST (₹)', 'INVOICE VALUE (₹)'
+    ];
+
+    let totMat = 0, totTr = 0, totLab = 0, totTaxable = 0, totIgst = 0, totCgst = 0, totSgst = 0, totInv = 0;
+    const rows = [headers];
+
+    entries.forEach((item, idx) => {
+      const mat = item.material_value || 0;
+      const tr = item.transport || 0;
+      const lab = item.labour_charges || 0;
+      const tax = item.taxable_value || 0;
+      const igst = item.igst || 0;
+      const cgst = item.cgst || 0;
+      const sgst = item.sgst || 0;
+      const inv = item.invoice_value || 0;
+
+      totMat += mat;
+      totTr += tr;
+      totLab += lab;
+      totTaxable += tax;
+      totIgst += igst;
+      totCgst += cgst;
+      totSgst += sgst;
+      totInv += inv;
+
+      rows.push([
+        idx + 1,
+        item.month || getRealTimeMonth(item.date),
+        item.date ? item.date.split('T')[0] : '—',
+        item.igr_no || '—',
+        item.invoice_no_date || '—',
+        item.supplier_name || '—',
+        item.description || '—',
+        mat,
+        tr,
+        lab,
+        tax,
+        ((item.taxable_rate || 0) * 100).toFixed(0) + '%',
+        igst,
+        cgst,
+        sgst,
+        inv
+      ]);
+    });
+
+    rows.push([
+      'TOTAL', '', '', '', '', '', 'Grand Total',
+      totMat, totTr, totLab, totTaxable, '', totIgst, totCgst, totSgst, totInv
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 8 },  { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 20 },
+      { wch: 24 }, { wch: 30 }, { wch: 18 }, { wch: 14 }, { wch: 18 },
+      { wch: 18 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 20 }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'IGR Inventory');
+    const filename = `IGR_Inventory_${capitalize(currentBranch)}_${filterTag}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    showToast(`Downloaded IGR Excel (${entries.length} entries)`, 'success');
+
+  } else if (activeSubTab === 'bpr') {
+    let entries = [...currentBPREntries];
+
+    if (fromDate || toDate) {
+      entries = entries.filter(item => {
+        const d = item.date ? item.date.split('T')[0] : '';
+        if (!d) return false;
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      });
+    } else {
+      const selectedMonth = tabMonthFilters['bpr'] || 'all';
+      if (selectedMonth && selectedMonth.toLowerCase() !== 'all') {
+        entries = filterEntriesBySelectedMonth(entries, selectedMonth);
+      }
+    }
+
+    if (selectedSupplier !== 'all') {
+      const sLower = selectedSupplier.toLowerCase();
+      entries = entries.filter(item => item.supplier && item.supplier.toLowerCase().includes(sLower));
+    }
+
+    if (!entries || entries.length === 0) {
+      const suppText = selectedSupplier !== 'all' ? ` for supplier "${selectedSupplier}"` : '';
+      const msg = (fromDate || toDate)
+        ? `No BPR entries found between ${fromDate || 'Start'} and ${toDate || 'End'}${suppText}.`
+        : `No BPR entries found${suppText}.`;
+      showToast(msg, 'warning');
+      return;
+    }
+
+    const headers = [
+      'SL NO', 'MONTH', 'DATE', 'BPR NO', 'CONTRACTOR NAME', 'JOB WORK',
+      'SUPPLIER', 'INVOICE NO & DATE', 'PARTICULARS', 'DESCRIPTION',
+      'TAXABLE VALUE (₹)', 'TAX RATE (%)', 'IGST (₹)', 'CGST (₹)', 'SGST (₹)',
+      'INVOICE VALUE (₹)', 'REMARKS'
+    ];
+
+    let totTaxable = 0, totIgst = 0, totCgst = 0, totSgst = 0, totInv = 0;
+    const rows = [headers];
+
+    entries.forEach((item, idx) => {
+      const tax = item.taxable_value || 0;
+      const igst = item.igst || 0;
+      const cgst = item.cgst || 0;
+      const sgst = item.sgst || 0;
+      const inv = item.invoice_value || 0;
+
+      totTaxable += tax;
+      totIgst += igst;
+      totCgst += cgst;
+      totSgst += sgst;
+      totInv += inv;
+
+      rows.push([
+        idx + 1,
+        item.month || getRealTimeMonth(item.date),
+        item.date ? item.date.split('T')[0] : '—',
+        item.bpr_no || '—',
+        item.contractor_name || '—',
+        item.job_work || '—',
+        item.supplier || '—',
+        item.invoice_no_date || '—',
+        item.particulars || '—',
+        item.description || '—',
+        tax,
+        ((item.taxable_rate || 0) * 100).toFixed(0) + '%',
+        igst,
+        cgst,
+        sgst,
+        inv,
+        item.remarks || '—'
+      ]);
+    });
+
+    rows.push([
+      'TOTAL', '', '', '', '', '', '', '', '', 'Grand Total',
+      totTaxable, '', totIgst, totCgst, totSgst, totInv, ''
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 8 },  { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 22 },
+      { wch: 20 }, { wch: 22 }, { wch: 20 }, { wch: 20 }, { wch: 28 },
+      { wch: 18 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+      { wch: 20 }, { wch: 24 }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'BPR Inventory');
+    const filename = `BPR_Inventory_${capitalize(currentBranch)}_${filterTag}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    showToast(`Downloaded BPR Excel (${entries.length} entries)`, 'success');
+
+  } else if (activeSubTab === 'supplier' || activeSubTab === 'abstract') {
+    let igrEntries = [...(currentIGREntries || [])];
+    let bprEntries = [...(currentBPREntries || [])];
+
+    if (fromDate || toDate) {
+      igrEntries = igrEntries.filter(item => {
+        const d = item.date ? item.date.split('T')[0] : '';
+        if (!d) return false;
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      });
+      bprEntries = bprEntries.filter(item => {
+        const d = item.date ? item.date.split('T')[0] : '';
+        if (!d) return false;
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      });
+    }
+
+    if (selectedSupplier !== 'all') {
+      const sLower = selectedSupplier.toLowerCase();
+      igrEntries = igrEntries.filter(item => item.supplier_name && item.supplier_name.toLowerCase().includes(sLower));
+      bprEntries = bprEntries.filter(item => item.supplier && item.supplier.toLowerCase().includes(sLower));
+    }
+
+    if (igrEntries.length === 0 && bprEntries.length === 0) {
+      const suppText = selectedSupplier !== 'all' ? ` for supplier "${selectedSupplier}"` : '';
+      showToast(`No inventory data found${suppText} for the selected criteria.`, 'warning');
+      return;
+    }
+
+    if (igrEntries.length > 0) {
+      const headers = [
+        'SL NO', 'MONTH', 'DATE', 'IGR NO', 'INVOICE NO & DATE', 'SUPPLIER NAME',
+        'DESCRIPTION', 'MATERIAL VALUE (₹)', 'TRANSPORT (₹)', 'LABOUR CHARGES (₹)',
+        'TAXABLE VALUE (₹)', 'TAX RATE (%)', 'IGST (₹)', 'CGST (₹)', 'SGST (₹)', 'INVOICE VALUE (₹)'
+      ];
+      let totMat = 0, totTr = 0, totLab = 0, totTaxable = 0, totIgst = 0, totCgst = 0, totSgst = 0, totInv = 0;
+      const rows = [headers];
+      igrEntries.forEach((item, idx) => {
+        totMat += item.material_value || 0;
+        totTr += item.transport || 0;
+        totLab += item.labour_charges || 0;
+        totTaxable += item.taxable_value || 0;
+        totIgst += item.igst || 0;
+        totCgst += item.cgst || 0;
+        totSgst += item.sgst || 0;
+        totInv += item.invoice_value || 0;
+
+        rows.push([
+          idx + 1, item.month || getRealTimeMonth(item.date), item.date ? item.date.split('T')[0] : '—',
+          item.igr_no || '—', item.invoice_no_date || '—', item.supplier_name || '—',
+          item.description || '—', item.material_value || 0, item.transport || 0,
+          item.labour_charges || 0, item.taxable_value || 0,
+          ((item.taxable_rate || 0) * 100).toFixed(0) + '%',
+          item.igst || 0, item.cgst || 0, item.sgst || 0, item.invoice_value || 0
+        ]);
+      });
+      rows.push(['TOTAL', '', '', '', '', '', 'Grand Total', totMat, totTr, totLab, totTaxable, '', totIgst, totCgst, totSgst, totInv]);
+      const wsIgr = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, wsIgr, 'IGR Entries');
+    }
+
+    if (bprEntries.length > 0) {
+      const headers = [
+        'SL NO', 'MONTH', 'DATE', 'BPR NO', 'CONTRACTOR NAME', 'JOB WORK',
+        'SUPPLIER', 'INVOICE NO & DATE', 'PARTICULARS', 'DESCRIPTION',
+        'TAXABLE VALUE (₹)', 'TAX RATE (%)', 'IGST (₹)', 'CGST (₹)', 'SGST (₹)',
+        'INVOICE VALUE (₹)', 'REMARKS'
+      ];
+      let totTaxable = 0, totIgst = 0, totCgst = 0, totSgst = 0, totInv = 0;
+      const rows = [headers];
+      bprEntries.forEach((item, idx) => {
+        totTaxable += item.taxable_value || 0;
+        totIgst += item.igst || 0;
+        totCgst += item.cgst || 0;
+        totSgst += item.sgst || 0;
+        totInv += item.invoice_value || 0;
+
+        rows.push([
+          idx + 1, item.month || getRealTimeMonth(item.date), item.date ? item.date.split('T')[0] : '—',
+          item.bpr_no || '—', item.contractor_name || '—', item.job_work || '—',
+          item.supplier || '—', item.invoice_no_date || '—', item.particulars || '—',
+          item.description || '—', item.taxable_value || 0,
+          ((item.taxable_rate || 0) * 100).toFixed(0) + '%',
+          item.igst || 0, item.cgst || 0, item.sgst || 0, item.invoice_value || 0,
+          item.remarks || '—'
+        ]);
+      });
+      rows.push(['TOTAL', '', '', '', '', '', '', '', '', 'Grand Total', totTaxable, '', totIgst, totCgst, totSgst, totInv, '']);
+      const wsBpr = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, wsBpr, 'BPR Entries');
+    }
+
+    const filename = `Supplier_Data_${capitalize(currentBranch)}_${filterTag}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    showToast(`Downloaded Supplier Excel (${igrEntries.length + bprEntries.length} total entries)`, 'success');
+  }
+}
+
+window.exportInventoryToExcel = exportInventoryToExcel;
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {

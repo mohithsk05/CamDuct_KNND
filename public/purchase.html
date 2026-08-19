@@ -113,18 +113,44 @@
 
     <!-- Inventory Subtabs (Only visible when Inventory main tab is active) -->
     <div class="purchase-subtabs-bar hidden" id="inventory-subtabs-bar">
-      <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-right:4px;">
-        Inventory Subtabs:
-      </span>
-      <button class="purchase-subtab-btn active" data-subtab="igr" id="subtab-btn-igr">
-        <span>📥 IGR</span>
-      </button>
-      <button class="purchase-subtab-btn" data-subtab="bpr" id="subtab-btn-bpr">
-        <span>🔄 BPR</span>
-      </button>
-      <button class="purchase-subtab-btn" data-subtab="abstract" id="subtab-btn-abstract">
-        <span>📊 Abstract</span>
-      </button>
+      <div class="inventory-subtabs-left">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-right:4px;">
+          INVENTORY SUBTABS:
+        </span>
+        <button class="purchase-subtab-btn active" data-subtab="igr" id="subtab-btn-igr">
+          <span>📥 IGR</span>
+        </button>
+        <button class="purchase-subtab-btn" data-subtab="bpr" id="subtab-btn-bpr">
+          <span>🔄 BPR</span>
+        </button>
+        <button class="purchase-subtab-btn" data-subtab="abstract" id="subtab-btn-abstract">
+          <span>📊 Abstract</span>
+        </button>
+      </div>
+
+      <!-- Calendar-based & Supplier Excel Download Option (Right Side) -->
+      <div class="inventory-subtabs-download-group" id="inventory-download-group">
+        <div class="export-date-field">
+          <label for="export-from-date">📅 From:</label>
+          <input type="date" id="export-from-date" title="Select From Date">
+        </div>
+        <div class="export-date-field">
+          <label for="export-to-date">To:</label>
+          <input type="date" id="export-to-date" title="Select To Date">
+        </div>
+        <div class="export-date-field">
+          <label for="export-supplier-select">🏢 Supplier:</label>
+          <select id="export-supplier-select" title="Filter by Supplier" style="font-size:0.8rem; font-weight:600; padding:3px 8px; border-radius:6px; border:1px solid var(--border); background:#fff; max-width:180px;">
+            <option value="all">All Suppliers</option>
+          </select>
+        </div>
+        <button class="btn-export-excel" id="export-excel-btn" type="button" title="Download Excel (.xlsx) data">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span>Download Excel (.xlsx)</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -436,7 +462,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Supplier Name</label>
-          <input class="form-input" type="text" id="igr-supplier-name" placeholder="e.g. Aloukik Agencies">
+          <input class="form-input" type="text" id="igr-supplier-name" list="supplier-datalist-options" placeholder="e.g. Aloukik Agencies">
         </div>
       </div>
 
@@ -549,7 +575,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Supplier</label>
-          <input class="form-input" type="text" id="bpr-supplier" placeholder="Supplier name">
+          <input class="form-input" type="text" id="bpr-supplier" list="supplier-datalist-options" placeholder="Supplier name">
         </div>
       </div>
 
@@ -618,8 +644,10 @@
   </div>
 </div>
 
+<datalist id="supplier-datalist-options"></datalist>
 <div class="toast-container" id="toast-container"></div>
 
+<script src="/vendor/xlsx/xlsx.full.min.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/purchase.js"></script>
 </body>

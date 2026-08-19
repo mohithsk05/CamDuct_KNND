@@ -13,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/vendor/xlsx', express.static(path.join(__dirname, '..', 'node_modules', 'xlsx', 'dist')));
 
 // ─── API Routes ───────────────────────────────────────────────────────────
 app.use('/api/auth',     require('./routes/auth'));
