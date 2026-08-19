@@ -1058,6 +1058,50 @@
   </div>
 </div>
 
+<!-- ─── MODAL: Know the Rate (Supplier Enquiry) ────────────────────────── -->
+<div class="modal-backdrop hidden" id="modal-know-rate">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.3rem;">📧</span>
+        <h3 style="margin:0;" id="know-rate-modal-title">Know the Rate — Supplier Enquiry</h3>
+      </div>
+      <button class="modal-close" id="close-know-rate-modal">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex; flex-direction:column; gap:14px;">
+      
+      <div class="form-group">
+        <label class="form-label">Raw Material Name</label>
+        <input class="form-input" id="know-rate-material-name" readonly style="font-weight:700; background:#f8fafc; color:var(--text-primary);">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Choose Supplier *</label>
+        <select class="form-select" id="know-rate-supplier-select" style="font-weight:600;">
+          <option value="">Select Supplier...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Supplier Email ID *</label>
+        <input class="form-input" type="email" id="know-rate-supplier-email" placeholder="e.g. sales@supplier.com">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Enquiry Message *</label>
+        <textarea class="form-input" id="know-rate-message" rows="4" style="font-size:0.88rem; line-height:1.4;" placeholder="Type your enquiry message here..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancel-know-rate-modal">Cancel</button>
+      <button class="btn btn-primary" id="send-know-rate-btn" style="background:var(--accent); border-color:var(--accent);">
+        ✉️ Send Enquiry
+      </button>
+    </div>
+  </div>
+</div>
+
 <datalist id="make-datalist-options"></datalist>
 <datalist id="rawmaterial-datalist-options"></datalist>
 <datalist id="supplier-datalist-options"></datalist>

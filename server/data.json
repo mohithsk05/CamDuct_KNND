@@ -572,6 +572,28 @@
       "sender_name": "Purchase - Maalur",
       "is_read": 0,
       "created_at": "2026-08-19T18:10:40.352Z"
+    },
+    {
+      "id": 184,
+      "role": "admin",
+      "branch": null,
+      "type": "materials_update",
+      "message": "[Materials Update] Purchase - Maalur updated consumable items item \"Drilling Bit (8MM)\": Qty = 9090, UOM = Box",
+      "sender_id": 6,
+      "sender_name": "Purchase - Maalur",
+      "is_read": 0,
+      "created_at": "2026-08-19T18:15:45.299Z"
+    },
+    {
+      "id": 185,
+      "role": "manager",
+      "branch": "maalur",
+      "type": "materials_update",
+      "message": "[Materials Update] Purchase - Maalur updated consumable items item \"Drilling Bit (8MM)\": Qty = 9090, UOM = Box",
+      "sender_id": 6,
+      "sender_name": "Purchase - Maalur",
+      "is_read": 0,
+      "created_at": "2026-08-19T18:15:45.299Z"
     }
   ],
   "power_grants": [
@@ -595,7 +617,7 @@
   "autoInc": {
     "users": 17,
     "projects": 13,
-    "notifications": 184,
+    "notifications": 186,
     "power_grants": 27,
     "purchase_igr": 4,
     "purchase_bpr": 1,
@@ -1794,9 +1816,9 @@
         "id": 1,
         "name": "Drilling Bit (8MM)",
         "make": "",
-        "qty": 0,
+        "qty": 9090,
         "uom": "Box",
-        "updated_at": "2026-08-19T18:10:40.352Z",
+        "updated_at": "2026-08-19T18:15:45.298Z",
         "updated_by": "Purchase - Maalur"
       },
       {

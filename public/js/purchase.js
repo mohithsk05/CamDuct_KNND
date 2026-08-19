@@ -2688,6 +2688,41 @@ function setupMaterialsSubTabs() {
       }
     }
   });
+
+  // Setup Know the Rate Modal listeners
+  const closeKnowRateModal = document.getElementById('close-know-rate-modal');
+  const cancelKnowRateModal = document.getElementById('cancel-know-rate-modal');
+  const sendKnowRateBtn = document.getElementById('send-know-rate-btn');
+  const knowRateSupplierSelect = document.getElementById('know-rate-supplier-select');
+  const knowRateModal = document.getElementById('modal-know-rate');
+
+  if (closeKnowRateModal) {
+    closeKnowRateModal.addEventListener('click', () => knowRateModal && knowRateModal.classList.add('hidden'));
+  }
+  if (cancelKnowRateModal) {
+    cancelKnowRateModal.addEventListener('click', () => knowRateModal && knowRateModal.classList.add('hidden'));
+  }
+  if (sendKnowRateBtn) {
+    sendKnowRateBtn.addEventListener('click', sendKnowRateEnquiry);
+  }
+  if (knowRateSupplierSelect) {
+    knowRateSupplierSelect.addEventListener('change', () => {
+      const selectedSup = knowRateSupplierSelect.value;
+      const emailInput = document.getElementById('know-rate-supplier-email');
+      if (emailInput && !emailInput.value && selectedSup) {
+        const domain = selectedSup.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (domain) emailInput.value = `sales@${domain}.com`;
+      }
+      updateKnowRateMessageDraft();
+    });
+  }
+  if (knowRateModal) {
+    knowRateModal.addEventListener('click', (e) => {
+      if (e.target === knowRateModal) {
+        knowRateModal.classList.add('hidden');
+      }
+    });
+  }
 }
 
 function switchMaterialsSubTab(subtabKey) {
@@ -2773,6 +2808,10 @@ function getAllSystemUnits() {
 }
 
 function isPurchaseUserRole() {
+  const u = currentUser || (typeof getAuthUser === 'function' ? getAuthUser() : null);
+  if (u && (u.role === 'admin' || u.role === 'manager')) {
+    return false;
+  }
   return true;
 }
 
@@ -2780,6 +2819,15 @@ function renderRawMaterialsTable() {
   const tbody = document.getElementById('raw-materials-tbody');
   const countPill = document.getElementById('raw-materials-count-pill');
   if (!tbody) return;
+
+  // Raw materials action column ("Know the rate") is accessible to Admin, Manager, and Purchase department
+  const table = tbody.closest('table');
+  if (table) {
+    const actionTh = table.querySelector('thead tr th:last-child');
+    if (actionTh && actionTh.textContent.trim().toUpperCase() === 'ACTION') {
+      actionTh.style.display = '';
+    }
+  }
 
   let list = materialsData.raw_materials || [];
   const query = (document.getElementById('raw-materials-search')?.value || '').toLowerCase().trim();
@@ -2804,7 +2852,7 @@ function renderRawMaterialsTable() {
       <td style="font-weight:700; color:var(--text-muted);">${idx + 1}</td>
       <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(item.name)}</td>
       <td style="text-align:center;">
-        <button class="btn-know-rate" data-name="${escapeHtml(item.name)}" onclick="handleKnowRate('${escapeHtml(item.name)}')">
+        <button class="btn-know-rate" data-name="${escapeHtml(item.name)}" onclick="openKnowRateModal('${escapeHtml(item.name)}')">
           ℹ️ Know the rate
         </button>
       </td>
@@ -3063,7 +3111,105 @@ async function saveMaterialUpdate() {
   }
 }
 
+function openKnowRateModal(materialName) {
+  const matNameInput = document.getElementById('know-rate-material-name');
+  const supplierSelect = document.getElementById('know-rate-supplier-select');
+  const emailInput = document.getElementById('know-rate-supplier-email');
+  const modal = document.getElementById('modal-know-rate');
+
+  if (matNameInput) matNameInput.value = materialName || '';
+  if (emailInput) emailInput.value = '';
+
+  if (supplierSelect) {
+    supplierSelect.innerHTML = '<option value="">Select Supplier...</option>';
+    const supplierSet = new Set();
+    if (typeof PREDEFINED_SUPPLIERS !== 'undefined' && Array.isArray(PREDEFINED_SUPPLIERS)) {
+      PREDEFINED_SUPPLIERS.forEach(s => supplierSet.add(s));
+    }
+    if (typeof customSuppliers !== 'undefined' && Array.isArray(customSuppliers)) {
+      customSuppliers.forEach(s => supplierSet.add(s));
+    }
+    if (typeof currentPOEntries !== 'undefined' && Array.isArray(currentPOEntries)) {
+      currentPOEntries.forEach(item => {
+        if (item.supplier && item.supplier.trim() && item.supplier !== '—') {
+          supplierSet.add(item.supplier.trim());
+        }
+      });
+    }
+    if (typeof currentIGREntries !== 'undefined' && Array.isArray(currentIGREntries)) {
+      currentIGREntries.forEach(item => {
+        if (item.supplier_name && item.supplier_name.trim() && item.supplier_name !== '—') {
+          supplierSet.add(item.supplier_name.trim());
+        }
+      });
+    }
+    const suppliers = Array.from(supplierSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    suppliers.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      supplierSelect.appendChild(opt);
+    });
+  }
+
+  updateKnowRateMessageDraft();
+
+  if (modal) {
+    modal.classList.remove('hidden');
+  }
+}
+
+function updateKnowRateMessageDraft() {
+  const matName = document.getElementById('know-rate-material-name')?.value || 'Raw Material';
+  const supplierName = document.getElementById('know-rate-supplier-select')?.value || 'Supplier';
+  const msgTextarea = document.getElementById('know-rate-message');
+
+  if (msgTextarea) {
+    msgTextarea.value = `Dear ${supplierName && supplierName !== 'Supplier' ? supplierName : 'Sir/Madam'},\n\nWe would like to inquire about the current market rate, availability, and lead time for the raw material item: "${matName}".\n\nPlease reply with your official quotation at your earliest convenience.\n\nThank you,\nCamDuct KNND Purchase Department`;
+  }
+}
+
+function handleKnowRate(materialName) {
+  openKnowRateModal(materialName);
+}
+
+function sendKnowRateEnquiry() {
+  const materialName = document.getElementById('know-rate-material-name')?.value || 'Raw Material';
+  const supplierName = document.getElementById('know-rate-supplier-select')?.value;
+  const supplierEmail = document.getElementById('know-rate-supplier-email')?.value?.trim();
+  const message = document.getElementById('know-rate-message')?.value?.trim();
+
+  if (!supplierName) {
+    showToast('Please choose a supplier from the dropdown', 'warning');
+    return;
+  }
+
+  if (!supplierEmail) {
+    showToast('Please enter the supplier email ID', 'warning');
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(supplierEmail)) {
+    showToast('Please enter a valid supplier email address', 'warning');
+    return;
+  }
+
+  if (!message) {
+    showToast('Please enter an enquiry message', 'warning');
+    return;
+  }
+
+  const modal = document.getElementById('modal-know-rate');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+
+  showToast(`✉️ Rate enquiry for "${materialName}" sent to ${supplierName} (${supplierEmail}) successfully!`, 'success');
+}
+
 window.handleKnowRate = handleKnowRate;
+window.openKnowRateModal = openKnowRateModal;
 window.openUpdateMaterialModal = openUpdateMaterialModal;
 
 // Initialize on DOM load
